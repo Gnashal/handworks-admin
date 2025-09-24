@@ -1,6 +1,6 @@
 # handworks-admin
 
-An Electron application with React and TypeScript
+Built using Electron Vite Build Tool
 
 ## Recommended IDE Setup
 

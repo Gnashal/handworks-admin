@@ -4,42 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a5bb8967-66f6-41db-a1be-40068e5491e5" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.editorconfig" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.prettierignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.prettierrc.yaml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.vscode/extensions.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.vscode/launch.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.vscode/settings.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/entitlements.mac.plist" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/icon.icns" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/icon.ico" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/icon.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/electron-builder.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/electron.vite.config.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/eslint.config.mjs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/icon.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/index.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/preload/index.d.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/preload/index.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/index.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/src/App.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/src/assets/base.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/src/assets/electron.svg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/src/assets/main.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/src/assets/wavy-lines.svg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/src/components/Versions.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/src/env.d.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/src/main.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/tsconfig.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tsconfig.node.json" beforeDir="false" afterPath="$PROJECT_DIR$/tsconfig.node.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tsconfig.web.json" beforeDir="false" />
-    </list>
+    <list default="true" id="a5bb8967-66f6-41db-a1be-40068e5491e5" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -54,12 +19,15 @@
     &quot;assignee&quot;: &quot;Gnashal&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "git@github.com:Gnashal/handworks-admin.git",
-    "accountId": "f4d18e11-844a-4e62-a57a-4cc1f13a02a7"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Gnashal/handworks-admin.git&quot;,
+    &quot;accountId&quot;: &quot;f4d18e11-844a-4e62-a57a-4cc1f13a02a7&quot;
   }
-}]]></component>
+}</component>
+  <component name="PackageJsonUpdateNotifier">
+    <dismissed value="$PROJECT_DIR$/package.json" />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 8
 }</component>
@@ -71,30 +39,22 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "init",
-    "last_opened_file_path": "/home/yousif/Programming/Capstone Projects/handworks-web",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "prettierjs.PrettierConfiguration.Package": "/home/yousif/WebstormProjects/handworks-admin/node_modules/prettier",
-    "settings.editor.selected.configurable": "configurable.group.editor",
-    "ts.external.directory.path": "/home/yousif/WebstormProjects/handworks-admin/node_modules/typescript/lib",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/home/yousif/WebstormProjects/handworks-admin/node_modules/typescript/lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
-  <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/.github" />
-    </key>
-  </component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -110,8 +70,7 @@
       <option name="presentableId" value="Default" />
       <updated>1756549128333</updated>
       <workItem from="1756549130107" duration="515000" />
-      <workItem from="1756549651640" duration="3190000" />
-      <workItem from="1756552846020" duration="3148000" />
+      <workItem from="1756549651640" duration="2674000" />
     </task>
     <servers />
   </component>
