@@ -1,5 +1,14 @@
-function App(): React.JSX.Element {
-  return <div className="p-4 text-xl text-black">Hello World</div>
-}
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react'
 
-export default App
+export default function App() {
+  return (
+    <header>
+      <SignedOut>
+        <SignInButton />
+      </SignedOut>
+      <SignedIn>
+        <UserButton />
+      </SignedIn>
+    </header>
+  );
+}
