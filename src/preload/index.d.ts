@@ -1,5 +1,7 @@
 declare global {
   interface Window {
-    context: { '' }
+    context: {
+      notify: (title: string, body: string) => void
+     }
   }
 }
