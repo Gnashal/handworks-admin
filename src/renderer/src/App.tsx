@@ -1,14 +1,9 @@
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react'
-
 export default function App() {
   return (
-    <header>
-      <SignedOut>
-        <SignInButton />
-      </SignedOut>
-      <SignedIn>
-        <UserButton />
-      </SignedIn>
-    </header>
-  );
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <h1 className="text-2xl font-bold text-gray-800">
+        Handworks Admin
+      </h1>
+    </div>
+  )
 }
