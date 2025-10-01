@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@apollo/client": "^4.0.5",
+    "@clerk/clerk-react": "^5.48.1",
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
     "@fontsource/arimo": "^5.2.8",
