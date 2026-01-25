@@ -3,7 +3,6 @@ import { Arimo } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
-import DefaultLayoutWrapper from "@/components/layouts/layoutWrapper";
 import { AdminProvider } from "@/context/adminContext";
 
 const arimo = Arimo({
@@ -32,7 +31,7 @@ export default function RootLayout({
         <html lang="en">
           <body className={arimo.className}>
             <Toaster position="top-right" />
-            <DefaultLayoutWrapper>{children}</DefaultLayoutWrapper>
+            {children}
           </body>
         </html>
       </AdminProvider>
