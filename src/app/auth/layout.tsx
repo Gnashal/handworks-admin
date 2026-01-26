@@ -1,6 +1,4 @@
-"use client";
-
-import AuthLayout from "@/components/layouts/authLayout";
+import AuthLayout from "../../components/layouts/authLayout";
 
 export default function AuthRootLayout({
   children,

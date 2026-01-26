@@ -2,9 +2,9 @@
 
 import { Suspense, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
-import Login from "@/components/auth/loginForm";
+import { SignUpForm } from "@/components/auth/signUpForm";
 
-export default function LoginPage() {
+export default function SignUpPage() {
   const { isLoaded } = useUser();
 
   useEffect(() => {
@@ -13,8 +13,8 @@ export default function LoginPage() {
 
   return (
     <div className="w-full flex items-center justify-center">
-      <Suspense fallback={<div>Loading login...</div>}>
-        <Login />
+      <Suspense fallback={<div>Loading signup...</div>}>
+        <SignUpForm />
       </Suspense>
     </div>
   );

@@ -3,8 +3,7 @@ import { Arimo } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
-import { AdminProvider } from "@/context/adminContext";
-
+import { AdminProvider } from "../context/adminContext";
 const arimo = Arimo({
   subsets: ["latin"],
   variable: "--font-Arimo",
@@ -16,7 +15,7 @@ export const metadata: Metadata = {
   title: "Handworks Admin",
   description: "Admin dashboard for Handworks Cleaning Services",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/favicon.png",
   },
 };
 
@@ -26,15 +25,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
-      <AdminProvider>
-        <html lang="en">
+    <html lang="en">
+      <ClerkProvider>
+        <AdminProvider>
           <body className={arimo.className}>
             <Toaster position="top-right" />
             {children}
           </body>
-        </html>
-      </AdminProvider>
-    </ClerkProvider>
+        </AdminProvider>
+      </ClerkProvider>
+    </html>
   );
 }

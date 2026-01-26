@@ -1,6 +1,4 @@
-"use client";
-
-import LandingLayout from "@/components/layouts/defaultLayout";
+import DefaultLayout from "../../components/layouts/defaultLayout";
 
 export default function AuthRootLayout({
   children,
@@ -9,7 +7,7 @@ export default function AuthRootLayout({
 }) {
   return (
     <>
-      <LandingLayout>{children}</LandingLayout>
+      <DefaultLayout>{children}</DefaultLayout>
     </>
   );
 }
