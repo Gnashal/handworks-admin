@@ -78,7 +78,7 @@ function Sidebar() {
 
   return (
     <aside
-      className={`bg-white border-r border-gray-100 p-4 flex flex-col transition-all duration-300 ${
+      className={`bg-white border-r border-l-blue-100 p-4 flex flex-col transition-all duration-300 ${
         collapsed ? "w-20" : "w-72"
       }`}
     >
@@ -97,7 +97,7 @@ function Sidebar() {
           <div className="text-2xl font-extrabold tracking-tight">
             Handworks
           </div>
-          <div className="text-sm text-gray-400 -mt-1">Management</div>
+          <div className="text-sm text-gray-400 -mt-1">Admin</div>
         </div>
       )}
 
@@ -110,7 +110,7 @@ function Sidebar() {
               href={route.path}
               className={`
                 flex items-center gap-3 p-3 transition rounded-md
-                ${isActive ? "bg-gray-100 text-gray-900 font-semibold border border-gray-200" : "text-gray-600 hover:bg-gray-50"}
+                ${isActive ? "bg-blue-200 text-gray-900 font-semibold border border-l-blue-300" : "text-gray-600 hover:bg-blue-50"}
                 ${collapsed ? "justify-center p-2" : ""}
               `}
             >
