@@ -51,25 +51,20 @@ export default function DashboardOverview(props: DashboardOverviewProps) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex gap-4">
-        {/* Left column: grid */}
-        <div className="grid grid-cols-2 grid-rows-[repeat(3,minmax(0,auto))] gap-4 flex-[2]">
-          {/* Metric Cards */}
+        <div className="grid grid-cols-2 grid-rows-[repeat(3,minmax(0,auto))] gap-4 flex-2">
           <MetricCard icon={<ArrowUpRight />} data={weeklySales} />
           <MetricCard icon={<Package />} data={bookings} />
           <MetricCard icon={<Clock />} data={activeSessions} />
           <MetricCard icon={<Briefcase />} data={activeWorkers} />
 
-          {/* Financial Cards */}
           <FinancialCard data={paidInvoices} />
           <FinancialCard data={fundReceived} />
 
-          {/* Service Dynamics spans 2 columns */}
           <div className="col-span-2">
             <ServiceDynamics bookingSeries={bookingSeries} />
           </div>
         </div>
 
-        {/* Right column: Client Breakdown */}
         <div className="flex-1">
           <ClientBreakdownCard
             clients={clientBreakdown}

@@ -26,7 +26,6 @@ export default function ClientBreakdownCard({
 }: ClientBreakdownCardProps) {
   return (
     <Card className="h-full flex flex-col">
-      {/* HEADER */}
       <CardHeader className="flex items-center justify-between pb-2">
         <div className="flex items-center gap-2">
           <CardTitle className="text-xl font-bold">Clients</CardTitle>
@@ -35,9 +34,7 @@ export default function ClientBreakdownCard({
         <Users className="w-6 h-6" />
       </CardHeader>
 
-      {/* CONTENT */}
       <CardContent className="flex flex-col items-center gap-6">
-        {/* PIE CHART */}
         <PieChart width={160} height={160}>
           <Pie
             data={clients}
@@ -58,7 +55,6 @@ export default function ClientBreakdownCard({
           </Pie>
         </PieChart>
 
-        {/* LABELS */}
         <div className="flex flex-col w-full gap-2">
           {clients.map((item, index) => (
             <div

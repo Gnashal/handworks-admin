@@ -1,5 +1,6 @@
 import axios, { AxiosRequestConfig } from "axios";
 import { IAdmin, ISignUpAdminRequest } from "@/types/account";
+import { IAdminDashboardResponse } from "@/types/admin";
 
 const fetchWithAuth = async <T>(
   url: string,
@@ -58,4 +59,29 @@ const signUpAdmin = async (
     throw error;
   }
 };
-export { signUpAdmin };
+
+const fetchAdminDashboardData = async (
+  token: string,
+  adminId: string,
+  dateFilter: string,
+): Promise<IAdminDashboardResponse> => {
+  try {
+    const params = new URLSearchParams();
+    if (adminId && dateFilter) {
+      params.append("adminId", adminId);
+      params.append("dateFilter", dateFilter);
+    }
+
+    const res = await fetchWithAuth<IAdminDashboardResponse>(
+      `/api/fetchDashboardData?${params.toString()}`,
+      token,
+      { method: "GET" },
+    );
+    return res;
+  } catch (error) {
+    console.error("fetchDashboardData Error:", error);
+    throw error;
+  }
+};
+
+export { signUpAdmin, fetchAdminDashboardData };
