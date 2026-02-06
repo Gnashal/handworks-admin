@@ -78,7 +78,7 @@ function Sidebar() {
 
   return (
     <aside
-      className={`bg-white border-r border-l-blue-100 p-4 flex flex-col transition-all duration-300 ${
+      className={`ticky top-0 h-screen bg-white border-r border-l-blue-100 p-4 flex flex-col transition-all duration-300 ${
         collapsed ? "w-20" : "w-72"
       }`}
     >

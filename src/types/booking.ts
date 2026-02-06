@@ -119,7 +119,7 @@ export interface IBaseBookingDetails {
   reviewStatus: string;
   photos: string[];
   createdAt: string;
-  updatedAt?: string | null;
+  updatedAt: string;
   quoteId: string;
 }
 
@@ -133,7 +133,7 @@ export interface IBaseBookingDetailsRequest {
   dirtyScale: number;
   photos: string[];
   createdAt: string;
-  updatedAt?: string | null;
+  updatedAt?: string;
   quoteId: string;
 }
 
@@ -145,10 +145,10 @@ export interface IAddress {
 
 export interface IBookingReply {
   source: string;
-  equipments?: ICleaningEquipment[];
-  resources?: ICleaningResources[];
-  cleaners?: ICleanerAssigned[];
-  prices?: ICleaningPrices;
+  equipments: ICleaningEquipment[];
+  resources: ICleaningResources[];
+  cleaners: ICleanerAssigned[];
+  prices: ICleaningPrices;
   error?: string;
 }
 
@@ -187,9 +187,9 @@ export interface IBooking {
   base: IBaseBookingDetails;
   mainService: IServiceDetails;
   addons?: IAddOns[];
-  equipments?: ICleaningEquipment[];
-  resources?: ICleaningResources[];
-  cleaners?: ICleanerAssigned[];
+  equipments: ICleaningEquipment[];
+  resources: ICleaningResources[];
+  cleaners: ICleanerAssigned[];
   totalPrice: number;
 }
 
