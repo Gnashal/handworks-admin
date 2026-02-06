@@ -22,8 +22,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
         paymentStatus: "PAID",
         reviewStatus: "PENDING",
         photos: [
-          "https://example.com/photos/bk_001_1.jpg",
-          "https://example.com/photos/bk_001_2.jpg",
+          "https://images.unsplash.com/photo-1581578731548-c64695cc6952",
+          "https://images.unsplash.com/photo-1581578731341-046aed8d1c86",
         ],
         createdAt: "2026-02-01T08:15:00Z",
         updatedAt: "2026-02-03T10:30:00Z",
@@ -64,13 +64,15 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "eq_001",
           name: "Vacuum Cleaner",
           type: "ELECTRIC",
-          photoUrl: "https://example.com/equipment/vacuum.jpg",
+          photoUrl:
+            "https://images.unsplash.com/photo-1581578731548-c64695cc6952",
         },
         {
           id: "eq_002",
           name: "Mop",
           type: "MANUAL",
-          photoUrl: "https://example.com/equipment/mop.jpg",
+          photoUrl:
+            "https://images.unsplash.com/photo-1581579188842-246c3b41f852",
         },
       ],
       resources: [
@@ -78,7 +80,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "res_001",
           name: "All-purpose Cleaner",
           type: "CHEMICAL",
-          photoUrl: "https://example.com/resources/cleaner.jpg",
+          photoUrl:
+            "https://images.unsplash.com/photo-1583947581924-860bda6a26fb",
         },
       ],
       cleaners: [
@@ -86,7 +89,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "cln_001",
           cleanerFirstName: "Maria",
           cleanerLastName: "Lopez",
-          pfpUrl: "https://example.com/cleaners/maria.jpg",
+          pfpUrl:
+            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1",
         },
       ],
       totalPrice: 2500,
@@ -110,7 +114,7 @@ export const mockBookings: IFetchAllBookingsResponse = {
         reviewStatus: "NOT_REQUESTED",
         photos: [],
         createdAt: "2026-02-02T11:00:00Z",
-        updatedAt: null,
+        updatedAt: "2026-02-02T11:00:00Z",
         quoteId: "q_002",
       },
       mainService: {
@@ -135,7 +139,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "eq_003",
           name: "Steam Cleaner",
           type: "ELECTRIC",
-          photoUrl: "https://example.com/equipment/steam-cleaner.jpg",
+          photoUrl:
+            "https://images.unsplash.com/photo-1621609871049-d8b7430c2c66",
         },
       ],
       resources: [
@@ -143,7 +148,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "res_002",
           name: "Upholstery Shampoo",
           type: "CHEMICAL",
-          photoUrl: "https://example.com/resources/upholstery-shampoo.jpg",
+          photoUrl:
+            "https://images.unsplash.com/photo-1583947581924-860bda6a26fb",
         },
       ],
       cleaners: [
@@ -151,13 +157,15 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "cln_002",
           cleanerFirstName: "Jose",
           cleanerLastName: "Reyes",
-          pfpUrl: "https://example.com/cleaners/jose.jpg",
+          pfpUrl:
+            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1",
         },
         {
           id: "cln_003",
           cleanerFirstName: "Ana",
           cleanerLastName: "Garcia",
-          pfpUrl: "https://example.com/cleaners/ana.jpg",
+          pfpUrl:
+            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1",
         },
       ],
       totalPrice: 1800,
@@ -179,7 +187,9 @@ export const mockBookings: IFetchAllBookingsResponse = {
         dirtyScale: 5,
         paymentStatus: "PAID",
         reviewStatus: "COMPLETED",
-        photos: ["https://example.com/photos/bk_003_1.jpg"],
+        photos: [
+          "https://images.unsplash.com/photo-1581579188842-246c3b41f852",
+        ],
         createdAt: "2026-02-03T09:45:00Z",
         updatedAt: "2026-02-04T13:20:00Z",
         quoteId: "q_003",
@@ -217,7 +227,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "eq_004",
           name: "Industrial Vacuum",
           type: "ELECTRIC",
-          photoUrl: "https://example.com/equipment/industrial-vacuum.jpg",
+          photoUrl:
+            "https://images.unsplash.com/photo-1581578731548-c64695cc6952",
         },
       ],
       resources: [
@@ -225,7 +236,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "res_003",
           name: "Heavy-duty Degreaser",
           type: "CHEMICAL",
-          photoUrl: "https://example.com/resources/degreaser.jpg",
+          photoUrl:
+            "https://images.unsplash.com/photo-1583947581924-860bda6a26fb",
         },
       ],
       cleaners: [
@@ -233,7 +245,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "cln_004",
           cleanerFirstName: "Mark",
           cleanerLastName: "Tan",
-          pfpUrl: "https://example.com/cleaners/mark.jpg",
+          pfpUrl:
+            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1",
         },
       ],
       totalPrice: 4200,
@@ -257,7 +270,7 @@ export const mockBookings: IFetchAllBookingsResponse = {
         reviewStatus: "PENDING",
         photos: [],
         createdAt: "2026-02-04T07:30:00Z",
-        updatedAt: null,
+        updatedAt: "2026-02-04T07:30:00Z",
         quoteId: "q_004",
       },
       mainService: {
@@ -274,7 +287,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "eq_005",
           name: "Broom",
           type: "MANUAL",
-          photoUrl: "https://example.com/equipment/broom.jpg",
+          photoUrl:
+            "https://images.unsplash.com/photo-1581579188842-246c3b41f852",
         },
       ],
       resources: [],
@@ -283,7 +297,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "cln_005",
           cleanerFirstName: "Irene",
           cleanerLastName: "Villanueva",
-          pfpUrl: "https://example.com/cleaners/irene.jpg",
+          pfpUrl:
+            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1",
         },
       ],
       totalPrice: 1300,
@@ -307,7 +322,7 @@ export const mockBookings: IFetchAllBookingsResponse = {
         reviewStatus: "NOT_REQUESTED",
         photos: [],
         createdAt: "2026-02-04T10:00:00Z",
-        updatedAt: null,
+        updatedAt: "2026-02-04T07:30:00Z",
         quoteId: "q_005",
       },
       mainService: {
@@ -332,7 +347,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "eq_006",
           name: "Fabric Brush",
           type: "MANUAL",
-          photoUrl: "https://example.com/equipment/fabric-brush.jpg",
+          photoUrl:
+            "https://images.unsplash.com/photo-1581579188842-246c3b41f852",
         },
       ],
       resources: [
@@ -340,7 +356,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "res_004",
           name: "Fabric Cleaner",
           type: "CHEMICAL",
-          photoUrl: "https://example.com/resources/fabric-cleaner.jpg",
+          photoUrl:
+            "https://images.unsplash.com/photo-1583947581924-860bda6a26fb",
         },
       ],
       cleaners: [
@@ -348,7 +365,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "cln_006",
           cleanerFirstName: "Paolo",
           cleanerLastName: "Mendoza",
-          pfpUrl: "https://example.com/cleaners/paolo.jpg",
+          pfpUrl:
+            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1",
         },
       ],
       totalPrice: 1600,
@@ -370,7 +388,9 @@ export const mockBookings: IFetchAllBookingsResponse = {
         dirtyScale: 4,
         paymentStatus: "PAID",
         reviewStatus: "COMPLETED",
-        photos: ["https://example.com/photos/bk_006_1.jpg"],
+        photos: [
+          "https://images.unsplash.com/photo-1581579188842-246c3b41f852",
+        ],
         createdAt: "2026-02-05T05:45:00Z",
         updatedAt: "2026-02-05T09:15:00Z",
         quoteId: "q_006",
@@ -396,7 +416,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "eq_007",
           name: "Handheld Vacuum",
           type: "ELECTRIC",
-          photoUrl: "https://example.com/equipment/handheld-vacuum.jpg",
+          photoUrl:
+            "https://images.unsplash.com/photo-1581578731548-c64695cc6952",
         },
       ],
       resources: [],
@@ -405,7 +426,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "cln_007",
           cleanerFirstName: "Sofia",
           cleanerLastName: "Lim",
-          pfpUrl: "https://example.com/cleaners/sofia.jpg",
+          pfpUrl:
+            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1",
         },
       ],
       totalPrice: 1900,
@@ -429,7 +451,7 @@ export const mockBookings: IFetchAllBookingsResponse = {
         reviewStatus: "PENDING",
         photos: [],
         createdAt: "2026-02-05T06:30:00Z",
-        updatedAt: null,
+        updatedAt: "2026-02-04T07:30:00Z",
         quoteId: "q_007",
       },
       mainService: {
@@ -451,7 +473,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "eq_008",
           name: "Pressure Washer",
           type: "ELECTRIC",
-          photoUrl: "https://example.com/equipment/pressure-washer.jpg",
+          photoUrl:
+            "https://images.unsplash.com/photo-1508896694512-1eade5586795",
         },
       ],
       resources: [
@@ -459,7 +482,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "res_005",
           name: "Car Shampoo",
           type: "CHEMICAL",
-          photoUrl: "https://example.com/resources/car-shampoo.jpg",
+          photoUrl:
+            "https://images.unsplash.com/photo-1583947581924-860bda6a26fb",
         },
       ],
       cleaners: [
@@ -467,7 +491,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "cln_008",
           cleanerFirstName: "Leo",
           cleanerLastName: "Ng",
-          pfpUrl: "https://example.com/cleaners/leo.jpg",
+          pfpUrl:
+            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1",
         },
       ],
       totalPrice: 1100,
@@ -491,7 +516,7 @@ export const mockBookings: IFetchAllBookingsResponse = {
         reviewStatus: "NOT_REQUESTED",
         photos: [],
         createdAt: "2026-02-05T08:20:00Z",
-        updatedAt: null,
+        updatedAt: "2026-02-04T07:30:00Z",
         quoteId: "q_008",
       },
       mainService: {
@@ -507,7 +532,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "eq_009",
           name: "Scrubber",
           type: "ELECTRIC",
-          photoUrl: "https://example.com/equipment/scrubber.jpg",
+          photoUrl:
+            "https://images.unsplash.com/photo-1581578731548-c64695cc6952",
         },
       ],
       resources: [
@@ -515,7 +541,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "res_006",
           name: "Floor Stripper",
           type: "CHEMICAL",
-          photoUrl: "https://example.com/resources/floor-stripper.jpg",
+          photoUrl:
+            "https://images.unsplash.com/photo-1583947581924-860bda6a26fb",
         },
       ],
       cleaners: [
@@ -523,13 +550,15 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "cln_009",
           cleanerFirstName: "Cathy",
           cleanerLastName: "Zhang",
-          pfpUrl: "https://example.com/cleaners/cathy.jpg",
+          pfpUrl:
+            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1",
         },
         {
           id: "cln_010",
           cleanerFirstName: "Noel",
           cleanerLastName: "Sy",
-          pfpUrl: "https://example.com/cleaners/noel.jpg",
+          pfpUrl:
+            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1",
         },
       ],
       totalPrice: 5000,
@@ -553,7 +582,7 @@ export const mockBookings: IFetchAllBookingsResponse = {
         reviewStatus: "PENDING",
         photos: [],
         createdAt: "2026-02-05T09:10:00Z",
-        updatedAt: null,
+        updatedAt: "2026-02-04T07:30:00Z",
         quoteId: "q_009",
       },
       mainService: {
@@ -588,7 +617,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "eq_010",
           name: "Bucket",
           type: "MANUAL",
-          photoUrl: "https://example.com/equipment/bucket.jpg",
+          photoUrl:
+            "https://images.unsplash.com/photo-1581579188842-246c3b41f852",
         },
       ],
       resources: [],
@@ -597,7 +627,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "cln_011",
           cleanerFirstName: "Henry",
           cleanerLastName: "Chua",
-          pfpUrl: "https://example.com/cleaners/henry.jpg",
+          pfpUrl:
+            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1",
         },
       ],
       totalPrice: 2700,
@@ -621,7 +652,7 @@ export const mockBookings: IFetchAllBookingsResponse = {
         reviewStatus: "NOT_REQUESTED",
         photos: [],
         createdAt: "2026-02-05T10:00:00Z",
-        updatedAt: null,
+        updatedAt: "2026-02-04T07:30:00Z",
         quoteId: "q_010",
       },
       mainService: {
@@ -648,7 +679,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "cln_012",
           cleanerFirstName: "Diane",
           cleanerLastName: "Quintos",
-          pfpUrl: "https://example.com/cleaners/diane.jpg",
+          pfpUrl:
+            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1",
         },
       ],
       totalPrice: 2100,
@@ -672,7 +704,7 @@ export const mockBookings: IFetchAllBookingsResponse = {
         reviewStatus: "PENDING",
         photos: [],
         createdAt: "2026-02-05T11:15:00Z",
-        updatedAt: null,
+        updatedAt: "2026-02-04T07:30:00Z",
         quoteId: "q_011",
       },
       mainService: {
@@ -703,7 +735,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "eq_011",
           name: "UV Sanitizer",
           type: "ELECTRIC",
-          photoUrl: "https://example.com/equipment/uv-sanitizer.jpg",
+          photoUrl:
+            "https://images.unsplash.com/photo-1581578731548-c64695cc6952",
         },
       ],
       resources: [],
@@ -712,7 +745,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "cln_013",
           cleanerFirstName: "Fiona",
           cleanerLastName: "Laurel",
-          pfpUrl: "https://example.com/cleaners/fiona.jpg",
+          pfpUrl:
+            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1",
         },
       ],
       totalPrice: 3200,
@@ -736,7 +770,7 @@ export const mockBookings: IFetchAllBookingsResponse = {
         reviewStatus: "NOT_REQUESTED",
         photos: [],
         createdAt: "2026-02-05T12:00:00Z",
-        updatedAt: null,
+        updatedAt: "2026-02-04T07:30:00Z",
         quoteId: "q_012",
       },
       mainService: {
@@ -765,7 +799,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "eq_012",
           name: "Floor Polisher",
           type: "ELECTRIC",
-          photoUrl: "https://example.com/equipment/floor-polisher.jpg",
+          photoUrl:
+            "https://images.unsplash.com/photo-1581578731548-c64695cc6952",
         },
       ],
       resources: [],
@@ -774,7 +809,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "cln_014",
           cleanerFirstName: "Owen",
           cleanerLastName: "Santos",
-          pfpUrl: "https://example.com/cleaners/owen.jpg",
+          pfpUrl:
+            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1",
         },
       ],
       totalPrice: 5600,
@@ -796,7 +832,9 @@ export const mockBookings: IFetchAllBookingsResponse = {
         dirtyScale: 2,
         paymentStatus: "PAID",
         reviewStatus: "COMPLETED",
-        photos: ["https://example.com/photos/bk_013_1.jpg"],
+        photos: [
+          "https://images.unsplash.com/photo-1508896694512-1eade5586795",
+        ],
         createdAt: "2026-02-05T12:30:00Z",
         updatedAt: "2026-02-05T15:00:00Z",
         quoteId: "q_013",
@@ -820,7 +858,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "eq_013",
           name: "Foam Cannon",
           type: "ELECTRIC",
-          photoUrl: "https://example.com/equipment/foam-cannon.jpg",
+          photoUrl:
+            "https://images.unsplash.com/photo-1508896694512-1eade5586795",
         },
       ],
       resources: [],
@@ -829,7 +868,8 @@ export const mockBookings: IFetchAllBookingsResponse = {
           id: "cln_015",
           cleanerFirstName: "Gail",
           cleanerLastName: "Robles",
-          pfpUrl: "https://example.com/cleaners/gail.jpg",
+          pfpUrl:
+            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1",
         },
       ],
       totalPrice: 1400,

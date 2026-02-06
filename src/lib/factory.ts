@@ -6,6 +6,7 @@ import {
   IPostConstructionDetails,
   IMainServiceType,
   IServiceDetails,
+  IAddOns,
 } from "@/types/booking";
 
 export type IServiceDetailConcrete =
@@ -14,6 +15,17 @@ export type IServiceDetailConcrete =
   | IMattressCleaningDetails
   | ICarCleaningDetails
   | IPostConstructionDetails;
+export interface ITypedServiceDetails<T extends IServiceDetailConcrete> {
+  id: string;
+  serviceType: IMainServiceType;
+  details: T;
+}
+export interface ITypedAddon<T extends IServiceDetailConcrete> {
+  id: string;
+  serviceType: IMainServiceType;
+  details: T;
+  price: number;
+}
 
 const detailFactories: Record<IMainServiceType, () => IServiceDetailConcrete> =
   {
@@ -37,11 +49,6 @@ const detailFactories: Record<IMainServiceType, () => IServiceDetailConcrete> =
       sqm: 0,
     }),
   };
-export interface ITypedServiceDetails<T extends IServiceDetailConcrete> {
-  id: string;
-  serviceType: IMainServiceType;
-  details: T;
-}
 
 export function mapServiceDetails<T extends IServiceDetailConcrete>(
   serviceType: IMainServiceType,
@@ -62,5 +69,18 @@ export function mapServiceDetails<T extends IServiceDetailConcrete>(
       ...base,
       ...(raw.details as object),
     } as T,
+  };
+}
+export function mapAddonDetails<T extends IServiceDetailConcrete>(
+  addon: IAddOns,
+): ITypedAddon<T> {
+  const mapped = mapServiceDetails<T>(
+    addon.serviceDetail.serviceType as IMainServiceType,
+    addon.serviceDetail,
+  );
+
+  return {
+    ...mapped,
+    price: addon.price,
   };
 }

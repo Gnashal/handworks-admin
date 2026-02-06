@@ -11,12 +11,13 @@ export default function DefaultLayout({
 }) {
   const { isLoaded } = useAuth();
   if (!isLoaded) return <Loader />;
+
   return (
-    <div className="flex h-screen w-full">
+    <div className="flex h-screen w-full overflow-hidden">
       <Sidebar />
 
       <div
-        className="flex flex-1 bg-cover bg-center bg-no-repeat"
+        className="flex-1 overflow-y-auto bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: `url(${bgImage.src})`,
         }}
