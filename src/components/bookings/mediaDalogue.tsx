@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ArrowRight, ArrowLeft } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -55,7 +56,7 @@ export function BookingMediaDialog({ photos }: BookingMediaDialogProps) {
           {photos.length > 1 && (
             <div className="flex items-center justify-between gap-3">
               <Button variant="outline" size="icon" onClick={prev}>
-                ←
+                <ArrowLeft />
               </Button>
               <div className="flex flex-1 justify-center gap-2 overflow-x-auto">
                 {photos.map((url, idx) => (
@@ -78,7 +79,7 @@ export function BookingMediaDialog({ photos }: BookingMediaDialogProps) {
                 ))}
               </div>
               <Button variant="outline" size="icon" onClick={next}>
-                →
+                <ArrowRight />
               </Button>
             </div>
           )}

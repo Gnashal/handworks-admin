@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/incompatible-library */
 "use client";
 
 import * as React from "react";
@@ -19,7 +20,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
@@ -31,7 +31,8 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   onRowClick?: (row: TData) => void;
-  // optional: functions to read a date from the row, for filtering
+
+  enableDateFilter?: boolean;
   getStartDate?: (row: TData) => Date | null;
   getEndDate?: (row: TData) => Date | null;
 }
@@ -40,6 +41,7 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   onRowClick,
+  enableDateFilter = false,
   getStartDate,
   getEndDate,
 }: DataTableProps<TData, TValue>) {
@@ -47,6 +49,7 @@ export function DataTable<TData, TValue>({
   const [toDate, setToDate] = React.useState<Date | undefined>();
 
   const filteredData = React.useMemo(() => {
+    if (!enableDateFilter) return data;
     if (!fromDate && !toDate) return data;
     if (!getStartDate && !getEndDate) return data;
 
@@ -67,7 +70,7 @@ export function DataTable<TData, TValue>({
 
       return true;
     });
-  }, [data, fromDate, toDate, getStartDate, getEndDate]);
+  }, [data, fromDate, toDate, getStartDate, getEndDate, enableDateFilter]);
 
   const table = useReactTable({
     data: filteredData,
@@ -79,82 +82,82 @@ export function DataTable<TData, TValue>({
   return (
     <div className="bg-white p-4 m-auto rounded-md border space-y-4">
       {/* Filter row */}
-      <div className="flex flex-wrap items-center gap-4 justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">Date range:</span>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        {/* Left side */}
+        {enableDateFilter && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Date range:</span>
 
-          {/* Start date */}
-          <Popover>
-            <PopoverTrigger asChild>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="rounded-none w-30 justify-start text-left font-normal"
+                >
+                  {fromDate ? format(fromDate, "yyyy-MM-dd") : "Start date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={fromDate}
+                  onSelect={(date) => setFromDate(date ?? undefined)}
+                  autoFocus
+                />
+              </PopoverContent>
+            </Popover>
+
+            <span className="text-sm">to</span>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="rounded-none w-30 justify-start text-left font-normal"
+                >
+                  {toDate ? format(toDate, "yyyy-MM-dd") : "End date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={toDate}
+                  onSelect={(date) => setToDate(date ?? undefined)}
+                  autoFocus
+                />
+              </PopoverContent>
+            </Popover>
+
+            {(fromDate || toDate) && (
               <Button
-                variant="outline"
-                className="rounded-none w-30 justify-start text-left font-normal"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setFromDate(undefined);
+                  setToDate(undefined);
+                }}
               >
-                {fromDate ? format(fromDate, "yyyy-MM-dd") : "Start date"}
+                Clear
               </Button>
-            </PopoverTrigger>
-            <PopoverContent className="p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={fromDate}
-                onSelect={(date) => setFromDate(date ?? undefined)}
-                autoFocus
-              />
-            </PopoverContent>
-          </Popover>
+            )}
+          </div>
+        )}
 
-          <span className="text-sm">to</span>
-
-          {/* End date */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="rounded-none w-30 justify-start text-left font-normal"
-              >
-                {toDate ? format(toDate, "yyyy-MM-dd") : "End date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={toDate}
-                onSelect={(date) => setToDate(date ?? undefined)}
-                autoFocus
-              />
-            </PopoverContent>
-          </Popover>
-
-          {fromDate || toDate ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setFromDate(undefined);
-                setToDate(undefined);
-              }}
-            >
-              Clear
-            </Button>
-          ) : null}
-        </div>
-
-        {/* Page size selector */}
+        {/* Right side*/}
         <div className="flex items-center gap-2 text-sm">
           <span>Rows per page:</span>
-          <Input
+          <input
             type="number"
-            className="w-16 h-8"
+            min={1}
+            className="w-16 h-8 rounded border px-2"
             value={table.getState().pagination.pageSize}
             onChange={(e) => {
               const size = Number(e.target.value) || 1;
               table.setPageSize(size);
             }}
-            min={1}
           />
         </div>
       </div>
-
       {/* Table */}
       <Table>
         <TableHeader>

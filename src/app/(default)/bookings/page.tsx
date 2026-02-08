@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { DataTable } from "@/components/bookings/bookingTable";
+import { DataTable } from "@/components/dataTable";
 import { bookingColumns } from "@/components/bookings/columns";
 import { mockBookings } from "@/data/mockBookings";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ export default function BookingsPage() {
       <DataTable<IBooking, unknown>
         columns={bookingColumns}
         data={mockBookings.bookings}
+        enableDateFilter
         onRowClick={(booking) => {
           router.push(`/bookings/${booking.id}`);
         }}
