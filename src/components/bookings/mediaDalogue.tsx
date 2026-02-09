@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ArrowRight, ArrowLeft } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +21,21 @@ export function BookingMediaDialog({ photos }: BookingMediaDialogProps) {
   const hasPhotos = photos && photos.length > 0;
 
   if (!hasPhotos) {
-    return null;
+    return (
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm">
+            Show media uploads
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-5xl">
+          <DialogHeader>
+            <DialogTitle>Media uploads</DialogTitle>
+          </DialogHeader>
+          Customer has not uploaded any Media
+        </DialogContent>
+      </Dialog>
+    );
   }
 
   const prev = () => {
@@ -38,7 +53,7 @@ export function BookingMediaDialog({ photos }: BookingMediaDialogProps) {
           Show media uploads
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-5xl">
         <DialogHeader>
           <DialogTitle>Media uploads</DialogTitle>
         </DialogHeader>
@@ -55,7 +70,7 @@ export function BookingMediaDialog({ photos }: BookingMediaDialogProps) {
           {photos.length > 1 && (
             <div className="flex items-center justify-between gap-3">
               <Button variant="outline" size="icon" onClick={prev}>
-                ←
+                <ArrowLeft />
               </Button>
               <div className="flex flex-1 justify-center gap-2 overflow-x-auto">
                 {photos.map((url, idx) => (
@@ -78,7 +93,7 @@ export function BookingMediaDialog({ photos }: BookingMediaDialogProps) {
                 ))}
               </div>
               <Button variant="outline" size="icon" onClick={next}>
-                →
+                <ArrowRight />
               </Button>
             </div>
           )}

@@ -8,6 +8,7 @@ import {
   Users,
   UserCheck,
   Settings,
+  BookOpenIcon,
   LogOut,
   Menu,
   X,
@@ -18,6 +19,7 @@ import { usePathname } from "next/navigation";
 
 const routes = [
   { icon: <LayoutDashboard />, label: "Dashboard", path: "/" },
+  { icon: <BookOpenIcon />, label: "Bookings", path: "/bookings" },
   { icon: <Package />, label: "Inventory", path: "/inventory" },
   { icon: <MessageSquare />, label: "Messages", path: "/messages" },
   { icon: <Users />, label: "Clients", path: "/clients" },

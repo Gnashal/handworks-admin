@@ -48,7 +48,7 @@ export default async function BookingDetailsPage(
   return (
     <div className="flex min-h-screen flex-col bg-linear-to-b from-muted/40 to-background">
       {/* Sticky header */}
-      <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b bg-grey-500 backdrop-blur">
         <div className="flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <div className="space-y-1">
             <Link
@@ -84,10 +84,10 @@ export default async function BookingDetailsPage(
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" size="sm" disabled>
-              Reassign
+            <Button variant="outline" size="sm">
+              Edit Booking
             </Button>
-            <Button variant="destructive" size="sm" disabled>
+            <Button variant="destructive" size="sm">
               Cancel booking
             </Button>
           </div>

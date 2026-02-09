@@ -2,7 +2,7 @@ import axios from "axios";
 import { IAdminDashboardResponse } from "@/types/admin";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
     const token = req.headers.get("authorization");
     const adminId = req.nextUrl.searchParams.get("adminId");

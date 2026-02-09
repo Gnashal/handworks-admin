@@ -1,6 +1,7 @@
 import axios, { AxiosRequestConfig } from "axios";
 import { IAdmin, ISignUpAdminRequest } from "@/types/account";
 import { IAdminDashboardResponse } from "@/types/admin";
+import { IBooking } from "@/types/booking";
 
 const fetchWithAuth = async <T>(
   url: string,
@@ -84,4 +85,26 @@ const fetchAdminDashboardData = async (
   }
 };
 
-export { signUpAdmin, fetchAdminDashboardData };
+const fetchBooking = async (
+  token: string,
+  bookingId: string,
+): Promise<IBooking> => {
+  try {
+    const params = new URLSearchParams();
+    if (bookingId) {
+      params.append("bookingId", bookingId);
+    }
+
+    const res = await fetchWithAuth<IBooking>(
+      `/api/fetchBooking?${params.toString()}`,
+      token,
+      { method: "GET" },
+    );
+    return res;
+  } catch (error) {
+    console.error("fetchBooking Error:", error);
+    throw error;
+  }
+};
+
+export { signUpAdmin, fetchAdminDashboardData, fetchBooking };
