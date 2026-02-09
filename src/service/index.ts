@@ -2,6 +2,7 @@ import axios, { AxiosRequestConfig } from "axios";
 import { IAdmin, ISignUpAdminRequest } from "@/types/account";
 import { IAdminDashboardResponse } from "@/types/admin";
 import { IBooking } from "@/types/booking";
+import { IInventoryItem } from "@/types/inventory";
 
 const fetchWithAuth = async <T>(
   url: string,
@@ -106,5 +107,33 @@ const fetchBooking = async (
     throw error;
   }
 };
+const fetchInventoryItems = async (
+  token: string,
+  page = 0,
+  limit = 10,
+): Promise<IInventoryItem> => {
+  try {
+    const params = new URLSearchParams();
+    if (page && limit) {
+      params.append("page", page.toString());
+      params.append("limit", limit.toString());
+    }
 
-export { signUpAdmin, fetchAdminDashboardData, fetchBooking };
+    const res = await fetchWithAuth<IInventoryItem>(
+      `/api/fetchInventory?${params.toString()}`,
+      token,
+      { method: "GET" },
+    );
+    return res;
+  } catch (error) {
+    console.error("fetchInventoryItems Error:", error);
+    throw error;
+  }
+};
+
+export {
+  signUpAdmin,
+  fetchAdminDashboardData,
+  fetchBooking,
+  fetchInventoryItems,
+};
