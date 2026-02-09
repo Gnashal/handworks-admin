@@ -21,7 +21,21 @@ export function BookingMediaDialog({ photos }: BookingMediaDialogProps) {
   const hasPhotos = photos && photos.length > 0;
 
   if (!hasPhotos) {
-    return null;
+    return (
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm">
+            Show media uploads
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-5xl">
+          <DialogHeader>
+            <DialogTitle>Media uploads</DialogTitle>
+          </DialogHeader>
+          Customer has not uploaded any Media
+        </DialogContent>
+      </Dialog>
+    );
   }
 
   const prev = () => {
@@ -39,7 +53,7 @@ export function BookingMediaDialog({ photos }: BookingMediaDialogProps) {
           Show media uploads
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-5xl">
         <DialogHeader>
           <DialogTitle>Media uploads</DialogTitle>
         </DialogHeader>
