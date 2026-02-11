@@ -21,9 +21,9 @@ const routes = [
   { icon: <LayoutDashboard />, label: "Dashboard", path: "/" },
   { icon: <BookOpenIcon />, label: "Bookings", path: "/bookings" },
   { icon: <Package />, label: "Inventory", path: "/inventory" },
-  { icon: <MessageSquare />, label: "Messages", path: "/messages" },
   { icon: <Users />, label: "Clients", path: "/clients" },
   { icon: <UserCheck />, label: "Employees", path: "/employees" },
+  { icon: <MessageSquare />, label: "Messages", path: "/messages" },
 ];
 
 const bottomRoutes = [

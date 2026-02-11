@@ -1,6 +1,5 @@
 "use client";
 
-import * as z from "zod";
 import { useState } from "react";
 import {
   Card,
@@ -13,12 +12,6 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Button } from "../../components/ui/button";
 import Link from "next/link";
-export const loginSchema = z.object({
-  email: z.email({ message: "Invalid email address" }),
-  password: z
-    .string()
-    .min(6, { message: "Password must be at least 6 characters" }),
-});
 
 export default function Login() {
   const [email, setEmail] = useState("");

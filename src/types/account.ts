@@ -11,6 +11,27 @@ export interface IAdmin {
   id: string;
   account: IAccount;
 }
+
+export interface ICustomer {
+  id: string;
+  account: IAccount;
+}
+
+export interface IEmployee {
+  id: string;
+  account: IAccount;
+  position: string;
+  status: string;
+  performance_score: number;
+  hire_date: string;
+  num_ratings: number;
+}
+export interface ICustomers {
+  customers: ICustomer[];
+}
+export interface IEmployees {
+  employees: IEmployee[];
+}
 export interface ILoginRequest {
   email: string;
   password: string;
