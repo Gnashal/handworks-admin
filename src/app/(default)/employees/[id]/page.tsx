@@ -3,7 +3,7 @@
 import * as React from "react";
 import { use } from "react";
 import Link from "next/link";
-import { notFound, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { endOfMonth, format, startOfMonth } from "date-fns";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,9 +28,6 @@ export default function EmployeeDetailsPage(props: EmployeeDetailsPageProps) {
   const { id } = use(props.params);
   const [page, setPage] = React.useState(0);
   const [limit, setLimit] = React.useState(10);
-
-  const [fromDate, setFromDate] = React.useState<Date | undefined>();
-  const [toDate, setToDate] = React.useState<Date | undefined>();
 
   const [searchParams, setSearchParams] = React.useState<{
     startDate?: string;
@@ -70,6 +67,12 @@ export default function EmployeeDetailsPage(props: EmployeeDetailsPageProps) {
 
   const assignedBookings: IBooking[] =
     assignments?.bookings ?? ([] as IFetchAllBookingsResponse["bookings"]);
+  const totalPages = assignments
+    ? Math.ceil(assignments.totalBookings / limit)
+    : 1;
+  const canNextPage = page + 1 < totalPages;
+  const canPreviousPage = page > 0;
+
   if (employeeError) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-destructive">
@@ -160,7 +163,7 @@ export default function EmployeeDetailsPage(props: EmployeeDetailsPageProps) {
       <section className="w-full max-w-7xl mx-auto space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-semibold">
-            Assigned Cleanings ({assignedBookings.length})
+            Assigned Cleanings ({assignments?.totalBookings})
           </h3>
           {isAssignmentsLoading && (
             <p className="text-xs text-muted-foreground">
@@ -190,6 +193,9 @@ export default function EmployeeDetailsPage(props: EmployeeDetailsPageProps) {
             });
             setPage(0);
           }}
+          pageCount={totalPages}
+          canNextPage={canNextPage}
+          canPreviousPage={canPreviousPage}
         />
       </section>
     </div>

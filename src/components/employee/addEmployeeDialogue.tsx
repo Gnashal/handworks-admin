@@ -56,8 +56,8 @@ export function AddEmployeeDialog({ open, onClose, onCreate }: Props) {
       id: `emp_${crypto.randomUUID()}`,
       account: {
         id: `acc_${crypto.randomUUID()}`,
-        firstName: data.firstName,
-        lastName: data.lastName,
+        first_name: data.firstName,
+        last_name: data.lastName,
         email: data.email,
         clerkId: `mock_clerk_${crypto.randomUUID()}`,
         role: "EMPLOYEE",

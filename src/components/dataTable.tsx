@@ -33,11 +33,15 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   onRowClick?: (row: TData) => void;
 
-  // keep the search callback if you like the UI
   enableDateFilter?: boolean;
   onDateSearchClick?: (from: Date | undefined, to: Date | undefined) => void;
 
   onPaginationChange?: (pageIndex: number, pageSize: number) => void;
+  onPreviousPageClick?: (pageIndex: number, pageSize: number) => void;
+  onNextPageClick?: (pageIndex: number, pageSize: number) => void;
+  pageCount?: number; // total pages from server
+  canNextPage?: boolean; // whether server says next is allowed
+  canPreviousPage?: boolean; // whether server says previous is allowed
 }
 
 export function DataTable<TData, TValue>({
@@ -47,6 +51,11 @@ export function DataTable<TData, TValue>({
   enableDateFilter = false,
   onPaginationChange,
   onDateSearchClick,
+  onNextPageClick,
+  onPreviousPageClick,
+  pageCount,
+  canNextPage,
+  canPreviousPage,
 }: DataTableProps<TData, TValue>) {
   const [fromDate, setFromDate] = React.useState<Date | undefined>();
   const [toDate, setToDate] = React.useState<Date | undefined>();
@@ -65,11 +74,27 @@ export function DataTable<TData, TValue>({
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    manualPagination: true,
+    pageCount: pageCount ?? -1, // -1 = unknown; but we pass the real count
     state: {
       pagination,
     },
     onPaginationChange: setPagination,
   });
+
+  const handlePreviousPage = () => {
+    if (!canPreviousPage) return;
+    table.previousPage();
+    const { pageIndex, pageSize } = table.getState().pagination;
+    onPreviousPageClick?.(pageIndex, pageSize);
+  };
+
+  const handleNextPage = () => {
+    if (!canNextPage) return;
+    table.nextPage();
+    const { pageIndex, pageSize } = table.getState().pagination;
+    onNextPageClick?.(pageIndex, pageSize);
+  };
 
   return (
     <div className="bg-white p-4 m-auto rounded-md border space-y-4">
@@ -201,26 +226,28 @@ export function DataTable<TData, TValue>({
       </Table>
 
       {/* Pagination controls */}
-      <div className="flex items-center justify-between pt-2 text-sm">
+      <div className="flex flex-row justify-between">
         <div>
-          Page <span className="font-medium">{pagination.pageIndex + 1}</span>{" "}
-          of <span className="font-medium">{table.getPageCount() || 1}</span>
+          Page <span className="font-small">{pagination.pageIndex + 1}</span> of{" "}
+          <span className="font-small">
+            {pageCount && pageCount > 0 ? pageCount : 1}
+          </span>
         </div>
 
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            onClick={handlePreviousPage}
+            disabled={!canPreviousPage}
           >
             Previous
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            onClick={handleNextPage}
+            disabled={!canNextPage}
           >
             Next
           </Button>
