@@ -1,7 +1,12 @@
 import axios, { AxiosRequestConfig } from "axios";
-import { IAdmin, ISignUpAdminRequest } from "@/types/account";
+import {
+  IAdmin,
+  IEmployees,
+  IGetEmployee,
+  ISignUpAdminRequest,
+} from "@/types/account";
 import { IAdminDashboardResponse } from "@/types/admin";
-import { IBooking } from "@/types/booking";
+import { IBooking, IFetchAllBookingsResponse } from "@/types/booking";
 import { IInventoryItem } from "@/types/inventory";
 
 const fetchWithAuth = async <T>(
@@ -114,7 +119,7 @@ const fetchInventoryItems = async (
 ): Promise<IInventoryItem> => {
   try {
     const params = new URLSearchParams();
-    if (page && limit) {
+    if (page !== null && limit !== null) {
       params.append("page", page.toString());
       params.append("limit", limit.toString());
     }
@@ -130,10 +135,92 @@ const fetchInventoryItems = async (
     throw error;
   }
 };
+const fetchEmployees = async (
+  token: string,
+  page = 0,
+  limit = 10,
+): Promise<IEmployees> => {
+  try {
+    const params = new URLSearchParams();
+    if (page !== null && limit !== null) {
+      params.append("page", page.toString());
+      params.append("limit", limit.toString());
+    }
+
+    const res = await fetchWithAuth<IEmployees>(
+      `/api/employee/fetchEmployees?${params.toString()}`,
+      token,
+      { method: "GET" },
+    );
+    return res;
+  } catch (error) {
+    console.error("fetchEmployees Error:", error);
+    throw error;
+  }
+};
+const fetchEmployee = async (
+  token: string,
+  employeeId: string,
+): Promise<IGetEmployee> => {
+  try {
+    const params = new URLSearchParams();
+    if (employeeId) {
+      params.append("employeeId", employeeId);
+    }
+
+    const res = await fetchWithAuth<IGetEmployee>(
+      `/api/employee/fetchEmployee?${params.toString()}`,
+      token,
+      { method: "GET" },
+    );
+    return res;
+  } catch (error) {
+    console.error("fetchEmployee Error:", error);
+    throw error;
+  }
+};
+const fetchEmployeeAssignments = async (
+  token: string,
+  employeeId: string,
+  startDate: string,
+  endDate: string,
+  page: number,
+  limit: number,
+): Promise<IFetchAllBookingsResponse> => {
+  try {
+    const params = new URLSearchParams();
+    if (
+      employeeId &&
+      page !== null &&
+      limit != null &&
+      startDate !== null &&
+      endDate != null
+    ) {
+      params.append("employeeId", employeeId);
+      params.append("page", page.toString());
+      params.append("limit", limit.toString());
+      params.append("startDate", startDate);
+      params.append("endDate", endDate);
+    }
+
+    const res = await fetchWithAuth<IFetchAllBookingsResponse>(
+      `/api/employee/fetchEmployeeAssignments?${params.toString()}`,
+      token,
+      { method: "GET" },
+    );
+    return res;
+  } catch (error) {
+    console.error("fetchEmployee Error:", error);
+    throw error;
+  }
+};
 
 export {
   signUpAdmin,
   fetchAdminDashboardData,
+  fetchEmployeeAssignments,
   fetchBooking,
   fetchInventoryItems,
+  fetchEmployees,
+  fetchEmployee,
 };

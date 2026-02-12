@@ -1,7 +1,7 @@
 export interface IAccount {
   id: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
   clerkId: string;
   role: string;
@@ -10,6 +10,30 @@ export interface IAccount {
 export interface IAdmin {
   id: string;
   account: IAccount;
+}
+
+export interface ICustomer {
+  id: string;
+  account: IAccount;
+}
+
+export interface IEmployee {
+  id: string;
+  account: IAccount;
+  position: string;
+  status: string;
+  performance_score: number;
+  hire_date: string;
+  num_ratings: number;
+}
+export interface IGetEmployee {
+  employee: IEmployee;
+}
+export interface ICustomers {
+  customers: ICustomer[];
+}
+export interface IEmployees {
+  employees: IEmployee[];
 }
 export interface ILoginRequest {
   email: string;

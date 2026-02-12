@@ -50,7 +50,7 @@ export function PopupEmailVerify({
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-highlight text-white p-2 rounded-md"
+            className="w-full bg-highlight text-black p-2 rounded-md"
           >
             {loading ? "Verifying..." : "Verify Email"}
           </button>
