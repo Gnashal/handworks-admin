@@ -14,13 +14,13 @@ export default function AuthRootLayout({
   const { isAdmin } = useAdmin();
   const router = useRouter();
 
-  // useEffect(() => {
-  //   if (!isLoaded) return;
+  useEffect(() => {
+    if (!isLoaded) return;
 
-  //   if (!isSignedIn || !isAdmin) {
-  //     router.replace("/auth");
-  //   }
-  // }, [isLoaded, isSignedIn, router, isAdmin]);
+    if (!isSignedIn || !isAdmin) {
+      router.replace("/auth");
+    }
+  }, [isLoaded, isSignedIn, router, isAdmin]);
 
   if (!isLoaded) return null;
   return (

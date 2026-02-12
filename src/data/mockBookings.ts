@@ -86,7 +86,7 @@ export const mockBookings: IFetchAllBookingsResponse = {
       ],
       cleaners: [
         {
-          id: "cln_001",
+          id: "emp_001",
           cleanerFirstName: "Maria",
           cleanerLastName: "Lopez",
           pfpUrl:
@@ -154,14 +154,14 @@ export const mockBookings: IFetchAllBookingsResponse = {
       ],
       cleaners: [
         {
-          id: "cln_002",
+          id: "emp_002",
           cleanerFirstName: "Jose",
           cleanerLastName: "Reyes",
           pfpUrl:
             "https://images.unsplash.com/photo-1524504388940-b1c1722653e1",
         },
         {
-          id: "cln_003",
+          id: "emp_003",
           cleanerFirstName: "Ana",
           cleanerLastName: "Garcia",
           pfpUrl:
@@ -242,7 +242,7 @@ export const mockBookings: IFetchAllBookingsResponse = {
       ],
       cleaners: [
         {
-          id: "cln_004",
+          id: "emp_004",
           cleanerFirstName: "Mark",
           cleanerLastName: "Tan",
           pfpUrl:
@@ -294,7 +294,7 @@ export const mockBookings: IFetchAllBookingsResponse = {
       resources: [],
       cleaners: [
         {
-          id: "cln_005",
+          id: "emp_005",
           cleanerFirstName: "Irene",
           cleanerLastName: "Villanueva",
           pfpUrl:
@@ -362,7 +362,7 @@ export const mockBookings: IFetchAllBookingsResponse = {
       ],
       cleaners: [
         {
-          id: "cln_006",
+          id: "emp_006",
           cleanerFirstName: "Paolo",
           cleanerLastName: "Mendoza",
           pfpUrl:
@@ -423,7 +423,7 @@ export const mockBookings: IFetchAllBookingsResponse = {
       resources: [],
       cleaners: [
         {
-          id: "cln_007",
+          id: "emp_007",
           cleanerFirstName: "Sofia",
           cleanerLastName: "Lim",
           pfpUrl:
@@ -488,7 +488,7 @@ export const mockBookings: IFetchAllBookingsResponse = {
       ],
       cleaners: [
         {
-          id: "cln_008",
+          id: "emp_008",
           cleanerFirstName: "Leo",
           cleanerLastName: "Ng",
           pfpUrl:
@@ -547,14 +547,14 @@ export const mockBookings: IFetchAllBookingsResponse = {
       ],
       cleaners: [
         {
-          id: "cln_009",
+          id: "emp_009",
           cleanerFirstName: "Cathy",
           cleanerLastName: "Zhang",
           pfpUrl:
             "https://images.unsplash.com/photo-1524504388940-b1c1722653e1",
         },
         {
-          id: "cln_010",
+          id: "emp_010",
           cleanerFirstName: "Noel",
           cleanerLastName: "Sy",
           pfpUrl:
@@ -624,7 +624,7 @@ export const mockBookings: IFetchAllBookingsResponse = {
       resources: [],
       cleaners: [
         {
-          id: "cln_011",
+          id: "emp_011",
           cleanerFirstName: "Henry",
           cleanerLastName: "Chua",
           pfpUrl:
@@ -676,7 +676,7 @@ export const mockBookings: IFetchAllBookingsResponse = {
       resources: [],
       cleaners: [
         {
-          id: "cln_012",
+          id: "emp_012",
           cleanerFirstName: "Diane",
           cleanerLastName: "Quintos",
           pfpUrl:
@@ -742,7 +742,7 @@ export const mockBookings: IFetchAllBookingsResponse = {
       resources: [],
       cleaners: [
         {
-          id: "cln_013",
+          id: "emp_013",
           cleanerFirstName: "Fiona",
           cleanerLastName: "Laurel",
           pfpUrl:
@@ -806,7 +806,7 @@ export const mockBookings: IFetchAllBookingsResponse = {
       resources: [],
       cleaners: [
         {
-          id: "cln_014",
+          id: "emp_014",
           cleanerFirstName: "Owen",
           cleanerLastName: "Santos",
           pfpUrl:
@@ -865,7 +865,7 @@ export const mockBookings: IFetchAllBookingsResponse = {
       resources: [],
       cleaners: [
         {
-          id: "cln_015",
+          id: "emp_015",
           cleanerFirstName: "Gail",
           cleanerLastName: "Robles",
           pfpUrl:

@@ -9,6 +9,7 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import type { PaginationState } from "@tanstack/react-table";
 import { format } from "date-fns";
 
 import {
@@ -33,8 +34,14 @@ interface DataTableProps<TData, TValue> {
   onRowClick?: (row: TData) => void;
 
   enableDateFilter?: boolean;
-  getStartDate?: (row: TData) => Date | null;
-  getEndDate?: (row: TData) => Date | null;
+  onDateSearchClick?: (from: Date | undefined, to: Date | undefined) => void;
+
+  onPaginationChange?: (pageIndex: number, pageSize: number) => void;
+  onPreviousPageClick?: (pageIndex: number, pageSize: number) => void;
+  onNextPageClick?: (pageIndex: number, pageSize: number) => void;
+  pageCount?: number; // total pages from server
+  canNextPage?: boolean; // whether server says next is allowed
+  canPreviousPage?: boolean; // whether server says previous is allowed
 }
 
 export function DataTable<TData, TValue>({
@@ -42,50 +49,58 @@ export function DataTable<TData, TValue>({
   data,
   onRowClick,
   enableDateFilter = false,
-  getStartDate,
-  getEndDate,
+  onPaginationChange,
+  onDateSearchClick,
+  onNextPageClick,
+  onPreviousPageClick,
+  pageCount,
+  canNextPage,
+  canPreviousPage,
 }: DataTableProps<TData, TValue>) {
   const [fromDate, setFromDate] = React.useState<Date | undefined>();
   const [toDate, setToDate] = React.useState<Date | undefined>();
 
-  const filteredData = React.useMemo(() => {
-    if (!enableDateFilter) return data;
-    if (!fromDate && !toDate) return data;
-    if (!getStartDate && !getEndDate) return data;
+  const [pagination, setPagination] = React.useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
 
-    return data.filter((row) => {
-      const start = getStartDate?.(row) ?? getEndDate?.(row);
-      const end = getEndDate?.(row) ?? getStartDate?.(row);
-
-      if (!start && !end) return true;
-
-      const startTime = start?.getTime();
-      const endTime = end?.getTime();
-
-      const fromTime = fromDate?.setHours(0, 0, 0, 0);
-      const toTime = toDate?.setHours(23, 59, 59, 999);
-
-      if (fromTime && startTime && startTime < fromTime) return false;
-      if (toTime && endTime && endTime > toTime) return false;
-
-      return true;
-    });
-  }, [data, fromDate, toDate, getStartDate, getEndDate, enableDateFilter]);
+  React.useEffect(() => {
+    onPaginationChange?.(pagination.pageIndex, pagination.pageSize);
+  }, [pagination, onPaginationChange]);
 
   const table = useReactTable({
-    data: filteredData,
+    data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    manualPagination: true,
+    pageCount: pageCount ?? -1, // -1 = unknown; but we pass the real count
+    state: {
+      pagination,
+    },
+    onPaginationChange: setPagination,
   });
+
+  const handlePreviousPage = () => {
+    if (!canPreviousPage) return;
+    table.previousPage();
+    const { pageIndex, pageSize } = table.getState().pagination;
+    onPreviousPageClick?.(pageIndex, pageSize);
+  };
+
+  const handleNextPage = () => {
+    if (!canNextPage) return;
+    table.nextPage();
+    const { pageIndex, pageSize } = table.getState().pagination;
+    onNextPageClick?.(pageIndex, pageSize);
+  };
 
   return (
     <div className="bg-white p-4 m-auto rounded-md border space-y-4">
-      {/* Filter row */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        {/* Left side */}
         {enableDateFilter && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm font-medium">Date range:</span>
 
             <Popover>
@@ -135,15 +150,23 @@ export function DataTable<TData, TValue>({
                 onClick={() => {
                   setFromDate(undefined);
                   setToDate(undefined);
+                  onDateSearchClick?.(undefined, undefined);
                 }}
               >
                 Clear
               </Button>
             )}
+
+            <Button
+              size="sm"
+              onClick={() => onDateSearchClick?.(fromDate, toDate)}
+              disabled={!onDateSearchClick}
+            >
+              Search
+            </Button>
           </div>
         )}
 
-        {/* Right side*/}
         <div className="flex items-center gap-2 text-sm">
           <span>Rows per page:</span>
           <input
@@ -158,6 +181,7 @@ export function DataTable<TData, TValue>({
           />
         </div>
       </div>
+
       {/* Table */}
       <Table>
         <TableHeader>
@@ -202,29 +226,28 @@ export function DataTable<TData, TValue>({
       </Table>
 
       {/* Pagination controls */}
-      <div className="flex items-center justify-between pt-2 text-sm">
+      <div className="flex flex-row justify-between">
         <div>
-          Page{" "}
-          <span className="font-medium">
-            {table.getState().pagination.pageIndex + 1}
-          </span>{" "}
-          of <span className="font-medium">{table.getPageCount() || 1}</span>
+          Page <span className="font-small">{pagination.pageIndex + 1}</span> of{" "}
+          <span className="font-small">
+            {pageCount && pageCount > 0 ? pageCount : 1}
+          </span>
         </div>
 
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            onClick={handlePreviousPage}
+            disabled={!canPreviousPage}
           >
             Previous
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            onClick={handleNextPage}
+            disabled={!canNextPage}
           >
             Next
           </Button>

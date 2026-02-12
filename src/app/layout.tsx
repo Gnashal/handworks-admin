@@ -4,6 +4,7 @@ import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
 import { AdminProvider } from "../context/adminContext";
+import { ReactQueryProvider } from "@/providers/tanstack.query";
 const arimo = Arimo({
   subsets: ["latin"],
   variable: "--font-Arimo",
@@ -28,10 +29,12 @@ export default function RootLayout({
     <html lang="en">
       <ClerkProvider>
         <AdminProvider>
-          <body className={arimo.className}>
-            <Toaster position="top-right" />
-            {children}
-          </body>
+          <ReactQueryProvider>
+            <body className={arimo.className}>
+              <Toaster position="top-right" />
+              {children}
+            </body>
+          </ReactQueryProvider>
         </AdminProvider>
       </ClerkProvider>
     </html>
