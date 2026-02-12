@@ -1,7 +1,7 @@
 export interface IAccount {
   id: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
   clerkId: string;
   role: string;
@@ -25,6 +25,9 @@ export interface IEmployee {
   performance_score: number;
   hire_date: string;
   num_ratings: number;
+}
+export interface IGetEmployee {
+  employee: IEmployee;
 }
 export interface ICustomers {
   customers: ICustomer[];

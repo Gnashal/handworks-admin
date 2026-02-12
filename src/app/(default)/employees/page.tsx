@@ -8,11 +8,24 @@ import { IEmployee } from "@/types/account";
 import { Button } from "@/components/ui/button";
 import { AddEmployeeDialog } from "@/components/employee/addEmployeeDialogue";
 import { useRouter } from "next/navigation";
+import { useEmployeesQuery } from "@/queries/employeeQueries";
+import { DataTableSkeleton } from "@/components/dataTableSkeleton";
 
 export default function EmployeesPage() {
   const router = useRouter();
   const [addOpen, setAddOpen] = useState(false);
   const [employees, setEmployees] = useState(mockEmployees.employees);
+  const [page, setPage] = useState(0);
+  const [limit, setLimit] = useState(10);
+  const { data, isLoading } = useEmployeesQuery(page, limit);
+
+  if (isLoading) {
+    return (
+      <div className="w-full h-screen p-6 space-y-4">
+        <DataTableSkeleton columnCount={columns.length} rowCount={10} />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-screen p-6 space-y-4">
@@ -28,9 +41,13 @@ export default function EmployeesPage() {
 
       <DataTable<IEmployee, unknown>
         columns={columns}
-        data={employees}
+        data={data?.employees ?? []}
         onRowClick={(employee) => {
           router.push(`/employees/${employee.id}`);
+        }}
+        onPaginationChange={(pageIndex, limitIndex) => {
+          setPage(pageIndex);
+          setLimit(limitIndex);
         }}
       />
 

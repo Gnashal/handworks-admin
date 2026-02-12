@@ -33,10 +33,10 @@ export const columns: ColumnDef<IEmployee>[] = [
     id: "name",
     header: "Name",
     cell: ({ row }) => {
-      const { firstName, lastName } = row.original.account;
+      const { first_name, last_name } = row.original.account;
       return (
         <span className="font-medium">
-          {firstName} {lastName}
+          {first_name} {last_name}
         </span>
       );
     },
