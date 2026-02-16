@@ -7,7 +7,7 @@ import {
 } from "@/types/account";
 import { IAdminDashboardResponse } from "@/types/admin";
 import { IBooking, IFetchAllBookingsResponse } from "@/types/booking";
-import { IInventoryItem } from "@/types/inventory";
+import { IInventoryListResponse } from "@/types/inventory";
 
 const fetchWithAuth = async <T>(
   url: string,
@@ -102,7 +102,7 @@ const fetchBooking = async (
     }
 
     const res = await fetchWithAuth<IBooking>(
-      `/api/fetchBooking?${params.toString()}`,
+      `/api/booking/fetchBooking?${params.toString()}`,
       token,
       { method: "GET" },
     );
@@ -112,19 +112,63 @@ const fetchBooking = async (
     throw error;
   }
 };
+const fetchBookings = async (
+  token: string,
+  startDate: string,
+  endDate: string,
+  page: number,
+  limit: number,
+): Promise<IFetchAllBookingsResponse> => {
+  try {
+    const params = new URLSearchParams();
+    if (
+      page !== null &&
+      limit != null &&
+      startDate !== null &&
+      endDate != null
+    ) {
+      params.append("page", page.toString());
+      params.append("limit", limit.toString());
+      params.append("startDate", startDate);
+      params.append("endDate", endDate);
+    }
+
+    const res = await fetchWithAuth<IFetchAllBookingsResponse>(
+      `/api/booking/fetchBookings?${params.toString()}`,
+      token,
+      { method: "GET" },
+    );
+    return res;
+  } catch (error) {
+    console.error("fetchBookings Error:", error);
+    throw error;
+  }
+};
 const fetchInventoryItems = async (
   token: string,
+  type: string | null,
+  status: string | null,
+  category: string | null,
   page = 0,
   limit = 10,
-): Promise<IInventoryItem> => {
+): Promise<IInventoryListResponse> => {
   try {
     const params = new URLSearchParams();
     if (page !== null && limit !== null) {
       params.append("page", page.toString());
       params.append("limit", limit.toString());
     }
+    if (type !== null) {
+      params.append("type", type);
+    }
+    if (status !== null) {
+      params.append("status", status);
+    }
+    if (category !== null) {
+      params.append("category", category);
+    }
 
-    const res = await fetchWithAuth<IInventoryItem>(
+    const res = await fetchWithAuth<IInventoryListResponse>(
       `/api/fetchInventory?${params.toString()}`,
       token,
       { method: "GET" },
@@ -220,6 +264,7 @@ export {
   fetchAdminDashboardData,
   fetchEmployeeAssignments,
   fetchBooking,
+  fetchBookings,
   fetchInventoryItems,
   fetchEmployees,
   fetchEmployee,

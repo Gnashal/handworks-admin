@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     if (bookingId) {
       params.append("bookingId", bookingId);
     }
-    const apiUrl = `${process.env.API_URL}booking/booking/${params.toString()}`;
+    const apiUrl = `${process.env.API_URL}booking/${params.toString()}`;
     const { data } = await axios.get<IBooking>(apiUrl, {
       headers: {
         "Content-Type": "application/json",

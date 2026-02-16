@@ -194,7 +194,10 @@ export interface IBooking {
 }
 
 export interface IFetchAllBookingsResponse {
-  totalBookings: number;
-  bookingsRequested: number;
-  bookings: IBooking[];
+  data: {
+    totalBookings: number;
+    bookingsRequested: number;
+    bookings: IBooking[];
+  };
+  status: string;
 }

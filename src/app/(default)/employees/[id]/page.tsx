@@ -89,7 +89,6 @@ export default function EmployeeDetailsPage(props: EmployeeDetailsPageProps) {
     );
   }
 
-  console.log("assignments", assignedBookings);
   return (
     <div className="flex min-h-screen flex-col bg-linear-to-b from-muted/40 to-background p-4">
       <Link
