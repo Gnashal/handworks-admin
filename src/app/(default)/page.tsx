@@ -4,9 +4,9 @@ import DashboardOverview from "@/components/dashboard/overview";
 
 export default function Dashboard() {
   return (
-    <div className="block w-full h-screen p-6">
+    <div className="w-full h-screen p-6 space-y-4">
       <div className="flex flex-row items-center justify-between p-4">
-        <h1 className="text-3xl text-bold">Overview</h1>
+        <h2 className="text-2xl font-semibold">Overview</h2>
         <DatePicker />
       </div>
       <DashboardOverview

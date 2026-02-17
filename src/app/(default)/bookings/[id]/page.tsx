@@ -1,5 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { notFound } from "next/navigation";
+"use client";
+
+import { use } from "react";
+import { notFound, useRouter } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
 
@@ -7,26 +10,37 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { mockBookings } from "@/data/mockBookings";
 import { mapAddonDetails, mapServiceDetails } from "@/lib/factory";
-import { IMainServiceType } from "@/types/booking";
+import { IBooking, IMainServiceType } from "@/types/booking";
 
 import { BookingServiceDetails } from "@/components/bookings/bookingServiceDetails";
 import { BookingAddons } from "@/components/bookings/bookingAddons";
 import { BookingOperationalDetails } from "@/components/bookings/operationalDetails";
+import { useBookingDetailsQuery } from "@/queries/bookingQueries";
 
 interface BookingDetailsPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export default async function BookingDetailsPage(
-  params: BookingDetailsPageProps,
-) {
-  const { id } = await params.params;
+export default function BookingDetailsPage(params: BookingDetailsPageProps) {
+  const { id } = use(params.params);
 
-  const booking = mockBookings.bookings.find((b) => b.id === id);
+  const { data, isLoading, error } = useBookingDetailsQuery(id);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    notFound();
+  }
+
+  if (!data) {
+    notFound();
+  }
+  const booking: IBooking = data;
 
   if (!booking) notFound();
 
@@ -87,9 +101,19 @@ export default async function BookingDetailsPage(
             <Button variant="outline" size="sm">
               Edit Booking
             </Button>
-            <Button variant="destructive" size="sm">
-              Cancel booking
-            </Button>
+            {booking.base.reviewStatus === "PENDING" ? (
+              <Button
+                className="bg-green-500 hover:bg-green-500/80"
+                variant="default"
+                size="sm"
+              >
+                Approve Booking
+              </Button>
+            ) : (
+              <Button variant="destructive" size="sm">
+                Cancel booking
+              </Button>
+            )}
           </div>
         </div>
       </header>

@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { DataTable } from "@/components/dataTable";
 import { columns } from "@/components/inventory/columns";
-import { mockInventory } from "@/data/mockInventory";
 import {
   ItemCategory,
   ItemStatus,
@@ -22,28 +21,50 @@ import {
 import { Button } from "@/components/ui/button";
 import { InventoryDetailsDialog } from "@/components/inventory/inventoryDetails";
 import { AddInventoryDialog } from "@/components/inventory/addItem";
+import { useInventoryQuery } from "@/queries/inventoryQueries";
+import { DataTableSkeleton } from "@/components/dataTableSkeleton";
 
 export default function InventoryPage() {
   const [type, setType] = useState<ItemType | "ALL">("ALL");
   const [status, setStatus] = useState<ItemStatus | "ALL">("ALL");
   const [category, setCategory] = useState<ItemCategory | "ALL">("ALL");
+
+  const [page, setPage] = useState(0);
+  const [limit, setLimit] = useState(10);
+
   const [selectedItem, setSelectedItem] = useState<IInventoryItem | null>(null);
   const [addOpen, setAddOpen] = useState(false);
 
-  const filteredData = useMemo(() => {
-    return mockInventory.items.filter((item) => {
-      if (type !== "ALL" && item.type !== type) return false;
-      if (status !== "ALL" && item.status !== status) return false;
-      if (category !== "ALL" && item.category !== category) return false;
-      return true;
-    });
-  }, [type, status, category]);
+  const typeFilter = type === "ALL" ? undefined : type;
+  const statusFilter = status === "ALL" ? undefined : status;
+  const categoryFilter = category === "ALL" ? undefined : category;
+
+  const { data, isLoading, isError } = useInventoryQuery(
+    page,
+    limit,
+    typeFilter,
+    statusFilter,
+    categoryFilter,
+  );
+
+  const items: IInventoryItem[] = data?.items ?? [];
+  const totalItems = data?.totalItems ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalItems / limit));
+  const canNextPage = page + 1 < totalPages;
+  const canPreviousPage = page > 0;
 
   return (
     <div className="w-full h-screen p-6 space-y-4">
       <h2 className="text-2xl font-semibold">Inventory</h2>
+
       {/* TYPE TABS */}
-      <Tabs value={type} onValueChange={(v) => setType(v as any)}>
+      <Tabs
+        value={type}
+        onValueChange={(v) => {
+          setType(v as any);
+          setPage(0);
+        }}
+      >
         <TabsList>
           <TabsTrigger value="ALL">All</TabsTrigger>
           <TabsTrigger value="RESOURCE">Resources</TabsTrigger>
@@ -53,7 +74,13 @@ export default function InventoryPage() {
 
       {/* FILTER SELECTORS */}
       <div className="flex flex-wrap gap-4">
-        <Select value={status} onValueChange={(v) => setStatus(v as any)}>
+        <Select
+          value={status}
+          onValueChange={(v) => {
+            setStatus(v as any);
+            setPage(0);
+          }}
+        >
           <SelectTrigger className="w-48 bg-white">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
@@ -66,7 +93,13 @@ export default function InventoryPage() {
           </SelectContent>
         </Select>
 
-        <Select value={category} onValueChange={(v) => setCategory(v as any)}>
+        <Select
+          value={category}
+          onValueChange={(v) => {
+            setCategory(v as any);
+            setPage(0);
+          }}
+        >
           <SelectTrigger className="w-48 bg-white">
             <SelectValue placeholder="Category" />
           </SelectTrigger>
@@ -80,6 +113,7 @@ export default function InventoryPage() {
             <SelectItem value="OTHER">Other</SelectItem>
           </SelectContent>
         </Select>
+
         <Button
           variant="ghost"
           className="bg-white border rounded-md"
@@ -89,12 +123,31 @@ export default function InventoryPage() {
         </Button>
       </div>
 
+      {isLoading && (
+        <div className="w-full h-screen p-6 space-y-4">
+          <DataTableSkeleton columnCount={columns.length} rowCount={10} />
+        </div>
+      )}
+      {isError && (
+        <p className="text-xs text-destructive">
+          Failed to load inventory items.
+        </p>
+      )}
+
       {/* TABLE */}
       <DataTable<IInventoryItem, unknown>
         columns={columns}
-        data={filteredData}
+        data={items}
         onRowClick={setSelectedItem}
+        onPaginationChange={(pageIndex, pageSize) => {
+          setPage(pageIndex);
+          setLimit(pageSize);
+        }}
+        pageCount={totalPages}
+        canNextPage={canNextPage}
+        canPreviousPage={canPreviousPage}
       />
+
       <InventoryDetailsDialog
         open={!!selectedItem}
         item={selectedItem}
