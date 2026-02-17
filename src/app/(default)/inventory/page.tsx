@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { InventoryDetailsDialog } from "@/components/inventory/inventoryDetails";
 import { AddInventoryDialog } from "@/components/inventory/addItem";
 import { useInventoryQuery } from "@/queries/inventoryQueries";
+import { DataTableSkeleton } from "@/components/dataTableSkeleton";
 
 export default function InventoryPage() {
   const [type, setType] = useState<ItemType | "ALL">("ALL");
@@ -123,7 +124,9 @@ export default function InventoryPage() {
       </div>
 
       {isLoading && (
-        <p className="text-xs text-muted-foreground">Loading inventory…</p>
+        <div className="w-full h-screen p-6 space-y-4">
+          <DataTableSkeleton columnCount={columns.length} rowCount={10} />
+        </div>
       )}
       {isError && (
         <p className="text-xs text-destructive">

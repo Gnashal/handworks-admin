@@ -16,6 +16,7 @@ import {
   useEmployeeAssignmentsQuery,
   useEmployeeQuery,
 } from "@/queries/employeeQueries";
+import { DataTableSkeleton } from "@/components/dataTableSkeleton";
 
 interface EmployeeDetailsPageProps {
   params: Promise<{
@@ -165,9 +166,12 @@ export default function EmployeeDetailsPage(props: EmployeeDetailsPageProps) {
             Assigned Cleanings ({assignments?.totalBookings})
           </h3>
           {isAssignmentsLoading && (
-            <p className="text-xs text-muted-foreground">
-              Loading assignments…
-            </p>
+            <div className="w-full h-screen p-6 space-y-4">
+              <DataTableSkeleton
+                columnCount={bookingColumns.length}
+                rowCount={10}
+              />
+            </div>
           )}
           {isAssignmentsError && (
             <p className="text-xs text-destructive">
