@@ -89,7 +89,7 @@ function Sidebar() {
 
   const confirmSignOut = async () => {
     setShowLogoutConfirm(false);
-    await signOut({ redirectUrl: "/auth/signin" }); // adjust redirect as needed
+    await signOut({ redirectUrl: "/auth" });
   };
 
   return (

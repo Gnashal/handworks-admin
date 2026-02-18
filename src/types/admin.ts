@@ -28,3 +28,12 @@ export interface IClientsGrowthIndex {
   inactive: number;
   growthIndex: number;
 }
+export interface IOnboardEmployeeRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  position: string;
+  hireDate: string;
+  organizationId: string;
+  role: string;
+}

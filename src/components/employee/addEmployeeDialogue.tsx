@@ -26,6 +26,10 @@ import {
 } from "@/validators/employee.schema";
 
 import { IEmployee } from "@/types/account";
+import { onboardEmployee } from "@/service";
+import { useAuth } from "@clerk/nextjs";
+import { toast } from "sonner";
+import useEmployee from "@/hooks/onboardingHook";
 
 interface Props {
   open: boolean;
@@ -45,119 +49,114 @@ export function AddEmployeeDialog({ open, onClose, onCreate }: Props) {
     resolver: zodResolver(createEmployeeSchema),
     mode: "onChange",
     defaultValues: {
-      status: "ACTIVE",
+      position: "cleaner",
     },
   });
+  const { loading, handleOnboardEmployee } = useEmployee();
+  const positionValue = watch("position");
 
-  const statusValue = watch("status");
+  const onSubmit = async (data: CreateEmployeeInput) => {
+    try {
+      const newEmployee = await handleOnboardEmployee(
+        data.firstName,
+        data.lastName,
+        data.email,
+        data.position,
+      );
+      if (!newEmployee) {
+        toast.error("Failed to onboard employee.");
+        return;
+      }
+      onCreate(newEmployee);
 
-  const onSubmit = (data: CreateEmployeeInput) => {
-    const newEmployee: IEmployee = {
-      id: `emp_${crypto.randomUUID()}`,
-      account: {
-        id: `acc_${crypto.randomUUID()}`,
-        first_name: data.firstName,
-        last_name: data.lastName,
-        email: data.email,
-        clerkId: `mock_clerk_${crypto.randomUUID()}`,
-        role: "EMPLOYEE",
-      },
-      position: data.position,
-      status: data.status,
-      performance_score: 0,
-      hire_date: new Date().toISOString(),
-      num_ratings: 0,
-    };
-
-    onCreate(newEmployee);
-    reset();
-    onClose();
+      reset();
+      onClose();
+      toast.success("Employee onboarded succesfully!");
+    } catch (err) {
+      console.error("Failed to onboard employee:", err);
+      toast.error("Failed to onboard employee.");
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Add Employee</DialogTitle>
-        </DialogHeader>
+    <>
+      {loading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      )}
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Employee</DialogTitle>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
-          {/* First Name */}
-          <div>
-            <Input placeholder="First Name" {...register("firstName")} />
-            {errors.firstName && (
-              <p className="text-sm text-destructive mt-1">
-                {errors.firstName.message}
-              </p>
-            )}
-          </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
+            {/* First Name */}
+            <div>
+              <Input placeholder="First Name" {...register("firstName")} />
+              {errors.firstName && (
+                <p className="text-sm text-destructive mt-1">
+                  {errors.firstName.message}
+                </p>
+              )}
+            </div>
 
-          {/* Last Name */}
-          <div>
-            <Input placeholder="Last Name" {...register("lastName")} />
-            {errors.lastName && (
-              <p className="text-sm text-destructive mt-1">
-                {errors.lastName.message}
-              </p>
-            )}
-          </div>
+            {/* Last Name */}
+            <div>
+              <Input placeholder="Last Name" {...register("lastName")} />
+              {errors.lastName && (
+                <p className="text-sm text-destructive mt-1">
+                  {errors.lastName.message}
+                </p>
+              )}
+            </div>
 
-          {/* Email */}
-          <div>
-            <Input type="email" placeholder="Email" {...register("email")} />
-            {errors.email && (
-              <p className="text-sm text-destructive mt-1">
-                {errors.email.message}
-              </p>
-            )}
-          </div>
+            {/* Email */}
+            <div>
+              <Input type="email" placeholder="Email" {...register("email")} />
+              {errors.email && (
+                <p className="text-sm text-destructive mt-1">
+                  {errors.email.message}
+                </p>
+              )}
+            </div>
 
-          {/* Position */}
-          <div>
-            <Input placeholder="Position" {...register("position")} />
-            {errors.position && (
-              <p className="text-sm text-destructive mt-1">
-                {errors.position.message}
-              </p>
-            )}
-          </div>
+            {/* Position */}
+            <div>
+              <Select
+                value={positionValue}
+                onValueChange={(value) =>
+                  setValue("position", value as any, { shouldValidate: true })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Position" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cleaner">Cleaner</SelectItem>
+                  <SelectItem value="driver">Driver</SelectItem>
+                  <SelectItem value="manager">Manager</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.position && (
+                <p className="text-sm text-destructive mt-1">
+                  {errors.position.message}
+                </p>
+              )}
+            </div>
 
-          {/* Status */}
-          <div>
-            <Select
-              value={statusValue}
-              onValueChange={(value) =>
-                setValue("status", value as any, {
-                  shouldValidate: true,
-                })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ACTIVE">Active</SelectItem>
-                <SelectItem value="INACTIVE">Inactive</SelectItem>
-                <SelectItem value="SUSPENDED">Suspended</SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.status && (
-              <p className="text-sm text-destructive mt-1">
-                {errors.status.message}
-              </p>
-            )}
-          </div>
-
-          <DialogFooter className="pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={!isValid || isSubmitting}>
-              Create
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            <DialogFooter className="pt-4">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={!isValid || isSubmitting}>
+                Create
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

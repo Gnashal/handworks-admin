@@ -63,6 +63,9 @@ export interface ISignUpAdminRequest {
 export interface ISignUpAdminResponse {
   admin: IAdmin;
 }
+export interface ISignUpEmployeeResponse {
+  employee: IEmployee;
+}
 export interface IResetPasswordRequest {
   code: string;
   newPassword: string;
