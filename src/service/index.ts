@@ -4,8 +4,12 @@ import {
   IEmployees,
   IGetEmployee,
   ISignUpAdminRequest,
+  ISignUpEmployeeResponse,
 } from "@/types/account";
-import { IAdminDashboardResponse } from "@/types/admin";
+import {
+  IAdminDashboardResponse,
+  IOnboardEmployeeRequest,
+} from "@/types/admin";
 import { IBooking, IFetchAllBookingsResponse } from "@/types/booking";
 import { IInventoryListResponse } from "@/types/inventory";
 
@@ -258,6 +262,25 @@ const fetchEmployeeAssignments = async (
     throw error;
   }
 };
+const onboardEmployee = async (
+  token: string,
+  payload: IOnboardEmployeeRequest,
+): Promise<ISignUpEmployeeResponse> => {
+  try {
+    const res = await fetchWithAuth<ISignUpEmployeeResponse>(
+      "/api/employee/onboard",
+      token,
+      {
+        method: "POST",
+        data: payload,
+      },
+    );
+    return res;
+  } catch (error) {
+    console.error("onboardEmployee Error:", error);
+    throw error;
+  }
+};
 
 export {
   signUpAdmin,
@@ -268,4 +291,5 @@ export {
   fetchInventoryItems,
   fetchEmployees,
   fetchEmployee,
+  onboardEmployee,
 };
