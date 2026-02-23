@@ -119,7 +119,7 @@ export default function Login() {
           <button
             type="button"
             onClick={handleForgotPassword}
-            className="underline underline-offset-4"
+            className="underline cursor-pointer underline-offset-4"
             disabled={isSubmittingForgot}
           >
             {isSubmittingForgot ? "Sending reset email..." : "Forgot password?"}

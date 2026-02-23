@@ -34,24 +34,54 @@ export const bookingColumns: ColumnDef<IBooking>[] = [
   {
     id: "cleaningDate",
     header: "Cleaning Date",
+    accessorFn: (row) => row.base.startSched,
     cell: ({ row }) =>
       format(new Date(row.original.base.startSched), "MMM dd, yyyy · hh:mm a"),
   },
   {
-    id: "status",
-    header: "Status",
+    id: "paymentStatus",
+    accessorFn: (row) => row.base.paymentStatus,
+    header: "Payment",
     cell: ({ row }) => {
-      const { paymentStatus, reviewStatus } = row.original.base;
+      const { paymentStatus } = row.original.base;
 
       if (paymentStatus === "UNPAID") {
-        return <Badge variant="destructive">Unpaid</Badge>;
+        return <Badge variant="destructive">{paymentStatus}</Badge>;
       }
+
+      if (paymentStatus === "PAID") {
+        return <Badge variant="default">{paymentStatus}</Badge>;
+      }
+
+      return <Badge variant="outline">{paymentStatus}</Badge>;
+    },
+  },
+  {
+    id: "reviewStatus",
+    accessorFn: (row) => row.base.reviewStatus,
+    header: "Review",
+    cell: ({ row }) => {
+      const { reviewStatus } = row.original.base;
 
       if (reviewStatus === "COMPLETED") {
         return <Badge>Completed</Badge>;
       }
 
-      return <Badge variant="outline">Active</Badge>;
+      if (reviewStatus === "PENDING") {
+        return (
+          <div className="flex items-center gap-2">
+            <Badge variant="destructive">{reviewStatus}</Badge>
+            <span
+              className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white"
+              title="New booking to review"
+            >
+              !
+            </span>
+          </div>
+        );
+      }
+
+      return <Badge variant="outline">{reviewStatus}</Badge>;
     },
   },
   {

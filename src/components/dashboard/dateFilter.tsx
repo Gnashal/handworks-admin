@@ -8,9 +8,22 @@ import {
   SelectItem,
 } from "../ui/select";
 
-export default function DatePicker() {
+export type DateFilterValue = "week" | "month" | "year";
+
+interface DatePickerProps {
+  value?: DateFilterValue;
+  onChange?: (value: DateFilterValue) => void;
+}
+
+export default function DatePicker({
+  value = "week",
+  onChange,
+}: DatePickerProps) {
   return (
-    <Select defaultValue="week">
+    <Select
+      value={value}
+      onValueChange={(v) => onChange?.(v as DateFilterValue)}
+    >
       <SelectTrigger className="w-full max-w-48 bg-white text-black border border-gray-300">
         <SelectValue placeholder="Select the date filter" />
       </SelectTrigger>

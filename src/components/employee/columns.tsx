@@ -2,6 +2,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { IEmployee } from "@/types/account";
 import { Star } from "lucide-react";
+import { format } from "date-fns";
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -45,8 +46,7 @@ export const columns: ColumnDef<IEmployee>[] = [
     accessorKey: "hire_date",
     header: "Hire Date",
     cell: ({ row }) => {
-      const date = new Date(row.original.hire_date);
-      return date.toLocaleDateString();
+      return format(new Date(row.original.hire_date), "MMM dd, yyyy");
     },
   },
   {
