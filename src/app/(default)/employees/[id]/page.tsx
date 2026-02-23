@@ -165,14 +165,6 @@ export default function EmployeeDetailsPage(props: EmployeeDetailsPageProps) {
           <h3 className="text-xl font-semibold">
             Assigned Cleanings ({assignments?.totalBookings})
           </h3>
-          {isAssignmentsLoading && (
-            <div className="w-full h-screen p-6 space-y-4">
-              <DataTableSkeleton
-                columnCount={bookingColumns.length}
-                rowCount={10}
-              />
-            </div>
-          )}
           {isAssignmentsError && (
             <p className="text-xs text-destructive">
               Failed to load assignments.
@@ -180,26 +172,35 @@ export default function EmployeeDetailsPage(props: EmployeeDetailsPageProps) {
           )}
         </div>
 
-        <DataTable<IBooking, unknown>
-          columns={bookingColumns}
-          data={assignedBookings}
-          enableDateFilter
-          onPaginationChange={(pageIndex, pageSize) => {
-            setPage(pageIndex);
-            setLimit(pageSize);
-          }}
-          onRowClick={(booking) => router.replace(`/bookings/${booking.id}`)}
-          onDateSearchClick={(from, to) => {
-            setSearchParams({
-              startDate: from ? from.toISOString() : undefined,
-              endDate: to ? to.toISOString() : undefined,
-            });
-            setPage(0);
-          }}
-          pageCount={totalPages}
-          canNextPage={canNextPage}
-          canPreviousPage={canPreviousPage}
-        />
+        {isAssignmentsLoading ? (
+          <div className="w-full">
+            <DataTableSkeleton
+              columnCount={bookingColumns.length}
+              rowCount={10}
+            />
+          </div>
+        ) : (
+          <DataTable<IBooking, unknown>
+            columns={bookingColumns}
+            data={assignedBookings}
+            enableDateFilter
+            onPaginationChange={(pageIndex, pageSize) => {
+              setPage(pageIndex);
+              setLimit(pageSize);
+            }}
+            onRowClick={(booking) => router.replace(`/bookings/${booking.id}`)}
+            onDateSearchClick={(from, to) => {
+              setSearchParams({
+                startDate: from ? from.toISOString() : undefined,
+                endDate: to ? to.toISOString() : undefined,
+              });
+              setPage(0);
+            }}
+            pageCount={totalPages}
+            canNextPage={canNextPage}
+            canPreviousPage={canPreviousPage}
+          />
+        )}
       </section>
     </div>
   );

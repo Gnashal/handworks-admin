@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/incompatible-library */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -26,8 +27,6 @@ import {
 } from "@/validators/employee.schema";
 
 import { IEmployee } from "@/types/account";
-import { onboardEmployee } from "@/service";
-import { useAuth } from "@clerk/nextjs";
 import { toast } from "sonner";
 import useEmployee from "@/hooks/onboardingHook";
 

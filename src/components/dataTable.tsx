@@ -7,9 +7,10 @@ import {
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
+  // getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import type { PaginationState } from "@tanstack/react-table";
+import type { PaginationState, SortingState } from "@tanstack/react-table";
 import { format } from "date-fns";
 
 import {
@@ -79,6 +80,12 @@ export function DataTable<TData, TValue>({
     onPaginationChange?.(pagination.pageIndex, pagination.pageSize);
   }, [pagination, onPaginationChange]);
 
+  // const [sorting, setSorting] = React.useState<SortingState>([
+  //   { id: "cleaningDate", desc: false },
+  //   { id: "reviewStatus", desc: false },
+  //   { id: "paymentStatus", desc: false },
+  // ]);
+
   const table = useReactTable({
     data,
     columns,
@@ -88,8 +95,11 @@ export function DataTable<TData, TValue>({
     pageCount: pageCount ?? -1,
     state: {
       pagination,
+      // sorting,
     },
     onPaginationChange: setPagination,
+    // onSortingChange: setSorting,
+    // getSortedRowModel: getSortedRowModel(),
   });
 
   const handlePreviousPage = () => {
