@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { DataTable } from "@/components/dataTable";
-import { columns } from "@/components/employee/columns";
+import { columns } from "./columns";
 import { mockEmployees } from "@/data/mockEmployees";
 import { IEmployee } from "@/types/account";
 import { Button } from "@/components/ui/button";

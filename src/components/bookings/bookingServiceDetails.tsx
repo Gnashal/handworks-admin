@@ -3,6 +3,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { normalizeServiceName } from "@/lib/normalize";
 import { IMainServiceType } from "@/types/booking";
 
 type MainServiceFromFactory = ReturnType<
@@ -144,7 +145,7 @@ export function BookingServiceDetails({
       <CardContent className="space-y-3 text-sm">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline" className="text-[11px] uppercase">
-            {mainService.serviceType}
+            {normalizeServiceName(mainService.serviceType)}
           </Badge>
           <p className="text-xs text-muted-foreground">
             Service ID:{" "}

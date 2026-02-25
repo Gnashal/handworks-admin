@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation";
 import { endOfMonth, startOfMonth } from "date-fns";
 
 import { DataTable } from "@/components/dataTable";
-import { bookingColumns } from "./columns";
 import { Button } from "@/components/ui/button";
 
-import type { IBooking } from "@/types/booking";
-import { useBookingsQuery } from "@/queries/bookingQueries";
 import { DataTableSkeleton } from "@/components/dataTableSkeleton";
+import { useQuotesQuery } from "@/queries/paymentQueries";
+import { IQuote } from "@/types/payment";
+import { quoteColumns } from "./columns";
 
-export default function BookingsPage() {
+export default function Quotes() {
   const router = useRouter();
 
   const [page, setPage] = React.useState(0);
@@ -34,15 +34,15 @@ export default function BookingsPage() {
     });
   }, []);
 
-  const { data, isLoading, isError } = useBookingsQuery(
+  const { data, isLoading, isError } = useQuotesQuery(
     searchParams.startDate ?? "",
     searchParams.endDate ?? "",
     page,
     limit,
   );
 
-  const bookings: IBooking[] = data?.bookings ?? [];
-  const totalBookings = data?.totalBookings ?? 0;
+  const quotes: IQuote[] = data?.quotes ?? [];
+  const totalBookings = data?.totalQuotes ?? 0;
 
   const totalPages = Math.max(1, Math.ceil(totalBookings / limit));
   const canNextPage = page + 1 < totalPages;
@@ -51,33 +51,28 @@ export default function BookingsPage() {
   return (
     <div className="block w-full h-screen p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Bookings</h2>
-        <Button disabled>Create Booking</Button>
+        <h2 className="text-2xl font-semibold">Quotes</h2>
+        <Button disabled>Create Quote</Button>
       </div>
 
       {isLoading && (
         <div className="w-full h-screen p-6 space-y-4">
-          <DataTableSkeleton
-            columnCount={bookingColumns.length}
-            rowCount={10}
-          />
+          <DataTableSkeleton columnCount={quoteColumns.length} rowCount={10} />
         </div>
       )}
       {isError && (
-        <p className="text-xs text-destructive">
-          Failed to load bookings data.
-        </p>
+        <p className="text-xs text-destructive">Failed to load quotes data.</p>
       )}
 
-      <DataTable<IBooking, unknown>
-        columns={bookingColumns}
-        data={bookings}
+      <DataTable<IQuote, unknown>
+        columns={quoteColumns}
+        data={quotes}
         enableDateFilter
         onPaginationChange={(pageIndex, pageSize) => {
           setPage(pageIndex);
           setLimit(pageSize);
         }}
-        onRowClick={(booking) => router.replace(`/bookings/${booking.id}`)}
+        onRowClick={(quotes) => router.replace(`/quotes/${quotes.id}`)}
         onDateSearchClick={(from, to) => {
           setSearchParams({
             startDate: from ? from.toISOString() : undefined,

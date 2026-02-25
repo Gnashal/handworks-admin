@@ -60,12 +60,12 @@ export const columns: ColumnDef<IEmployee>[] = [
     cell: ({ row }) => {
       const status = row.original.status;
 
-      if (status === "ACTIVE") return <Badge>Active</Badge>;
+      if (status === "ACTIVE") return <Badge>ACTIVE</Badge>;
 
       if (status === "INACTIVE")
-        return <Badge variant="secondary">Inactive</Badge>;
+        return <Badge variant="secondary">INACTIVE</Badge>;
 
-      return <Badge variant="destructive">Suspended</Badge>;
+      return <Badge variant="destructive">SUSPENDED</Badge>;
     },
   },
 ];

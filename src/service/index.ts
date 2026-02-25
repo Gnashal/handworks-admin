@@ -12,6 +12,7 @@ import {
 } from "@/types/admin";
 import { IBooking, IFetchAllBookingsResponse } from "@/types/booking";
 import { IInventoryListResponse } from "@/types/inventory";
+import { IFetchAllQuotesResponse } from "@/types/payment";
 
 const fetchWithAuth = async <T>(
   url: string,
@@ -281,6 +282,38 @@ const onboardEmployee = async (
     throw error;
   }
 };
+const fetchQuotes = async (
+  token: string,
+  startDate: string,
+  endDate: string,
+  page: number,
+  limit: number,
+): Promise<IFetchAllQuotesResponse> => {
+  try {
+    const params = new URLSearchParams();
+    if (
+      page !== null &&
+      limit != null &&
+      startDate !== null &&
+      endDate != null
+    ) {
+      params.append("page", page.toString());
+      params.append("limit", limit.toString());
+      params.append("startDate", startDate);
+      params.append("endDate", endDate);
+    }
+
+    const res = await fetchWithAuth<IFetchAllQuotesResponse>(
+      `/api/fetchQuotes?${params.toString()}`,
+      token,
+      { method: "GET" },
+    );
+    return res;
+  } catch (error) {
+    console.error("fetchQuotes Error:", error);
+    throw error;
+  }
+};
 
 export {
   signUpAdmin,
@@ -292,4 +325,5 @@ export {
   fetchEmployees,
   fetchEmployee,
   onboardEmployee,
+  fetchQuotes,
 };

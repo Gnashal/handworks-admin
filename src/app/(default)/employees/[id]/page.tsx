@@ -9,7 +9,7 @@ import { endOfMonth, format, startOfMonth } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/dataTable";
-import { bookingColumns } from "@/components/bookings/columns";
+import { bookingColumns } from "@/app/(default)/bookings/columns";
 
 import type { IBooking, IFetchAllBookingsResponse } from "@/types/booking";
 import {

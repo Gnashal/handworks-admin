@@ -10,6 +10,7 @@ import {
   IPostConstructionDetails,
 } from "@/types/booking";
 import { ITypedAddon, IServiceDetailConcrete } from "@/lib/factory";
+import { normalizeServiceName } from "@/lib/normalize";
 
 interface BookingAddonsProps {
   addons: ITypedAddon<IServiceDetailConcrete>[] | undefined;
@@ -100,7 +101,7 @@ export function BookingAddons({ addons }: BookingAddonsProps) {
               >
                 <div className="flex items-center justify-between gap-2">
                   <Badge variant="outline" className="text-[11px] uppercase">
-                    {addon.serviceType}
+                    {normalizeServiceName(addon.serviceType)}
                   </Badge>
                   <p className="text-sm font-medium">
                     ₱{addon.price.toLocaleString("en-PH")}
