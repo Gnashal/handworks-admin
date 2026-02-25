@@ -1,3 +1,5 @@
+import { IAddOnRequest, IServicesRequest } from "./booking";
+
 export interface IQuoteAddon {
   id: string;
   quoteId: string;
