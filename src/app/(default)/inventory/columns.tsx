@@ -39,12 +39,12 @@ export const columns: ColumnDef<IInventoryItem>[] = [
     cell: ({ row }) => {
       const status = row.original.status;
 
-      if (status === "HIGH") return <Badge>High</Badge>;
-      if (status === "LOW") return <Badge variant="secondary">Low</Badge>;
+      if (status === "HIGH") return <Badge>HIGH</Badge>;
+      if (status === "LOW") return <Badge variant="secondary">LOW</Badge>;
       if (status === "DANGER")
-        return <Badge variant="destructive">Danger</Badge>;
+        return <Badge variant="destructive">DANGER</Badge>;
 
-      return <Badge variant="outline">Out</Badge>;
+      return <Badge variant="outline">OUT OF STOCK</Badge>;
     },
   },
   {

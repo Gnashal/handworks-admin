@@ -1,7 +1,9 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
-import { IBooking } from "@/types/booking";
+import Link from "next/link";
+import { IBooking, IMainServiceType } from "@/types/booking";
 import { format } from "date-fns";
+import { normalizeServiceName } from "@/lib/normalize";
 
 export const bookingColumns: ColumnDef<IBooking>[] = [
   {
@@ -10,9 +12,12 @@ export const bookingColumns: ColumnDef<IBooking>[] = [
     cell: ({ row }) => {
       const base = row.original.base;
       return (
-        <div className="font-medium">
-          {base.customerFirstName} {base.customerLastName}
-        </div>
+        <Link
+          href={`/customers/${base.custId}`}
+          className="font-medium text-md text-blue-500 hover:underline"
+        >
+          {base.custId}
+        </Link>
       );
     },
   },
@@ -20,8 +25,10 @@ export const bookingColumns: ColumnDef<IBooking>[] = [
     accessorKey: "mainService.serviceType",
     header: "Service",
     cell: ({ row }) => (
-      <Badge variant="secondary">
-        {row.original.mainService.serviceType.replace("_", " ")}
+      <Badge variant="secondary" className="text-sm">
+        {normalizeServiceName(
+          row.original.mainService.serviceType as IMainServiceType,
+        )}
       </Badge>
     ),
   },

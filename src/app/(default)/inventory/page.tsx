@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { DataTable } from "@/components/dataTable";
-import { columns } from "@/components/inventory/columns";
+import { columns } from "./columns";
 import {
   ItemCategory,
   ItemStatus,

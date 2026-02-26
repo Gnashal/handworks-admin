@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from "react";
 import {
   LayoutDashboard,
+  Search,
   Package,
   MessageSquare,
   Users,
   UserCheck,
   Settings,
   BookOpenIcon,
+  LucideTextQuote,
   LogOut,
   Menu,
   X,
@@ -29,7 +31,9 @@ import {
 } from "@/components/ui/alert-dialog";
 const routes = [
   { icon: <LayoutDashboard />, label: "Dashboard", path: "/" },
+  { icon: <Search />, label: "Search", path: "/search" },
   { icon: <BookOpenIcon />, label: "Bookings", path: "/bookings" },
+  { icon: <LucideTextQuote />, label: "Quotes", path: "/quotes" },
   { icon: <Package />, label: "Inventory", path: "/inventory" },
   { icon: <Users />, label: "Clients", path: "/clients" },
   { icon: <UserCheck />, label: "Employees", path: "/employees" },
