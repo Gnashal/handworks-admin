@@ -1,78 +1,105 @@
 "use client";
 
-import React from "react";
-import DatePicker from "@/components/dashboard/dateFilter";
-import DashboardOverview from "@/components/dashboard/overview";
-import { useDashboardQuery } from "@/queries/dashboardQueries";
-import Loader from "@/components/loader";
+import { useEffect, useState } from "react";
+import { IFetchAllBookingsResponse, IBooking } from "@/types/booking";
+import { useRouter } from "next/navigation";
 
-export default function Dashboard() {
-  const [dateFilter, setDateFilter] = React.useState<"week" | "month" | "year">(
-    "week",
-  );
+interface Client {
+  custId: string;
+  fullName: string;
+}
 
-  const { data, isLoading, isError, error } = useDashboardQuery(dateFilter);
+export default function Clients() {
+  const [clients, setClients] = useState<Client[]>([]);
+  const [watchList, setWatchList] = useState<string[]>([]);
+  const router = useRouter();
+
+  useEffect(() => {
+    fetchClients();
+    loadWatchList();
+  }, []);
+
+  const fetchClients = async () => {
+    try {
+      const res = await fetch("/api/booking/fetchBookings");
+      const data: IFetchAllBookingsResponse = await res.json();
+
+      const uniqueMap = new Map<string, Client>();
+
+      data.bookings.forEach((booking: IBooking) => {
+        const { custId, customerFirstName, customerLastName } = booking.base;
+
+        if (!uniqueMap.has(custId)) {
+          uniqueMap.set(custId, {
+            custId,
+            fullName: `${customerFirstName} ${customerLastName}`,
+          });
+        }
+      });
+
+      setClients(Array.from(uniqueMap.values()));
+    } catch (err) {
+      console.error("Failed to fetch clients", err);
+    }
+  };
+
+  const loadWatchList = () => {
+    const stored = localStorage.getItem("watchList");
+    if (stored) {
+      setWatchList(JSON.parse(stored));
+    }
+  };
+
+  const toggleWatch = (custId: string) => {
+    let updated: string[];
+
+    if (watchList.includes(custId)) {
+      updated = watchList.filter((id) => id !== custId);
+    } else {
+      updated = [...watchList, custId];
+    }
+
+    setWatchList(updated);
+    localStorage.setItem("watchList", JSON.stringify(updated));
+  };
 
   return (
-    <div className="w-full h-screen p-6 space-y-4">
-      <div className="flex flex-row items-center justify-between p-4">
-        <h2 className="text-2xl font-semibold">Overview</h2>
-        <DatePicker value={dateFilter} onChange={setDateFilter} />
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6">Clients</h1>
+
+      <div className="space-y-4">
+        {clients.map((client) => (
+          <div
+            key={client.custId}
+            className="flex justify-between items-center p-4 border rounded-lg shadow-sm"
+          >
+            <div>
+              <p className="font-semibold">{client.fullName}</p>
+              {watchList.includes(client.custId) && (
+                <span className="text-red-500 text-sm">🔴 On Watch List</span>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => router.push(`/clients/${client.custId}`)}
+                className="px-3 py-1 bg-blue-600 text-white rounded"
+              >
+                View History
+              </button>
+
+              <button
+                onClick={() => toggleWatch(client.custId)}
+                className="px-3 py-1 bg-gray-200 rounded"
+              >
+                {watchList.includes(client.custId)
+                  ? "Remove Watch"
+                  : "Add Watch"}
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
-
-      {isLoading && (
-        <div className="flex w-full justify-center py-10">
-          <Loader />
-        </div>
-      )}
-
-      {isError && (
-        <p className="px-4 text-sm text-destructive">
-          Failed to load dashboard data
-          {error instanceof Error ? `: ${error.message}` : ""}
-        </p>
-      )}
-
-      <DashboardOverview
-        weeklySales={{
-          title: "Sales",
-          value: data?.sales ?? 0,
-          change: data?.growthIndex.salesGrowthIndex ?? 0,
-          trend: "up",
-        }}
-        bookings={{
-          title: "Bookings",
-          value: data?.bookings ?? 0,
-          change: data?.growthIndex.bookingsGrowthIndex ?? 0,
-          trend: "up",
-        }}
-        clients={{
-          title: "Clients",
-          value: data?.clients ?? 0,
-        }}
-        activeSessions={{
-          title: "Active Sessions",
-          value: data?.activeSessions ?? 0,
-          change: data?.growthIndex.activeSessionsGrowthIndex ?? 0,
-          trend: "down",
-        }}
-        activeWorkers={{
-          title: "Employees",
-          value: data?.clients ?? 0,
-        }}
-        clientBreakdown={[
-          { label: "New", value: 62 },
-          { label: "Returning", value: 26 },
-          { label: "Inactive", value: 12 },
-        ]}
-        bookingSeries={[
-          { label: "Jan", value: 40 },
-          { label: "Feb", value: 55 },
-          { label: "Mar", value: 48 },
-        ]}
-        paidInvoices={{ label: "Paid Invoices", amount: 80465.23 }}
-        fundReceived={{ label: "Fund Received", amount: 153355 }}
-      />
     </div>
   );
 }
