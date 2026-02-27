@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { DataTable } from "@/components/dataTable";
-import { bookingColumns } from "../../bookings/columns";
+import { bookingColumns } from "@/app/(default)/bookings/columns";
 
 import { useBookingsQuery } from "@/queries/bookingQueries";
 import type { IBooking } from "@/types/booking";
