@@ -1,4 +1,5 @@
-"use client";
-export default function Clients() {
-  return <div>Client page</div>;
+import ClientsPage from "@/components/clients/ClientsPage";
+
+export default function Page() {
+  return <ClientsPage />;
 }
