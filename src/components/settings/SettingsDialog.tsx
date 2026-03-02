@@ -4,7 +4,10 @@ import { useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 const sections = [
   "Dashboard",
@@ -26,9 +29,13 @@ export default function SettingsDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[600px] p-0 overflow-hidden">
+      <DialogHeader>
+        <VisuallyHidden>
+          <DialogTitle className="text-2xl font-semibold">Settings</DialogTitle>
+        </VisuallyHidden>
+      </DialogHeader>
+      <DialogContent className="max-w-4xl h-150 p-0 overflow-hidden">
         <div className="flex h-full">
-          
           {/* LEFT PANEL */}
           <div className="w-64 border-r bg-gray-50 p-4">
             <h2 className="text-lg font-semibold mb-4">Settings</h2>
@@ -55,15 +62,10 @@ export default function SettingsDialog({ open, onOpenChange }: Props) {
 
           {/* RIGHT PANEL */}
           <div className="flex-1 p-6">
-            <h3 className="text-xl font-semibold mb-4">
-              {activeSection}
-            </h3>
+            <h3 className="text-xl font-semibold mb-4">{activeSection}</h3>
 
-            <div className="text-gray-500">
-              empty for now.
-            </div>
+            <div className="text-gray-500">empty for now.</div>
           </div>
-
         </div>
       </DialogContent>
     </Dialog>
