@@ -17,8 +17,9 @@ import {
 } from "lucide-react";
 import { Button } from "../ui/button";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useClerk } from "@clerk/nextjs";
+import SettingsDialog from "@/components/settings/SettingsDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
 const routes = [
   { icon: <LayoutDashboard />, label: "Dashboard", path: "/" },
   { icon: <Search />, label: "Search", path: "/search" },
@@ -69,10 +71,11 @@ const MenuItem: React.FC<{
 
 function Sidebar() {
   const location = usePathname();
-  const router = useRouter();
   const { signOut } = useClerk();
+
   const [collapsed, setCollapsed] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -84,7 +87,7 @@ function Sidebar() {
   }, []);
 
   const handleSettingsClick = () => {
-    router.push("/settings");
+    setSettingsOpen(true);
   };
 
   const handleSignOutClick = () => {
@@ -99,7 +102,7 @@ function Sidebar() {
   return (
     <>
       <aside
-        className={`ticky top-0 h-screen bg-white border-r border-l-blue-100 p-4 flex flex-col transition-all duration-300 ${
+        className={`sticky top-0 h-screen bg-white border-r border-l-blue-100 p-4 flex flex-col transition-all duration-300 ${
           collapsed ? "w-20" : "w-72"
         }`}
       >
@@ -166,6 +169,13 @@ function Sidebar() {
         </div>
       </aside>
 
+      {/* SETTINGS DIALOG */}
+      <SettingsDialog
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+      />
+
+      {/* LOGOUT CONFIRMATION */}
       <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
