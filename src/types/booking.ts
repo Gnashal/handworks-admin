@@ -201,3 +201,7 @@ export interface IFetchAllBookingsResponse {
   bookingsRequested: number;
   bookings: IBooking[];
 }
+export interface IAcceptBookingResponse {
+  bookingId: string;
+  status: string;
+}

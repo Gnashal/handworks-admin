@@ -1,17 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import {
   ArrowLeft,
-  CalendarDays,
-  MapPin,
   User,
   Clock,
   ShieldCheck,
+  User2Icon,
+  PinIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ import { BookingAddons } from "@/components/bookings/bookingAddons";
 import { BookingOperationalDetails } from "@/components/bookings/operationalDetails";
 import { useBookingDetailsQuery } from "@/queries/bookingQueries";
 import Loader from "@/components/loader";
+import useBooking from "@/hooks/bookingHook";
 
 interface BookingDetailsPageProps {
   params: Promise<{
@@ -99,8 +100,11 @@ function ReviewPill({ status }: { status: string }) {
 
 export default function BookingDetailsPage(props: BookingDetailsPageProps) {
   const { id } = use(props.params);
-
   const { data, isLoading, error } = useBookingDetailsQuery(id);
+  const { loading: approveLoading, handleApproveBooking } = useBooking();
+  const [localReviewStatus, setLocalReviewStatus] = useState<string | null>(
+    null,
+  );
 
   if (isLoading) {
     return (
@@ -124,89 +128,98 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
   const addons = booking.addons?.map((addon) => mapAddonDetails(addon));
   const hasAddons = !!addons?.length;
   const addonTotal = addons?.reduce((sum, a) => sum + (a.price ?? 0), 0) ?? 0;
+  const effectiveReviewStatus = localReviewStatus ?? booking.base.reviewStatus;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Page header */}
-      <div className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-        <div className="mx-auto max-w-7xl px-4 py-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            {/* Left: breadcrumb + title */}
-            <div className="space-y-2.5">
-              <Link
-                href="/bookings"
-                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                Back to bookings
-              </Link>
-              <div className="flex flex-wrap items-center gap-2.5">
-                <h1 className="text-2xl font-bold tracking-tight">
-                  Booking{" "}
-                  <span className="font-mono text-muted-foreground">
-                    #{booking.id}
-                  </span>
-                </h1>
-                <StatusPill status={booking.base.status} />
-                <ReviewPill status={booking.base.reviewStatus} />
+    <div className="min-h-screen bg-linear-to-b from-muted/40 to-background">
+      <div className="mx-auto max-w-7xl px-6 pt-6 pb-8 space-y-6">
+        <Link
+          href="/bookings"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to bookings
+        </Link>
+
+        {/* Booking header card */}
+        <Card>
+          <CardContent className="pt-6 pb-6">
+            <div className="flex items-start justify-between gap-6">
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <CardTitle className="text-3xl font-bold">
+                    Booking{" "}
+                    <span className="font-mono text-muted-foreground">
+                      #{booking.id}
+                    </span>
+                  </CardTitle>
+                </div>
+                <div className="flex items-center gap-3">
+                  <StatusPill status={booking.base.status} />
+                  <ReviewPill status={effectiveReviewStatus} />
+                </div>
+                <div className="grid gap-6 sm:grid-cols-2 pt-1">
+                  <div className="flex flex-row items-center gap-3">
+                    <User2Icon />
+                    <div className="flex flex-col">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+                        Customer
+                      </p>
+                      <p className="text-xl font-semibold">
+                        {booking.base.customerFirstName}{" "}
+                        {booking.base.customerLastName}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-row items-center gap-3">
+                    <PinIcon />
+                    <div className="flex flex-col">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+                        Address
+                      </p>
+                      <p className="text-xl font-medium leading-snug">
+                        {booking.base.address.addressHuman}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <User className="h-3.5 w-3.5 shrink-0" />
-                  {booking.base.customerFirstName}{" "}
-                  {booking.base.customerLastName}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-                  {format(
-                    new Date(booking.base.startSched),
-                    "MMM dd, yyyy · hh:mm a",
-                  )}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <MapPin className="h-3.5 w-3.5 shrink-0" />
-                  {booking.base.address.addressHuman}
-                </span>
+              <div className="flex shrink-0 items-center gap-3">
+                <Button variant="outline">Edit booking</Button>
+                {effectiveReviewStatus === "PENDING" ? (
+                  <Button
+                    disabled={approveLoading}
+                    onClick={async () => {
+                      const res = await handleApproveBooking(booking.id);
+                      if (res?.status) {
+                        setLocalReviewStatus(res.status);
+                      }
+                    }}
+                    className="bg-emerald-600 text-white hover:bg-emerald-700"
+                  >
+                    <ShieldCheck className="mr-1.5 h-4 w-4" />
+                    Approve booking
+                  </Button>
+                ) : (
+                  <Button variant="destructive">Cancel booking</Button>
+                )}
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-            {/* Right: actions */}
-            <div className="flex shrink-0 items-center gap-2">
-              <Button variant="outline" size="sm">
-                Edit booking
-              </Button>
-              {booking.base.reviewStatus === "PENDING" ? (
-                <Button
-                  size="sm"
-                  className="bg-emerald-600 text-white hover:bg-emerald-700"
-                >
-                  <ShieldCheck className="mr-1.5 h-4 w-4" />
-                  Approve booking
-                </Button>
-              ) : (
-                <Button variant="destructive" size="sm">
-                  Cancel booking
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Page body */}
-      <div className="mx-auto max-w-7xl px-4 py-6 space-y-6">
         {/* Stats row */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 grid-cols-2">
           <Card>
-            <CardContent className="pt-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <CardContent className="pt-6 pb-6">
+              <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Total Price
               </p>
-              <p className="mt-1 text-2xl font-bold tracking-tight">
+              <p className="mt-2 text-4xl font-bold tracking-tight">
                 ₱{booking.totalPrice.toLocaleString("en-PH")}
               </p>
               {hasAddons && (
-                <p className="mt-0.5 text-xs text-muted-foreground">
+                <p className="mt-1 text-sm text-muted-foreground">
                   incl. ₱{addonTotal.toLocaleString("en-PH")} in add-ons
                 </p>
               )}
@@ -214,58 +227,60 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
           </Card>
 
           <Card>
-            <CardContent className="pt-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <CardContent className="pt-6 pb-6">
+              <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Dirty Scale
               </p>
-              <p className="tracking-tight">
-                <span className="mt-1 text-2xl font-bold ">
-                  {booking.base.dirtyScale}
+              <p className="mt-2 text-4xl font-bold tracking-tight">
+                {booking.base.dirtyScale}
+                <span className="text-2xl font-semibold text-muted-foreground">
+                  /5
                 </span>
-                <span className="mt-1 text-2xl font-bold">/5</span>
               </p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Customer-reported
               </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="pt-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <CardContent className="pt-6 pb-6">
+              <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Service
               </p>
-              <p className="mt-1 text-base font-semibold">
+              <p className="mt-2 text-2xl font-bold">
                 {normalizeServiceName(
                   booking.mainService.serviceType as IMainServiceType,
                 )}
               </p>
               {hasAddons ? (
-                <p className="mt-0.5 text-xs text-muted-foreground">
+                <p className="mt-1 text-sm text-muted-foreground">
                   +{addons!.length} add-on{addons!.length > 1 ? "s" : ""}
                 </p>
               ) : (
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  No add-ons
-                </p>
+                <p className="mt-1 text-sm text-muted-foreground">No add-ons</p>
               )}
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="pt-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <CardContent className="pt-6 pb-6">
+              <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Extra Hours
               </p>
-              <p className="mt-1 text-2xl font-bold tracking-tight">
-                {booking.base.extraHours + " h"}
+              <p className="mt-2 text-4xl font-bold tracking-tight">
+                {booking.base.extraHours}
+                <span className="text-2xl font-semibold text-muted-foreground">
+                  {" "}
+                  h
+                </span>
               </p>
               {booking.base.extraHourCost > 0 ? (
-                <p className="mt-0.5 text-xs text-muted-foreground">
+                <p className="mt-1 text-sm text-muted-foreground">
                   ₱{booking.base.extraHourCost.toLocaleString("en-PH")} extra
                 </p>
               ) : (
-                <p className="mt-0.5 text-xs text-muted-foreground">
+                <p className="mt-1 text-sm text-muted-foreground">
                   No extra cost
                 </p>
               )}
