@@ -8,7 +8,7 @@ interface ClientRow {
 
 export const clientColumns = (
   watchList: string[],
-  setWatchList: React.Dispatch<React.SetStateAction<string[]>>
+  setWatchList: React.Dispatch<React.SetStateAction<string[]>>,
 ): ColumnDef<ClientRow>[] => [
   {
     accessorKey: "custId",
@@ -31,9 +31,7 @@ export const clientColumns = (
 
       const toggleWatch = () => {
         if (isWatched) {
-          setWatchList((prev) =>
-            prev.filter((id) => id !== custId)
-          );
+          setWatchList((prev) => prev.filter((id) => id !== custId));
         } else {
           setWatchList((prev) => [...prev, custId]);
         }

@@ -15,13 +15,12 @@ export const clientHistoryColumns: ColumnDef<IBooking>[] = [
     accessorFn: (row) => row.base.startSched,
     id: "schedule",
     header: "Schedule",
-    cell: ({ row }) =>
-      new Date(row.original.base.startSched).toLocaleString(),
+    cell: ({ row }) => new Date(row.original.base.startSched).toLocaleString(),
   },
   {
-    accessorFn: (row) => row.base.paymentStatus,
-    id: "paymentStatus",
-    header: "Payment Status",
+    accessorFn: (row) => row.base.status,
+    id: "status",
+    header: "Status",
   },
   {
     accessorFn: (row) => row.totalPrice,
