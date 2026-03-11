@@ -1,16 +1,15 @@
 import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
-import { ISignUpEmployeeResponse } from "@/types/account";
-import { IOnboardEmployeeRequest } from "@/types/admin";
+import { IAcceptBookingResponse } from "@/types/booking";
 
 export async function POST(req: NextRequest) {
   try {
-    const body: IOnboardEmployeeRequest = await req.json();
     const token = req.headers.get("authorization");
+    const id = req.nextUrl.searchParams.get("bookingId");
 
-    const apiUrl = `${process.env.API_URL}admin/employee/onboard`;
+    const apiUrl = `${process.env.API_URL}admin/booking/approve/${id}`;
 
-    const { data } = await axios.post<ISignUpEmployeeResponse>(apiUrl, body, {
+    const { data } = await axios.post<IAcceptBookingResponse>(apiUrl, null, {
       headers: {
         "Content-Type": "application/json",
         Authorization: token || "",
@@ -19,9 +18,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(data, { status: 200 });
   } catch (err: unknown) {
-    console.error("onboard employee error: ", err);
+    console.error("accept booking error: ", err);
     return NextResponse.json(
-      { error: "Failed to onboard employee" },
+      { error: "Failed to accept booking" },
       { status: 500 },
     );
   }

@@ -10,7 +10,11 @@ import {
   IAdminDashboardResponse,
   IOnboardEmployeeRequest,
 } from "@/types/admin";
-import { IBooking, IFetchAllBookingsResponse } from "@/types/booking";
+import {
+  IAcceptBookingResponse,
+  IBooking,
+  IFetchAllBookingsResponse,
+} from "@/types/booking";
 import { IInventoryListResponse } from "@/types/inventory";
 import { IFetchAllQuotesResponse } from "@/types/payment";
 
@@ -282,6 +286,27 @@ const onboardEmployee = async (
     throw error;
   }
 };
+const approveBooking = async (
+  token: string,
+  bookingId: string,
+): Promise<IAcceptBookingResponse> => {
+  try {
+    const params = new URLSearchParams();
+    if (bookingId) {
+      params.append("bookingId", bookingId);
+    }
+
+    const res = await fetchWithAuth<IAcceptBookingResponse>(
+      `/api/booking/approveBooking?${params.toString()}`,
+      token,
+      { method: "POST" },
+    );
+    return res;
+  } catch (error) {
+    console.error("approveBooking Error:", error);
+    throw error;
+  }
+};
 const fetchQuotes = async (
   token: string,
   startDate: string,
@@ -326,4 +351,5 @@ export {
   fetchEmployee,
   onboardEmployee,
   fetchQuotes,
+  approveBooking,
 };

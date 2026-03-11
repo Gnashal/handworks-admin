@@ -12,7 +12,7 @@ import { useQuotesQuery } from "@/queries/paymentQueries";
 import { IQuote } from "@/types/payment";
 import { quoteColumns } from "./columns";
 
-export default function Quotes() {
+export default function Orders() {
   const router = useRouter();
 
   const [page, setPage] = React.useState(0);
@@ -72,7 +72,7 @@ export default function Quotes() {
           setPage(pageIndex);
           setLimit(pageSize);
         }}
-        onRowClick={(quotes) => router.replace(`/quotes/${quotes.id}`)}
+        onRowClick={(quotes) => router.replace(`/orders/${quotes.id}`)}
         onDateSearchClick={(from, to) => {
           setSearchParams({
             startDate: from ? from.toISOString() : undefined,

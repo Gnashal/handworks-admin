@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
       params.append("page", page);
       params.append("limit", limit);
     }
-    const apiUrl = `${process.env.API_URL}account/employee?${params.toString()}`;
+    const apiUrl = `${process.env.API_URL}account/employee/employees?${params.toString()}`;
     const { data } = await axios.get<IEmployees>(apiUrl, {
       headers: {
         "Content-Type": "application/json",

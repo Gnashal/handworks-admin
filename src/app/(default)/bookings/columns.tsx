@@ -46,21 +46,21 @@ export const bookingColumns: ColumnDef<IBooking>[] = [
       format(new Date(row.original.base.startSched), "MMM dd, yyyy · hh:mm a"),
   },
   {
-    id: "paymentStatus",
-    accessorFn: (row) => row.base.paymentStatus,
-    header: "Payment",
+    id: "status",
+    accessorFn: (row) => row.base.status,
+    header: "Status",
     cell: ({ row }) => {
-      const { paymentStatus } = row.original.base;
+      const { status } = row.original.base;
 
-      if (paymentStatus === "UNPAID") {
-        return <Badge variant="destructive">{paymentStatus}</Badge>;
+      if (status === "NOT_STARTED") {
+        return <Badge variant="destructive">Not Started</Badge>;
       }
 
-      if (paymentStatus === "PAID") {
-        return <Badge variant="default">{paymentStatus}</Badge>;
+      if (status === "ONGOING") {
+        return <Badge variant="secondary">Ongoing</Badge>;
       }
 
-      return <Badge variant="outline">{paymentStatus}</Badge>;
+      return <Badge variant="default">Completed</Badge>;
     },
   },
   {
@@ -70,14 +70,14 @@ export const bookingColumns: ColumnDef<IBooking>[] = [
     cell: ({ row }) => {
       const { reviewStatus } = row.original.base;
 
-      if (reviewStatus === "COMPLETED") {
-        return <Badge>Completed</Badge>;
+      if (reviewStatus === "SCHEDULED") {
+        return <Badge>Scheduled</Badge>;
       }
 
       if (reviewStatus === "PENDING") {
         return (
           <div className="flex items-center gap-2">
-            <Badge variant="destructive">{reviewStatus}</Badge>
+            <Badge variant="destructive">Pending</Badge>
             <span
               className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white"
               title="New booking to review"
