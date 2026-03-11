@@ -35,7 +35,7 @@ const routes = [
   { icon: <LayoutDashboard />, label: "Dashboard", path: "/" },
   { icon: <Search />, label: "Search", path: "/search" },
   { icon: <BookOpenIcon />, label: "Bookings", path: "/bookings" },
-  { icon: <LucideTextQuote />, label: "Quotes", path: "/quotes" },
+  { icon: <LucideTextQuote />, label: "Orders", path: "/orders" },
   { icon: <Package />, label: "Inventory", path: "/inventory" },
   { icon: <Users />, label: "Clients", path: "/clients" },
   { icon: <UserCheck />, label: "Employees", path: "/employees" },
@@ -170,10 +170,7 @@ function Sidebar() {
       </aside>
 
       {/* SETTINGS DIALOG */}
-      <SettingsDialog
-        open={settingsOpen}
-        onOpenChange={setSettingsOpen}
-      />
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
 
       {/* LOGOUT CONFIRMATION */}
       <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>

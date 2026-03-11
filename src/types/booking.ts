@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface IBookingAllocation {
   cleaningAllocation?: ICleaningAllocation | null;
   cleanerAssigned: ICleanerAssigned[];
@@ -51,7 +52,6 @@ export interface IServiceDetail {
 export interface IServiceDetails {
   id: string;
   serviceType: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   details: any;
 }
 
@@ -115,12 +115,15 @@ export interface IBaseBookingDetails {
   startSched: string;
   endSched: string;
   dirtyScale: number;
-  paymentStatus: string;
+  status: string;
   reviewStatus: string;
   photos: string[];
   createdAt: string;
   updatedAt: string;
-  quoteId: string;
+  orderId: string;
+  extraHours: number;
+  extraHourCost: number;
+  originalEndSched?: string;
 }
 
 export interface IBaseBookingDetailsRequest {
