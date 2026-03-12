@@ -1,36 +1,32 @@
-type Message = {
-createdAt: string | Date
-[key: string]: unknown
-}
+import { IMessage } from "@/data/mockMessages";
 
-export function groupMessagesByDate(messages: Message[]) {
-const today: Message[] = []
-const yesterday: Message[] = []
-const older: Message[] = []
+export function groupMessagesByDate(messages: IMessage[]) {
+  const today: IMessage[] = [];
+  const yesterday: IMessage[] = [];
+  const older: IMessage[] = [];
 
-const now = new Date()
+  const now = new Date();
 
-messages.forEach((msg) => {
-const date = new Date(msg.createdAt)
+  messages.forEach((msg) => {
+    if (!msg.createdAt) return;
 
-```
-const diff = now.getTime() - date.getTime()
-const days = diff / (1000 * 60 * 60 * 24)
+    const date = new Date(msg.createdAt);
 
-if (days < 1) {
-  today.push(msg)
-} else if (days < 2) {
-  yesterday.push(msg)
-} else {
-  older.push(msg)
-}
-```
+    const diff = now.getTime() - date.getTime();
+    const days = diff / (1000 * 60 * 60 * 24);
 
-})
+    if (days < 1) {
+      today.push(msg);
+    } else if (days < 2) {
+      yesterday.push(msg);
+    } else {
+      older.push(msg);
+    }
+  });
 
-return {
-today,
-yesterday,
-older
-}
+  return {
+    today,
+    yesterday,
+    older,
+  };
 }
