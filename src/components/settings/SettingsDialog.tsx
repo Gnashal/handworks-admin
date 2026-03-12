@@ -1,22 +1,19 @@
 "use client";
 
+import EmployeeSettings from "./EmployeeSettings";
+import BookingSettings from "./BookingSettings";
+import BusinessSettings from "./BusinessSettings";
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const sections = [
-  "Dashboard",
+  "Business",
+  "Bookings",
+  "Employees",
+  "Inventory",
   "Notifications",
-  "Media",
-  "Privacy & Security",
-  "Manage Folders",
-  "Appearance",
-  "Logout",
+  "Reports",
+  "Security",
 ];
 
 type Props = {
@@ -25,20 +22,19 @@ type Props = {
 };
 
 export default function SettingsDialog({ open, onOpenChange }: Props) {
-  const [activeSection, setActiveSection] = useState("Dashboard");
+  const [activeSection, setActiveSection] = useState("Business");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogHeader>
-        <VisuallyHidden>
-          <DialogTitle className="text-2xl font-semibold">Settings</DialogTitle>
-        </VisuallyHidden>
-      </DialogHeader>
-      <DialogContent className="max-w-4xl h-150 p-0 overflow-hidden">
+      <DialogContent className="!max-w-none w-[55vw] h-[75vh] p-0 overflow-hidden">
+
         <div className="flex h-full">
+
           {/* LEFT PANEL */}
-          <div className="w-64 border-r bg-gray-50 p-4">
-            <h2 className="text-lg font-semibold mb-4">Settings</h2>
+          <div className="w-44 border-r bg-gray-50 p-4">
+            <h2 className="text-sm font-semibold mb-4 text-gray-700">
+              Settings
+            </h2>
 
             <div className="space-y-1">
               {sections.map((section) => (
@@ -46,7 +42,7 @@ export default function SettingsDialog({ open, onOpenChange }: Props) {
                   key={section}
                   onClick={() => setActiveSection(section)}
                   className={`
-                    w-full text-left px-3 py-2 rounded-md text-sm
+                    w-full text-left px-3 py-2 rounded-md text-sm transition
                     ${
                       activeSection === section
                         ? "bg-blue-100 text-blue-700 font-medium"
@@ -61,11 +57,24 @@ export default function SettingsDialog({ open, onOpenChange }: Props) {
           </div>
 
           {/* RIGHT PANEL */}
-          <div className="flex-1 p-6">
-            <h3 className="text-xl font-semibold mb-4">{activeSection}</h3>
+          <div className="flex-1 p-10">
+            <h3 className="text-3xl font-semibold mb-6">
+              {activeSection}
+            </h3>
 
-            <div className="text-gray-500">empty for now.</div>
+            {activeSection === "Business" && <BusinessSettings />}
+
+            {activeSection === "Bookings" && <BookingSettings />}
+
+            {activeSection === "Employees" && <EmployeeSettings />}
+
+            {activeSection !== "Business" && activeSection !== "Bookings" && activeSection !== "Employees" && (
+              <div className="text-gray-500">
+                empty for now
+              </div>
+            )}
           </div>
+
         </div>
       </DialogContent>
     </Dialog>

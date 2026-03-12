@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { clientColumns } from "@/components/clients/ClientsColumns";
 import { useBookingsQuery } from "@/queries/bookingQueries";
 import type { IBooking } from "@/types/booking";
+import { mockClients } from "@/data/mockClients";
 
 export default function ClientsPage() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function ClientsPage() {
     }
     return [];
   });
+
   const [showWatchedOnly, setShowWatchedOnly] = React.useState(false);
 
   React.useEffect(() => {
@@ -30,6 +32,11 @@ export default function ClientsPage() {
   const bookings: IBooking[] = data?.bookings ?? [];
 
   const allClients = React.useMemo(() => {
+    // TEMP: show mock clients when there are no bookings yet
+    if (bookings.length === 0) {
+      return mockClients;
+    }
+
     const map = new Map();
 
     bookings.forEach((booking) => {
@@ -79,9 +86,7 @@ export default function ClientsPage() {
         <DataTable
           columns={clientColumns(watchList, setWatchList)}
           data={clients}
-          onRowClick={(row) =>
-            router.push(`/clients/${row.custId}`)
-          }
+          onRowClick={(row) => router.push(`/clients/${row.custId}`)}
         />
       )}
     </div>
