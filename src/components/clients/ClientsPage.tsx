@@ -20,7 +20,6 @@ export default function ClientsPage() {
     }
     return [];
   });
-
   const [showWatchedOnly, setShowWatchedOnly] = React.useState(false);
 
   React.useEffect(() => {

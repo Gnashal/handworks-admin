@@ -15,13 +15,6 @@ export const clientHistoryColumns: ColumnDef<IBooking>[] = [
     accessorFn: (row) => row.base.startSched,
     id: "schedule",
     header: "Schedule",
-    cell: ({ row }) =>
-      new Date(row.original.base.startSched).toLocaleString(),
-  },
-  {
-    accessorFn: (row) => row.base.paymentStatus,
-    id: "paymentStatus",
-    header: "Payment Status",
     cell: ({ row }) => new Date(row.original.base.startSched).toLocaleString(),
   },
   {

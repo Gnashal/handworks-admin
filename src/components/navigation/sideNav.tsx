@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 import {
   LayoutDashboard,
@@ -18,6 +18,10 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useClerk } from "@clerk/nextjs";
+import { useMessages } from "@/context/messagesContext";
+import SettingsDialog from "@/components/settings/SettingsDialog";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,9 +32,6 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
 } from "@/components/ui/alert-dialog";
-
-import { useClerk } from "@clerk/nextjs";
-import { useMessages } from "@/context/messagesContext";
 
 type Route = {
   icon: React.ReactNode;
@@ -64,7 +65,6 @@ const MenuItem: React.FC<{
           {icon}
         </div>
 
-        {/* collapsed dot badge */}
         {collapsed && badge && (
           <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500" />
         )}
@@ -87,7 +87,6 @@ const MenuItem: React.FC<{
 
 export default function Sidebar() {
   const location = usePathname();
-  const router = useRouter();
   const { signOut } = useClerk();
   const { unreadCount } = useMessages();
 
@@ -97,8 +96,6 @@ export default function Sidebar() {
     { icon: <Package />, label: "Inventory", path: "/inventory" },
     { icon: <Users />, label: "Clients", path: "/clients" },
     { icon: <UserCheck />, label: "Employees", path: "/employees" },
-
-    // dynamic unread badge
     {
       icon: <MessageSquare />,
       label: "Messages",
@@ -109,6 +106,7 @@ export default function Sidebar() {
 
   const [collapsed, setCollapsed] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -116,13 +114,13 @@ export default function Sidebar() {
     };
 
     handleResize();
-
     window.addEventListener("resize", handleResize);
+
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const handleSettingsClick = () => {
-    router.push("/settings");
+    setSettingsOpen(true);
   };
 
   const handleSignOutClick = () => {
@@ -203,11 +201,11 @@ export default function Sidebar() {
         </div>
       </aside>
 
-      {/* Logout Dialog */}
-      <AlertDialog
-        open={showLogoutConfirm}
-        onOpenChange={setShowLogoutConfirm}
-      >
+      {/* SETTINGS DIALOG */}
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+
+      {/* LOGOUT CONFIRMATION */}
+      <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Sign out?</AlertDialogTitle>

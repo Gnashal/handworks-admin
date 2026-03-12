@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
       params.append("endDate", endDate);
     }
 
-    const apiUrl = `${process.env.API_URL}payment/quotes?${params.toString()}`;
+    const apiUrl = `${process.env.API_URL}payment/quote/quotes?${params.toString()}`;
     const { data } = await axios.get<IFetchAllQuotesResponse>(apiUrl, {
       headers: {
         "Content-Type": "application/json",

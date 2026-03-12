@@ -13,8 +13,9 @@ export async function GET(req: NextRequest) {
         { status: 400 },
       );
     }
-
-    const apiUrl = `${process.env.API_URL}account/employee/${employeeId}`;
+    const params = new URLSearchParams();
+    params.append("id", employeeId);
+    const apiUrl = `${process.env.API_URL}account/employee?${params.toString()}`;
 
     const { data } = await axios.get<IGetEmployee>(apiUrl, {
       headers: {
