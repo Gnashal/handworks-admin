@@ -1,28 +1,36 @@
-export function groupMessagesByDate(messages: any[]) {
-  const today: any[] = []
-  const yesterday: any[] = []
-  const older: any[] = []
+type Message = {
+createdAt: string | Date
+[key: string]: unknown
+}
 
-  const now = new Date()
+export function groupMessagesByDate(messages: Message[]) {
+const today: Message[] = []
+const yesterday: Message[] = []
+const older: Message[] = []
 
-  messages.forEach((msg) => {
-    const date = new Date(msg.createdAt)
+const now = new Date()
 
-    const diff = now.getTime() - date.getTime()
-    const days = diff / (1000 * 60 * 60 * 24)
+messages.forEach((msg) => {
+const date = new Date(msg.createdAt)
 
-    if (days < 1) {
-      today.push(msg)
-    } else if (days < 2) {
-      yesterday.push(msg)
-    } else {
-      older.push(msg)
-    }
-  })
+```
+const diff = now.getTime() - date.getTime()
+const days = diff / (1000 * 60 * 60 * 24)
 
-  return {
-    today,
-    yesterday,
-    older
-  }
+if (days < 1) {
+  today.push(msg)
+} else if (days < 2) {
+  yesterday.push(msg)
+} else {
+  older.push(msg)
+}
+```
+
+})
+
+return {
+today,
+yesterday,
+older
+}
 }
