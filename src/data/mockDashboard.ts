@@ -19,7 +19,12 @@ export const mockDashboardData = {
   unreadMessages: 2,
 };
 
-export const recentActivities = [
+export const recentActivities: {
+  id: number;
+  type: "booking" | "client" | "cancel";
+  title: string;
+  time: string;
+}[] = [
   {
     id: 1,
     type: "booking",

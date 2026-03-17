@@ -37,46 +37,7 @@ export default function Dashboard() {
       )}
 
       {/* DASHBOARD */}
-      <DashboardOverview
-        weeklySales={{
-          title: "Sales",
-          value: data?.sales ?? 0,
-          change: data?.growthIndex.salesGrowthIndex ?? 0,
-          trend: "up",
-        }}
-        bookings={{
-          title: "Bookings",
-          value: data?.bookings ?? 0,
-          change: data?.growthIndex.bookingsGrowthIndex ?? 0,
-          trend: "up",
-        }}
-        clients={{
-          title: "Clients",
-          value: data?.clients ?? 0,
-        }}
-        activeSessions={{
-          title: "Active Sessions",
-          value: data?.activeSessions ?? 0,
-          change: data?.growthIndex.activeSessionsGrowthIndex ?? 0,
-          trend: "down",
-        }}
-        activeWorkers={{
-          title: "Employees",
-          value: data?.clients ?? 0,
-        }}
-        clientBreakdown={[
-          { label: "New", value: 62 },
-          { label: "Returning", value: 26 },
-          { label: "Inactive", value: 12 },
-        ]}
-        bookingSeries={[
-          { label: "Jan", value: 40 },
-          { label: "Feb", value: 55 },
-          { label: "Mar", value: 48 },
-        ]}
-        paidInvoices={{ label: "Paid Invoices", amount: 80465.23 }}
-        fundReceived={{ label: "Fund Received", amount: 153355 }}
-      />
+      <DashboardOverview />
     </div>
   );
 }
