@@ -8,31 +8,35 @@ import Loader from "@/components/loader";
 
 export default function Dashboard() {
   const [dateFilter, setDateFilter] = React.useState<"week" | "month" | "year">(
-    "week",
+    "week"
   );
 
   const { data, isLoading, isError, error } = useDashboardQuery(dateFilter);
 
   return (
-    <div className="w-full h-screen p-6 space-y-4">
-      <div className="flex flex-row items-center justify-between p-4">
-        <h2 className="text-2xl font-semibold">Overview</h2>
+    <div className="w-full p-6 lg:p-8 space-y-6">
+      {/* HEADER */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold tracking-tight">Overview</h2>
         <DatePicker value={dateFilter} onChange={setDateFilter} />
       </div>
 
+      {/* LOADING */}
       {isLoading && (
         <div className="flex w-full justify-center py-10">
           <Loader />
         </div>
       )}
 
+      {/* ERROR */}
       {isError && (
-        <p className="px-4 text-sm text-destructive">
+        <p className="text-sm text-destructive">
           Failed to load dashboard data
           {error instanceof Error ? `: ${error.message}` : ""}
         </p>
       )}
 
+      {/* DASHBOARD */}
       <DashboardOverview
         weeklySales={{
           title: "Sales",
