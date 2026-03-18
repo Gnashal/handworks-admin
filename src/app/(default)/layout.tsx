@@ -5,6 +5,7 @@ import { useAuth, useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "sonner";
+import { MessagesProvider } from "@/context/messagesContext";
 
 export default function AuthRootLayout({
   children,
@@ -22,11 +23,12 @@ export default function AuthRootLayout({
       router.replace("/auth");
       return;
     }
+
     if (!orgId || !orgRole || orgRole !== "org:admin") {
       (async () => {
         await signOut();
         toast.warning(
-          "You do not have access to this application. Please contact your administrator.",
+          "You do not have access to this application. Please contact your administrator."
         );
         router.replace("/auth");
       })();
@@ -36,5 +38,9 @@ export default function AuthRootLayout({
 
   if (!isLoaded) return null;
 
-  return <DefaultLayout>{children}</DefaultLayout>;
+  return (
+    <MessagesProvider>
+      <DefaultLayout>{children}</DefaultLayout>
+    </MessagesProvider>
+  );
 }
