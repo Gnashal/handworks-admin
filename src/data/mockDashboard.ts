@@ -52,7 +52,7 @@ export const inventoryAlerts = [
 ];
 
 export const topServices = [
-  { id: 1, name: "Laundry", bookings: 32 },
-  { id: 2, name: "Dry Clean", bookings: 18 },
-  { id: 3, name: "Ironing", bookings: 12 },
+  { id: 1, name: "General Cleaning", bookings: 32 },
+  { id: 2, name: "Car Cleaning", bookings: 18 },
+  { id: 3, name: "Carpet Cleaning", bookings: 12 },
 ];

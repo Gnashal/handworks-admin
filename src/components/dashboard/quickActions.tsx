@@ -1,44 +1,60 @@
 "use client";
 
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarPlus, UserPlus, Users, Package } from "lucide-react";
-import Link from "next/link";
+import {
+  CalendarPlus,
+  UserPlus,
+  Users,
+  PackagePlus,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function QuickActions() {
-  return (
-    <Card className="w-full">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-semibold">
-          Quick Actions
-        </CardTitle>
-      </CardHeader>
+  const router = useRouter();
 
-      <CardContent className="flex flex-col gap-3 pt-2">
-        {/* PRIMARY ACTION */}
-        <Button className="w-full justify-start gap-2">
-          <CalendarPlus className="h-4 w-4" />
-          Add Booking
+  return (
+    <div className="rounded-xl border bg-card p-4 space-y-4 shadow-sm">
+      <h3 className="text-sm font-semibold">Quick Actions</h3>
+
+      {/* PRIMARY ACTION */}
+      <Button
+        className="w-full flex items-center gap-2"
+        onClick={() => router.push("/bookings")}
+      >
+        <CalendarPlus className="h-4 w-4" />
+        Add Booking
+      </Button>
+
+      {/* SECONDARY ACTIONS */}
+      <div className="grid grid-cols-2 gap-2">
+        <Button
+          variant="outline"
+          className="flex items-center gap-2 justify-center"
+          onClick={() => router.push("/clients")}
+        >
+          <UserPlus className="h-4 w-4" />
+          Client
         </Button>
 
-        {/* SECONDARY ACTIONS */}
-        <div className="grid grid-cols-2 gap-2">
-          <Button variant="outline" className="justify-start gap-2">
-            <UserPlus className="h-4 w-4" />
-            Client
-          </Button>
+        <Button
+          variant="outline"
+          className="flex items-center gap-2 justify-center"
+          onClick={() => router.push("/employees")}
+        >
+          <Users className="h-4 w-4" />
+          Employee
+        </Button>
+      </div>
 
-          <Button variant="outline" className="justify-start gap-2">
-            <Users className="h-4 w-4" />
-            Employee
-          </Button>
-
-          <Button variant="outline" className="col-span-2 justify-start gap-2">
-            <Package className="h-4 w-4" />
-            Inventory Item
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+      {/* FULL WIDTH ACTION */}
+      <Button
+        variant="outline"
+        className="w-full flex items-center gap-2 justify-center"
+        onClick={() => router.push("/inventory")}
+      >
+        <PackagePlus className="h-4 w-4" />
+        Inventory Item
+      </Button>
+    </div>
   );
 }

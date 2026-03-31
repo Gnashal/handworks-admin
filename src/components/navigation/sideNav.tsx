@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { CalendarDays } from "lucide-react";
 
 import {
   LayoutDashboard,
@@ -93,6 +94,7 @@ export default function Sidebar() {
   const routes: Route[] = [
     { icon: <LayoutDashboard />, label: "Dashboard", path: "/" },
     { icon: <BookOpenIcon />, label: "Bookings", path: "/bookings" },
+    { icon: <CalendarDays />, label: "Calendar", path: "/calendar" },
     { icon: <Package />, label: "Inventory", path: "/inventory" },
     { icon: <Users />, label: "Clients", path: "/clients" },
     { icon: <UserCheck />, label: "Employees", path: "/employees" },

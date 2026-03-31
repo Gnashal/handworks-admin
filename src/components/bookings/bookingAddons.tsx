@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import {
   IGeneralCleaningDetails,
   ICouchCleaningDetails,
@@ -9,15 +10,41 @@ import {
   ICarCleaningDetails,
   IPostConstructionDetails,
 } from "@/types/booking";
+
 import { ITypedAddon, IServiceDetailConcrete } from "@/lib/factory";
 import { normalizeServiceName } from "@/lib/normalize";
 
 interface BookingAddonsProps {
   addons: ITypedAddon<IServiceDetailConcrete>[] | undefined;
+
+  // NEW (optional for create page)
+  selectable?: boolean;
+  selectedAddons?: ITypedAddon<IServiceDetailConcrete>[];
+  onChange?: (addons: ITypedAddon<IServiceDetailConcrete>[]) => void;
 }
 
-export function BookingAddons({ addons }: BookingAddonsProps) {
+export function BookingAddons({
+  addons,
+  selectable = false,
+  selectedAddons = [],
+  onChange,
+}: BookingAddonsProps) {
   const hasAddons = addons && addons.length > 0;
+
+  const isSelected = (addon: ITypedAddon<IServiceDetailConcrete>) =>
+    selectedAddons.some((a) => a.id === addon.id);
+
+  const toggleAddon = (addon: ITypedAddon<IServiceDetailConcrete>) => {
+    if (!onChange) return;
+
+    const exists = isSelected(addon);
+
+    if (exists) {
+      onChange(selectedAddons.filter((a) => a.id !== addon.id));
+    } else {
+      onChange([...selectedAddons, addon]);
+    }
+  };
 
   const renderAddonDetails = (addon: ITypedAddon<IServiceDetailConcrete>) => {
     switch (addon.serviceType) {
@@ -87,29 +114,54 @@ export function BookingAddons({ addons }: BookingAddonsProps) {
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium">Add-ons</CardTitle>
       </CardHeader>
+
       <CardContent className="space-y-3 text-sm">
         {!hasAddons ? (
           <p className="text-xs italic text-muted-foreground">
-            No add-ons selected for this booking.
+            No add-ons available.
           </p>
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
-            {addons!.map((addon) => (
-              <div
-                key={addon.id}
-                className="flex flex-col rounded-lg border bg-card/60 p-3 shadow-sm"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <Badge variant="outline" className="text-[11px] uppercase">
-                    {normalizeServiceName(addon.serviceType)}
-                  </Badge>
-                  <p className="text-sm font-medium">
-                    ₱{addon.price.toLocaleString("en-PH")}
-                  </p>
+            {addons!.map((addon) => {
+              const checked = isSelected(addon);
+
+              return (
+                <div
+                  key={addon.id}
+                  className={`flex flex-col rounded-lg border p-3 shadow-sm transition ${
+                    selectable && checked
+                      ? "border-primary bg-primary/5"
+                      : "bg-card/60"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      {selectable && (
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleAddon(addon)}
+                          className="h-4 w-4"
+                        />
+                      )}
+
+                      <Badge
+                        variant="outline"
+                        className="text-[11px] uppercase"
+                      >
+                        {normalizeServiceName(addon.serviceType)}
+                      </Badge>
+                    </div>
+
+                    <p className="text-sm font-medium">
+                      ₱{addon.price.toLocaleString("en-PH")}
+                    </p>
+                  </div>
+
+                  <div className="mt-2">{renderAddonDetails(addon)}</div>
                 </div>
-                <div className="mt-2">{renderAddonDetails(addon)}</div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </CardContent>
