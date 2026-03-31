@@ -1,6 +1,5 @@
 "use client";
 
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
@@ -17,7 +16,7 @@ import {
 } from "@/components/ui/select";
 
 import { IMainServiceType } from "@/types/booking";
-import { mapServiceDetails } from "@/lib/factory";
+import { mapServiceDetails, ITypedAddon, IServiceDetailConcrete } from "@/lib/factory";
 import { BookingAddons } from "@/components/bookings/bookingAddons";
 
 const TIME_SLOTS = [
@@ -27,6 +26,11 @@ const TIME_SLOTS = [
   "03:00 PM",
   "05:00 PM",
 ];
+
+type ExistingBooking = {
+  date: string;
+  time: string;
+};
 
 export default function CreateBookingPageComponent() {
   const router = useRouter();
@@ -49,7 +53,11 @@ export default function CreateBookingPageComponent() {
     })
   );
 
-  const [addons, setAddons] = useState<any[]>([]);
+  // ✅ FIXED TYPE (CRITICAL FIX)
+  const [addons, setAddons] = useState<
+    ITypedAddon<IServiceDetailConcrete>[]
+  >([]);
+
   const [schedule, setSchedule] = useState({
     date: "",
     time: "",
@@ -58,9 +66,8 @@ export default function CreateBookingPageComponent() {
   const [dirtyScale, setDirtyScale] = useState(1);
   const [notes, setNotes] = useState("");
 
-  const [existingBookings, setExistingBookings] = useState<any[]>([]);
+  const [existingBookings, setExistingBookings] = useState<ExistingBooking[]>([]);
 
-  // 🔥 FETCH BOOKINGS
   useEffect(() => {
     const fetchBookings = async () => {
       const res = await fetch("/api/booking/fetchBookings");
@@ -68,7 +75,9 @@ export default function CreateBookingPageComponent() {
 
       const bookings = Array.isArray(data)
         ? data
-        : data.bookings || data.data || [];
+        : Array.isArray(data?.bookings)
+        ? data.bookings
+        : [];
 
       setExistingBookings(bookings);
     };
@@ -88,14 +97,13 @@ export default function CreateBookingPageComponent() {
     );
   };
 
-  // 🔥 SLOT INFO (COUNT + CAPACITY)
   const getSlotInfo = (slot: string) => {
     if (!schedule.date) {
       return { count: 0, capacity: 2, isFull: false };
     }
 
     const sameSlot = existingBookings.filter(
-      (b: any) =>
+      (b) =>
         b.date === schedule.date && b.time === slot
     );
 
@@ -135,9 +143,6 @@ export default function CreateBookingPageComponent() {
     };
 
     console.log("CREATE BOOKING PAYLOAD:", payload);
-
-    // 🔥 TODO: connect to backend POST
-    // await fetch("/api/booking/createBooking", {...})
 
     router.push("/bookings");
   };
@@ -186,14 +191,18 @@ export default function CreateBookingPageComponent() {
           </Card>
 
           {/* ADDONS */}
-          <BookingAddons addons={[]} selectable selectedAddons={addons} onChange={setAddons}/>
+          <BookingAddons
+            addons={[]}
+            selectable
+            selectedAddons={addons}
+            onChange={setAddons}
+          />
 
-          {/* 🔥 SCHEDULE */}
+          {/* SCHEDULE */}
           <Card>
             <CardHeader><CardTitle>Schedule</CardTitle></CardHeader>
             <CardContent className="grid grid-cols-2 gap-4">
 
-              {/* DATE */}
               <div>
                 <Label>Date</Label>
                 <Input
@@ -202,7 +211,6 @@ export default function CreateBookingPageComponent() {
                 />
               </div>
 
-              {/* TIME SLOT */}
               <div>
                 <Label>Time Slot</Label>
                 <Select

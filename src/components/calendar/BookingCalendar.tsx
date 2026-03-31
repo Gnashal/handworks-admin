@@ -19,6 +19,20 @@ type CalendarDay = {
   date: Date;
 };
 
+// ✅ NEW TYPE (fixes all 'any' errors)
+type CalendarBooking = {
+  id: string;
+  service: string;
+  schedule?: {
+    date: string;
+    time: string;
+  };
+  customer?: {
+    firstName: string;
+    lastName: string;
+  };
+};
+
 const SERVICE_COLORS: Record<string, string> = {
   "General Cleaning": "bg-green-100 text-green-800 border-green-200",
   "Deep Cleaning": "bg-blue-100 text-blue-800 border-blue-200",
@@ -30,7 +44,8 @@ export default function BookingCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 2));
   const [selectedDate, setSelectedDate] = useState("2026-03-24");
 
-  const bookings = mockBookings;
+  // ✅ typed bookings
+  const bookings: CalendarBooking[] = mockBookings;
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -42,6 +57,7 @@ export default function BookingCalendar() {
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const prevMonthDays = new Date(year, month, 0).getDate();
 
+    // previous month
     for (let i = firstDay - 1; i >= 0; i--) {
       days.push({
         day: prevMonthDays - i,
@@ -50,6 +66,7 @@ export default function BookingCalendar() {
       });
     }
 
+    // current month
     for (let i = 1; i <= daysInMonth; i++) {
       days.push({
         day: i,
@@ -58,6 +75,7 @@ export default function BookingCalendar() {
       });
     }
 
+    // next month
     while (days.length < 42) {
       const nextDay: number =
         days.length - (firstDay + daysInMonth) + 1;
@@ -79,7 +97,7 @@ export default function BookingCalendar() {
 
   const getDayBookings = (date: string) => {
     return bookings.filter(
-      (b: any) => b.schedule?.date === date
+      (b: CalendarBooking) => b.schedule?.date === date
     );
   };
 
@@ -102,13 +120,13 @@ export default function BookingCalendar() {
   };
 
   const selectedDayBookings = bookings.filter(
-    (b: any) => b.schedule?.date === selectedDate
+    (b: CalendarBooking) => b.schedule?.date === selectedDate
   );
 
   const grouped = TIME_SLOTS.map((slot) => ({
     slot,
     items: selectedDayBookings.filter(
-      (b: any) => b.schedule?.time === slot
+      (b: CalendarBooking) => b.schedule?.time === slot
     ),
   }));
 
@@ -240,7 +258,7 @@ export default function BookingCalendar() {
 
                   {/* MINI BOOKINGS */}
                   <div className="space-y-[2px] overflow-hidden">
-                    {dayBookings.slice(0, 2).map((b: any) => (
+                    {dayBookings.slice(0, 2).map((b: CalendarBooking) => (
                       <div
                         key={b.id}
                         className={`text-[10px] px-1 py-[2px] rounded border truncate ${getServiceColor(

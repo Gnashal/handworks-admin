@@ -205,3 +205,11 @@ export interface IAcceptBookingResponse {
   bookingId: string;
   status: string;
 }
+export interface ICalendarBooking {
+  id: string;
+  date: string; // YYYY-MM-DD
+  time: string;
+  service: string;
+  client: string;
+  note?: string;
+}
