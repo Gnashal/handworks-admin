@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   BookOpenIcon,
+  CalendarDays,
   Package,
   Users,
   UserCheck,
