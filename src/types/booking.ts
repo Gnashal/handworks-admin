@@ -213,3 +213,21 @@ export interface ICalendarBooking {
   client: string;
   note?: string;
 }
+
+export interface IBookingsTodayResponse {
+  bookings:
+    | {
+        id?: string;
+        date?: string;
+        service: string;
+        time: string;
+        client: string;
+      }
+    | {
+        id?: string;
+        date?: string;
+        service: string;
+        time: string;
+        client: string;
+      }[];
+}

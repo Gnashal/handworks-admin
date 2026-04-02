@@ -11,6 +11,7 @@ import { groupMessagesByDate } from "@/utils/groupMessagesByDate";
 
 import { useMessages } from "@/context/messagesContext";
 import { IMessage } from "@/data/mockMessages";
+import Image from "next/image";
 
 export default function MessagesInbox() {
   const { messages, selectMessage } = useMessages();
@@ -19,7 +20,7 @@ export default function MessagesInbox() {
   const [search, setSearch] = useState("");
 
   const filtered = messages.filter((msg) =>
-    msg.name.toLowerCase().includes(search.toLowerCase())
+    msg.name.toLowerCase().includes(search.toLowerCase()),
   );
 
   const handleClick = (msg: IMessage) => {
@@ -31,10 +32,8 @@ export default function MessagesInbox() {
 
   return (
     <div className="flex gap-6 h-[calc(100vh-180px)]">
-
       {/* LEFT PANEL (Inbox) */}
-      <Card className="w-[360px] flex flex-col overflow-hidden">
-
+      <Card className="w-90 flex flex-col overflow-hidden">
         {/* Search */}
         <div className="p-4 border-b">
           <div className="relative">
@@ -50,7 +49,6 @@ export default function MessagesInbox() {
 
         {/* Message List */}
         <div className="flex-1 overflow-y-auto">
-
           {/* TODAY */}
           {today.length > 0 && (
             <>
@@ -66,15 +64,11 @@ export default function MessagesInbox() {
                   ${selected?.id === msg.id ? "bg-muted" : ""}`}
                 >
                   <div className="flex items-center gap-3">
-
                     <Avatar>
-                      <AvatarFallback>
-                        {msg.name.charAt(0)}
-                      </AvatarFallback>
+                      <AvatarFallback>{msg.name.charAt(0)}</AvatarFallback>
                     </Avatar>
 
                     <div className="flex-1">
-
                       <div className="flex justify-between items-center">
                         <p className="font-medium text-sm">{msg.name}</p>
 
@@ -86,13 +80,11 @@ export default function MessagesInbox() {
                       <p className="text-xs text-muted-foreground truncate">
                         {msg.message}
                       </p>
-
                     </div>
 
                     {msg.unread && (
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"/>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full" />
                     )}
-
                   </div>
                 </div>
               ))}
@@ -114,15 +106,11 @@ export default function MessagesInbox() {
                   ${selected?.id === msg.id ? "bg-muted" : ""}`}
                 >
                   <div className="flex items-center gap-3">
-
                     <Avatar>
-                      <AvatarFallback>
-                        {msg.name.charAt(0)}
-                      </AvatarFallback>
+                      <AvatarFallback>{msg.name.charAt(0)}</AvatarFallback>
                     </Avatar>
 
                     <div className="flex-1">
-
                       <div className="flex justify-between items-center">
                         <p className="font-medium text-sm">{msg.name}</p>
 
@@ -134,13 +122,11 @@ export default function MessagesInbox() {
                       <p className="text-xs text-muted-foreground truncate">
                         {msg.message}
                       </p>
-
                     </div>
 
                     {msg.unread && (
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"/>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full" />
                     )}
-
                   </div>
                 </div>
               ))}
@@ -162,15 +148,11 @@ export default function MessagesInbox() {
                   ${selected?.id === msg.id ? "bg-muted" : ""}`}
                 >
                   <div className="flex items-center gap-3">
-
                     <Avatar>
-                      <AvatarFallback>
-                        {msg.name.charAt(0)}
-                      </AvatarFallback>
+                      <AvatarFallback>{msg.name.charAt(0)}</AvatarFallback>
                     </Avatar>
 
                     <div className="flex-1">
-
                       <div className="flex justify-between items-center">
                         <p className="font-medium text-sm">{msg.name}</p>
 
@@ -182,29 +164,24 @@ export default function MessagesInbox() {
                       <p className="text-xs text-muted-foreground truncate">
                         {msg.message}
                       </p>
-
                     </div>
 
                     {msg.unread && (
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"/>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full" />
                     )}
-
                   </div>
                 </div>
               ))}
             </>
           )}
-
         </div>
       </Card>
 
       {/* MIDDLE PANEL (Conversation) */}
       <Card className="flex-1 flex flex-col overflow-hidden">
-
         {selected ? (
           <>
             <div className="border-b p-6 flex items-center justify-between">
-
               <div>
                 <h2 className="text-lg font-semibold">{selected.name}</h2>
                 <p className="text-xs text-muted-foreground">
@@ -212,41 +189,31 @@ export default function MessagesInbox() {
                 </p>
               </div>
 
-              <Badge variant="secondary">
-                Open
-              </Badge>
-
+              <Badge variant="secondary">Open</Badge>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
-
               {/* CLIENT MESSAGE */}
               <div className="flex justify-start">
-
                 <div className="space-y-2 max-w-[70%]">
-
                   {selected.media?.type === "image" && (
-                    <img
+                    <Image
+                      alt="selected media"
                       src={selected.media.url}
-                      className="rounded-lg max-h-[220px] object-cover"
+                      className="rounded-lg max-h-55 object-cover"
                     />
                   )}
 
                   {selected.media?.type === "video" && (
-                    <video
-                      controls
-                      className="rounded-lg max-h-[220px]"
-                    >
-                      <source src={selected.media.url}/>
+                    <video controls className="rounded-lg max-h-55">
+                      <source src={selected.media.url} />
                     </video>
                   )}
 
                   <div className="bg-muted px-4 py-2 rounded-lg text-sm">
                     {selected.message}
                   </div>
-
                 </div>
-
               </div>
 
               {/* ADMIN REPLY */}
@@ -255,12 +222,10 @@ export default function MessagesInbox() {
                   Thanks for contacting Handworks!
                 </div>
               </div>
-
             </div>
 
             {/* REPLY AREA */}
             <div className="border-t p-4 flex gap-3">
-
               <input
                 type="file"
                 accept="image/*,video/*"
@@ -276,37 +241,26 @@ export default function MessagesInbox() {
               </label>
 
               <Input placeholder="Type a reply..." />
-
             </div>
           </>
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
-
-            <div className="text-lg font-medium">
-              No conversation selected
-            </div>
+            <div className="text-lg font-medium">No conversation selected</div>
 
             <p className="text-sm">
               Select a message from the inbox to start viewing the conversation.
             </p>
-
           </div>
         )}
-
       </Card>
 
       {/* RIGHT PANEL (Customer Info) */}
-      <Card className="w-[300px] flex flex-col overflow-hidden">
-
+      <Card className="w-75 flex flex-col overflow-hidden">
         {selected ? (
           <div className="p-6 space-y-6">
-
             <div className="flex items-center gap-4">
-
               <Avatar className="h-12 w-12">
-                <AvatarFallback>
-                  {selected.name.charAt(0)}
-                </AvatarFallback>
+                <AvatarFallback>{selected.name.charAt(0)}</AvatarFallback>
               </Avatar>
 
               <div>
@@ -319,11 +273,9 @@ export default function MessagesInbox() {
                   View client profile
                 </Link>
               </div>
-
             </div>
 
             <div className="space-y-4 text-sm">
-
               <div>
                 <p className="font-medium">Email</p>
                 <p className="text-muted-foreground">
@@ -333,21 +285,14 @@ export default function MessagesInbox() {
 
               <div>
                 <p className="font-medium">Phone</p>
-                <p className="text-muted-foreground">
-                  +63 912 345 6789
-                </p>
+                <p className="text-muted-foreground">+63 912 345 6789</p>
               </div>
-
             </div>
 
             <div className="space-y-3">
-
-              <p className="font-medium text-sm">
-                Previous Bookings
-              </p>
+              <p className="font-medium text-sm">Previous Bookings</p>
 
               <div className="text-xs text-muted-foreground space-y-2">
-
                 <div className="border rounded-md p-2">
                   Deep Cleaning — Feb 20 2026
                 </div>
@@ -359,30 +304,19 @@ export default function MessagesInbox() {
                 <div className="border rounded-md p-2">
                   General Cleaning — Dec 12 2025
                 </div>
-
               </div>
-
             </div>
-
           </div>
         ) : (
-
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-sm gap-2 p-6">
-
-            <div className="font-medium">
-              No customer selected
-            </div>
+            <div className="font-medium">No customer selected</div>
 
             <p className="text-center">
               Select a conversation to view customer information.
             </p>
-
           </div>
-
         )}
-
       </Card>
-
     </div>
   );
 }

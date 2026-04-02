@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUpRight, ArrowDownRight, ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
 import clsx from "clsx";
+import CountUp from "react-countup";
 
 export interface MetricCardData {
   title: string;
@@ -13,6 +14,25 @@ export interface MetricCardData {
 }
 
 type Variant = "default" | "info" | "success" | "warning" | "danger";
+
+const AnimatedMetricValue = ({ value }: { value: string | number }) => {
+  if (typeof value !== "number") {
+    return <>{value}</>;
+  }
+
+  const decimalPlaces = Number.isInteger(value) ? 0 : 2;
+
+  return (
+    <CountUp
+      start={0}
+      end={value}
+      duration={2}
+      separator=","
+      decimals={decimalPlaces}
+      preserveValue
+    />
+  );
+};
 
 export default function MetricCard({
   data,
@@ -30,21 +50,19 @@ export default function MetricCard({
   return (
     <Card
       className={clsx(
-        "w-full min-h-[140px] flex flex-col justify-between border transition hover:shadow-md",
+        "w-full min-h-35 flex flex-col justify-between border transition hover:shadow-md",
         {
           "border-blue-200 bg-blue-50/40": variant === "info",
           "border-green-200 bg-green-50/40": variant === "success",
           "border-yellow-200 bg-yellow-50/40": variant === "warning",
           "border-red-200 bg-red-50/40": variant === "danger",
         },
-        className
+        className,
       )}
     >
       {/* HEADER */}
       <CardHeader className="flex flex-row items-center justify-between pb-1">
-        <CardTitle className="text-sm font-semibold">
-          {data.title}
-        </CardTitle>
+        <CardTitle className="text-sm font-semibold">{data.title}</CardTitle>
         <div className="text-muted-foreground">{icon}</div>
       </CardHeader>
 
@@ -52,7 +70,9 @@ export default function MetricCard({
       <CardContent className="flex flex-col justify-between flex-1 pt-2">
         <div>
           {/* VALUE */}
-          <div className="text-2xl font-bold">{data.value}</div>
+          <div className="text-2xl font-bold">
+            <AnimatedMetricValue value={data.value} />
+          </div>
 
           {/* TREND (fixed height to prevent shifting) */}
           <div className="mt-2 h-5">
@@ -70,16 +90,14 @@ export default function MetricCard({
                     data.trend === "down"
                       ? "text-red-500"
                       : data.trend === "up"
-                      ? "text-green-500"
-                      : "text-muted-foreground"
+                        ? "text-green-500"
+                        : "text-muted-foreground"
                   }
                 >
                   {data.change}%
                 </span>
 
-                <span className="text-muted-foreground">
-                  since last month
-                </span>
+                <span className="text-muted-foreground">since last month</span>
               </p>
             ) : (
               <span className="opacity-0">placeholder</span>

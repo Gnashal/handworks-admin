@@ -1,15 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { normalizeServiceName } from "@/lib/normalize";
+import { useBookingsTodayQuery } from "@/queries/bookingQueries";
+import type { IMainServiceType } from "@/types/booking";
 import { mockBookings } from "@/data/mockBookings";
 
-const TIME_SLOTS = [
-  "08:00 AM",
-  "10:00 AM",
-  "01:00 PM",
-  "03:00 PM",
-  "05:00 PM",
-];
+const TIME_SLOTS = ["08:00 AM", "10:00 AM", "01:00 PM", "03:00 PM", "05:00 PM"];
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -35,14 +32,56 @@ type CalendarBooking = {
 
 const SERVICE_COLORS: Record<string, string> = {
   "General Cleaning": "bg-green-100 text-green-800 border-green-200",
-  "Deep Cleaning": "bg-blue-100 text-blue-800 border-blue-200",
-  "Sofa Cleaning": "bg-yellow-100 text-yellow-800 border-yellow-200",
+  "Couch Cleaning": "bg-yellow-100 text-yellow-800 border-yellow-200",
   "Mattress Cleaning": "bg-purple-100 text-purple-800 border-purple-200",
+  "Car Cleaning": "bg-blue-100 text-blue-800 border-blue-200",
+  "Post Construction Cleaning":
+    "bg-orange-100 text-orange-800 border-orange-200",
+};
+
+const SERVICE_TYPE_VALUES: IMainServiceType[] = [
+  "SERVICE_TYPE_UNSPECIFIED",
+  "GENERAL_CLEANING",
+  "COUCH",
+  "MATTRESS",
+  "CAR",
+  "POST",
+];
+
+const isMainServiceType = (service: string): service is IMainServiceType => {
+  return SERVICE_TYPE_VALUES.includes(service as IMainServiceType);
+};
+
+const formatServiceName = (service: string) => {
+  const normalized = service.trim().toUpperCase();
+
+  if (isMainServiceType(normalized)) {
+    return normalizeServiceName(normalized);
+  }
+
+  return service;
+};
+
+const parseTimeToMinutes = (time: string) => {
+  const match = time.match(/^(\d{1,2}):(\d{2})\s?(AM|PM)$/i);
+  if (!match) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  const period = match[3].toUpperCase();
+
+  const normalizedHours = (hours % 12) + (period === "PM" ? 12 : 0);
+
+  return normalizedHours * 60 + minutes;
 };
 
 export default function BookingCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 2));
   const [selectedDate, setSelectedDate] = useState("2026-03-24");
+  const { data: bookingsTodayData, isLoading: isLoadingBookingsToday } =
+    useBookingsTodayQuery();
 
   // ✅ typed bookings
   const bookings: CalendarBooking[] = mockBookings;
@@ -77,8 +116,7 @@ export default function BookingCalendar() {
 
     // next month
     while (days.length < 42) {
-      const nextDay: number =
-        days.length - (firstDay + daysInMonth) + 1;
+      const nextDay: number = days.length - (firstDay + daysInMonth) + 1;
 
       days.push({
         day: nextDay,
@@ -92,13 +130,10 @@ export default function BookingCalendar() {
 
   const calendarDays = generateCalendarDays();
 
-  const formatDate = (date: Date) =>
-    date.toISOString().split("T")[0];
+  const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
   const getDayBookings = (date: string) => {
-    return bookings.filter(
-      (b: CalendarBooking) => b.schedule?.date === date
-    );
+    return bookings.filter((b: CalendarBooking) => b.schedule?.date === date);
   };
 
   const getDayInfo = (date: string) => {
@@ -114,34 +149,35 @@ export default function BookingCalendar() {
 
   const getServiceColor = (service: string) => {
     return (
-      SERVICE_COLORS[service] ||
-      "bg-gray-100 text-gray-700 border-gray-200"
+      SERVICE_COLORS[service] || "bg-gray-100 text-gray-700 border-gray-200"
     );
   };
 
-  const selectedDayBookings = bookings.filter(
-    (b: CalendarBooking) => b.schedule?.date === selectedDate
-  );
+  const todayBookingsRaw = bookingsTodayData?.bookings;
+  const todayBookings = Array.isArray(todayBookingsRaw)
+    ? todayBookingsRaw
+    : todayBookingsRaw
+      ? [todayBookingsRaw]
+      : [];
 
-  const grouped = TIME_SLOTS.map((slot) => ({
+  const scheduleSlots = Array.from(
+    new Set([...TIME_SLOTS, ...todayBookings.map((booking) => booking.time)]),
+  ).sort((a, b) => parseTimeToMinutes(a) - parseTimeToMinutes(b));
+
+  const grouped = scheduleSlots.map((slot) => ({
     slot,
-    items: selectedDayBookings.filter(
-      (b: CalendarBooking) => b.schedule?.time === slot
-    ),
+    items: todayBookings.filter((booking) => booking.time === slot),
   }));
 
   return (
     <div className="p-6 flex gap-6">
       {/* MAIN */}
       <div className="flex-1 bg-white rounded-xl shadow-sm border p-6">
-
         {/* HEADER */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl font-semibold">Calendar</h2>
-            <p className="text-sm text-gray-400">
-              Dashboard / Calendar
-            </p>
+            <p className="text-sm text-gray-400">Dashboard / Calendar</p>
           </div>
 
           <div className="flex gap-2">
@@ -168,17 +204,13 @@ export default function BookingCalendar() {
 
           <div className="flex gap-2">
             <button
-              onClick={() =>
-                setCurrentDate(new Date(year, month - 1))
-              }
+              onClick={() => setCurrentDate(new Date(year, month - 1))}
               className="px-3 py-1 border rounded-md"
             >
               ‹
             </button>
             <button
-              onClick={() =>
-                setCurrentDate(new Date(year, month + 1))
-              }
+              onClick={() => setCurrentDate(new Date(year, month + 1))}
               className="px-3 py-1 border rounded-md"
             >
               ›
@@ -205,8 +237,7 @@ export default function BookingCalendar() {
               const info = getDayInfo(dateString);
               const dayBookings = getDayBookings(dateString);
 
-              const isDisabled =
-                !d.current || info.isFull;
+              const isDisabled = !d.current || info.isFull;
 
               return (
                 <div
@@ -217,11 +248,7 @@ export default function BookingCalendar() {
                     }
                   }}
                   className={`h-28 p-2 border-r border-b last:border-r-0
-                    ${
-                      selectedDate === dateString
-                        ? "bg-blue-50"
-                        : ""
-                    }
+                    ${selectedDate === dateString ? "bg-blue-50" : ""}
                     ${
                       isDisabled
                         ? "bg-gray-100 text-gray-300 cursor-not-allowed"
@@ -233,9 +260,7 @@ export default function BookingCalendar() {
                   <div className="flex justify-between text-xs mb-1">
                     <span
                       className={`font-medium ${
-                        d.current
-                          ? "text-gray-800"
-                          : "text-gray-300"
+                        d.current ? "text-gray-800" : "text-gray-300"
                       }`}
                     >
                       {d.day}
@@ -247,8 +272,8 @@ export default function BookingCalendar() {
                           info.isFull
                             ? "text-red-500"
                             : info.count > 0
-                            ? "text-yellow-500"
-                            : "text-gray-400"
+                              ? "text-yellow-500"
+                              : "text-gray-400"
                         }`}
                       >
                         {info.count}/{info.capacity}
@@ -257,12 +282,12 @@ export default function BookingCalendar() {
                   </div>
 
                   {/* MINI BOOKINGS */}
-                  <div className="space-y-[2px] overflow-hidden">
+                  <div className="space-y-0.5 overflow-hidden">
                     {dayBookings.slice(0, 2).map((b: CalendarBooking) => (
                       <div
                         key={b.id}
-                        className={`text-[10px] px-1 py-[2px] rounded border truncate ${getServiceColor(
-                          b.service
+                        className={`text-[10px] px-1 py-0.5 rounded border truncate ${getServiceColor(
+                          b.service,
                         )}`}
                       >
                         {b.schedule?.time} {b.service}
@@ -285,42 +310,50 @@ export default function BookingCalendar() {
       {/* RIGHT PANEL */}
       <div className="w-[320px] bg-white rounded-xl shadow-sm border p-4">
         <div className="mb-4">
-          <p className="text-sm text-gray-400">
-            Details Schedule
-          </p>
+          <p className="text-sm text-gray-400">Details Schedule</p>
           <h2 className="text-sm font-semibold">
-            {selectedDate}
+            {new Date().toISOString().split("T")[0]}
           </h2>
         </div>
 
         <div className="space-y-4">
+          {isLoadingBookingsToday && (
+            <p className="text-xs text-gray-500">
+              Loading today&apos;s bookings...
+            </p>
+          )}
+
           {grouped.map(({ slot, items }) =>
             items.length > 0
               ? items.map((booking, index) => (
                   <div
-                    key={booking.id + index}
+                    key={`${booking.client}-${booking.time}-${index}`}
                     className={`rounded-xl p-4 border ${getServiceColor(
-                      booking.service
+                      formatServiceName(booking.service),
                     )}`}
                   >
                     <h3 className="text-sm font-semibold">
-                      {booking.service}
+                      {formatServiceName(booking.service)}
                     </h3>
 
                     <div className="mt-2 text-xs space-y-1">
                       <p>
-                        <span className="font-medium">Time:</span>{" "}
-                        {slot}
+                        <span className="font-medium">Time:</span> {slot}
                       </p>
                       <p>
                         <span className="font-medium">Client:</span>{" "}
-                        {booking.customer?.firstName}{" "}
-                        {booking.customer?.lastName}
+                        {booking.client}
                       </p>
                     </div>
                   </div>
                 ))
-              : null
+              : null,
+          )}
+
+          {!isLoadingBookingsToday && todayBookings.length === 0 && (
+            <p className="text-xs text-gray-500">
+              No bookings scheduled for today.
+            </p>
           )}
         </div>
       </div>

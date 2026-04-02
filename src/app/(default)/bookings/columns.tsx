@@ -1,9 +1,27 @@
+"use client";
+
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { IBooking, IMainServiceType } from "@/types/booking";
 import { format } from "date-fns";
 import { normalizeServiceName } from "@/lib/normalize";
+
+function BookingActionCell({ bookingId }: { bookingId: string }) {
+  const router = useRouter();
+
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={() => router.replace(`/bookings/${bookingId}`)}
+    >
+      View
+    </Button>
+  );
+}
 
 export const bookingColumns: ColumnDef<IBooking>[] = [
   {
@@ -16,7 +34,7 @@ export const bookingColumns: ColumnDef<IBooking>[] = [
           href={`/customers/${base.custId}`}
           className="font-medium text-md text-blue-500 hover:underline"
         >
-          {base.custId}
+          {base.customerFirstName} {base.customerLastName}
         </Link>
       );
     },
@@ -99,5 +117,10 @@ export const bookingColumns: ColumnDef<IBooking>[] = [
         ₱{row.original.totalPrice.toLocaleString()}
       </span>
     ),
+  },
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => <BookingActionCell bookingId={row.original.id} />,
   },
 ];

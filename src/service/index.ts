@@ -13,6 +13,7 @@ import {
 import {
   IAcceptBookingResponse,
   IBooking,
+  IBookingsTodayResponse,
   IFetchAllBookingsResponse,
 } from "@/types/booking";
 import { IInventoryListResponse } from "@/types/inventory";
@@ -340,6 +341,21 @@ const fetchQuotes = async (
   }
 };
 
+const fetchBookingToday = async (
+  token: string,
+): Promise<IBookingsTodayResponse> => {
+  try {
+    const res = await fetchWithAuth<IBookingsTodayResponse>(
+      `/api/booking/fetchBookingsToday`,
+      token,
+      { method: "GET" },
+    );
+    return res;
+  } catch (error) {
+    console.error("fetchBookingToday Error:", error);
+    throw error;
+  }
+};
 export {
   signUpAdmin,
   fetchAdminDashboardData,
@@ -352,4 +368,5 @@ export {
   onboardEmployee,
   fetchQuotes,
   approveBooking,
+  fetchBookingToday,
 };

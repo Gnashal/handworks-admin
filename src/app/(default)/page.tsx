@@ -8,10 +8,18 @@ import Loader from "@/components/loader";
 
 export default function Dashboard() {
   const [dateFilter, setDateFilter] = React.useState<"week" | "month" | "year">(
-    "week"
+    "week",
   );
 
   const { data, isLoading, isError, error } = useDashboardQuery(dateFilter);
+
+  if (isLoading) {
+    return (
+      <div className="flex w-full justify-center py-10">
+        <Loader />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full p-6 lg:p-8 space-y-6">
@@ -20,13 +28,6 @@ export default function Dashboard() {
         <h2 className="text-2xl font-bold tracking-tight">Overview</h2>
         <DatePicker value={dateFilter} onChange={setDateFilter} />
       </div>
-
-      {/* LOADING */}
-      {isLoading && (
-        <div className="flex w-full justify-center py-10">
-          <Loader />
-        </div>
-      )}
 
       {/* ERROR */}
       {isError && (
@@ -37,7 +38,7 @@ export default function Dashboard() {
       )}
 
       {/* DASHBOARD */}
-      <DashboardOverview />
+      <DashboardOverview data={data} />
     </div>
   );
 }
