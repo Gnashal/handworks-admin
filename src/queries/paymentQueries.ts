@@ -4,8 +4,8 @@ import { useAuth } from "@clerk/nextjs";
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { fetchQuotes } from "@/service";
-import type { IFetchAllQuotesResponse } from "@/types/payment";
+import { fetchOrder, fetchQuotes } from "@/service";
+import type { IFetchAllQuotesResponse, IOrder } from "@/types/payment";
 
 export function useQuotesQuery(
   startDate: string,
@@ -30,6 +30,29 @@ export function useQuotesQuery(
         return res;
       } catch (err) {
         toast.error("Failed to fetch quotes data");
+        throw err;
+      }
+    },
+  });
+}
+export function useOrderQuery(orderId: string): UseQueryResult<IOrder> {
+  const { isLoaded, getToken } = useAuth();
+
+  return useQuery({
+    queryKey: ["order", orderId],
+    enabled: isLoaded && !!orderId,
+    queryFn: async () => {
+      const token = await getToken();
+      if (!token) {
+        toast.error("No active session token found");
+        throw new Error("No active session token found");
+      }
+
+      try {
+        const res = await fetchOrder(token, orderId);
+        return res;
+      } catch (err) {
+        toast.error("Failed to fetch order data");
         throw err;
       }
     },

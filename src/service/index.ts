@@ -17,7 +17,7 @@ import {
   IFetchAllBookingsResponse,
 } from "@/types/booking";
 import { IInventoryListResponse } from "@/types/inventory";
-import { IFetchAllQuotesResponse } from "@/types/payment";
+import { IFetchAllQuotesResponse, IOrder } from "@/types/payment";
 
 const fetchWithAuth = async <T>(
   url: string,
@@ -356,6 +356,19 @@ const fetchBookingToday = async (
     throw error;
   }
 };
+const fetchOrder = async (token: string, orderId: string): Promise<IOrder> => {
+  try {
+    const res = await fetchWithAuth<IOrder>(
+      `/api/fetchOrder?orderId=${orderId}`,
+      token,
+      { method: "GET" },
+    );
+    return res;
+  } catch (error) {
+    console.error("fetchOrder Error:", error);
+    throw error;
+  }
+};
 export {
   signUpAdmin,
   fetchAdminDashboardData,
@@ -366,6 +379,7 @@ export {
   fetchEmployees,
   fetchEmployee,
   onboardEmployee,
+  fetchOrder,
   fetchQuotes,
   approveBooking,
   fetchBookingToday,
