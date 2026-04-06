@@ -11,7 +11,7 @@ import {
   Package,
   Users,
   UserCheck,
-  MessageSquare,
+  // MessageSquare,
   Settings,
   LogOut,
   Menu,
@@ -20,7 +20,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { useClerk } from "@clerk/nextjs";
-import { useMessages } from "@/context/messagesContext";
+// import { useMessages } from "@/context/messagesContext";
 import SettingsDialog from "@/components/settings/SettingsDialog";
 
 import {
@@ -89,7 +89,7 @@ const MenuItem: React.FC<{
 export default function Sidebar() {
   const location = usePathname();
   const { signOut } = useClerk();
-  const { unreadCount } = useMessages();
+  // const { unreadCount } = useMessages();
 
   const routes: Route[] = [
     { icon: <LayoutDashboard />, label: "Dashboard", path: "/" },
@@ -98,12 +98,12 @@ export default function Sidebar() {
     { icon: <Package />, label: "Inventory", path: "/inventory" },
     { icon: <Users />, label: "Clients", path: "/clients" },
     { icon: <UserCheck />, label: "Employees", path: "/employees" },
-    {
-      icon: <MessageSquare />,
-      label: "Messages",
-      path: "/messages",
-      badge: unreadCount,
-    },
+    // {
+    //   icon: <MessageSquare />,
+    //   label: "Messages",
+    //   path: "/messages",
+    //   badge: unreadCount,
+    // },
   ];
 
   const [collapsed, setCollapsed] = useState(false);

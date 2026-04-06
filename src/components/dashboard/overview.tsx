@@ -5,8 +5,7 @@ import {
   AlertCircle,
   Users,
   UserCheck,
-  Package,
-  Mail,
+  // Package,
 } from "lucide-react";
 
 import MetricCard from "./metricCard";
@@ -16,23 +15,78 @@ import QuickActions from "./quickActions";
 import RecentActivity from "./recentActivity";
 import TopServicesCard from "./topServicesCard";
 import InventoryAlertsCard from "./inventoryAlertsCard";
+import FinancialCard from "./financialCard";
+import type { IAdminDashboardResponse } from "@/types/admin";
+import { normalizeServiceName } from "@/lib/normalize";
+import type { IMainServiceType } from "@/types/booking";
 
-import {
-  mockDashboardData as data,
-  recentActivities,
-  topServices,
-  inventoryAlerts,
-} from "@/data/mockDashboard";
+const SERVICE_TYPE_VALUES: IMainServiceType[] = [
+  "SERVICE_TYPE_UNSPECIFIED",
+  "GENERAL_CLEANING",
+  "COUCH",
+  "MATTRESS",
+  "CAR",
+  "POST",
+];
 
-export default function DashboardOverview() {
+type ActivityType = "booking" | "client" | "cancel";
+
+const toActivityType = (type: string): ActivityType => {
+  const normalized = type.toLowerCase();
+
+  if (normalized === "booking") {
+    return "booking";
+  }
+  if (normalized === "client") {
+    return "client";
+  }
+
+  return "cancel";
+};
+
+const getClientPercentage = (count: number, total: number) => {
+  if (!total) {
+    return 0;
+  }
+
+  return Math.round((count / total) * 100);
+};
+
+const normalizeDashboardServiceName = (name: string) => {
+  const normalizedName = name.trim().toUpperCase();
+
+  if (SERVICE_TYPE_VALUES.includes(normalizedName as IMainServiceType)) {
+    return normalizeServiceName(normalizedName as IMainServiceType);
+  }
+
+  return name;
+};
+
+export default function DashboardOverview({
+  data,
+}: {
+  data?: IAdminDashboardResponse;
+}) {
+  const activeClients = data?.activeClients ?? 0;
+
+  const topServices = (data?.topServices ?? []).map((service) => ({
+    ...service,
+    name: normalizeDashboardServiceName(service.name),
+  }));
+
+  const inventoryAlerts = data?.lowStockItems ?? [];
+
+  const recentActivities = (data?.recentActivities ?? []).map((activity) => ({
+    ...activity,
+    type: toActivityType(activity.type),
+  }));
+
   return (
     <div className="flex flex-col gap-6">
       {/* MAIN GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        
         {/* LEFT CONTENT */}
         <div className="lg:col-span-3 xl:col-span-4 flex flex-col gap-6">
-
           {/* METRIC CARDS */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             <MetricCard
@@ -40,21 +94,22 @@ export default function DashboardOverview() {
               variant="info"
               icon={<CalendarDays />}
               data={{
-                title: "Today’s Bookings",
-                value: data.todayBookings,
-                change: 12,
-                trend: "up",
+                title: "Bookings",
+                value: data?.todayBookings ?? 0,
+                change: data?.growthIndex?.bookingsGrowthIndex,
+                trend:
+                  (data?.growthIndex?.bookingsGrowthIndex ?? 0) >= 0
+                    ? "up"
+                    : "down",
               }}
             />
 
             <MetricCard
-              variant={data.pendingActions > 0 ? "danger" : "success"}
+              variant={(data?.pendingActions ?? 0) > 0 ? "danger" : "success"}
               icon={<AlertCircle />}
               data={{
                 title: "Pending Actions",
-                value: data.pendingActions,
-                change: 5,
-                trend: "down",
+                value: data?.pendingActions ?? 0,
               }}
             />
 
@@ -64,9 +119,7 @@ export default function DashboardOverview() {
               icon={<Users />}
               data={{
                 title: "Active Clients",
-                value: data.activeClients,
-                change: 8,
-                trend: "up",
+                value: activeClients,
               }}
             />
 
@@ -76,19 +129,26 @@ export default function DashboardOverview() {
               icon={<UserCheck />}
               data={{
                 title: "Employees Status",
-                value: `${data.employeesActive}/${data.employeesTotal}`,
+                value: `${data?.employeesActive ?? 0}/${data?.employeesTotal ?? 0}`,
               }}
             />
 
-            <MetricCard
-              href="/messages"
-              variant={data.unreadMessages > 0 ? "info" : "default"}
-              icon={<Mail />}
+            <FinancialCard
               data={{
-                title: "Messages",
-                value: data.unreadMessages,
-                change: 3,
-                trend: "up",
+                label: "Revenue",
+                amount: data?.revenue ?? 0,
+                breakdowns: [
+                  {
+                    label: "Paid",
+                    amount: data?.paid ?? 0,
+                  },
+                  {
+                    label: "Unpaid",
+                    amount: data?.unpaid ?? 0,
+                  },
+                ],
+                className:
+                  "w-full min-h-35 flex flex-col justify-between border transition hover:shadow-md",
               }}
             />
           </div>
@@ -128,26 +188,31 @@ export default function DashboardOverview() {
           <RecentActivity activities={recentActivities} />
 
           <ClientBreakdownCard
-            total={data.activeClients}
+            total={activeClients}
             clients={[
               {
                 label: "New",
-                value: Math.round((data.newClients / data.activeClients) * 100),
-                count: data.newClients,
+                value: getClientPercentage(
+                  data?.newClients ?? 0,
+                  activeClients,
+                ),
+                count: data?.newClients ?? 0,
               },
               {
                 label: "Returning",
-                value: Math.round(
-                  (data.returningClients / data.activeClients) * 100
+                value: getClientPercentage(
+                  data?.returningClients ?? 0,
+                  activeClients,
                 ),
-                count: data.returningClients,
+                count: data?.returningClients ?? 0,
               },
               {
                 label: "Inactive",
-                value: Math.round(
-                  (data.inactiveClients / data.activeClients) * 100
+                value: getClientPercentage(
+                  data?.inactiveClients ?? 0,
+                  activeClients,
                 ),
-                count: data.inactiveClients,
+                count: data?.inactiveClients ?? 0,
               },
             ]}
           />
