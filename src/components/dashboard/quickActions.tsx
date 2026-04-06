@@ -1,12 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  CalendarPlus,
-  UserPlus,
-  Users,
-  PackagePlus,
-} from "lucide-react";
+import { CalendarPlus, UserPlus, Users, PackagePlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function QuickActions() {
@@ -53,7 +48,7 @@ export default function QuickActions() {
         onClick={() => router.push("/inventory")}
       >
         <PackagePlus className="h-4 w-4" />
-        Inventory Item
+        Inventory Items
       </Button>
     </div>
   );

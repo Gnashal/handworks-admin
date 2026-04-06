@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { endOfMonth, startOfMonth } from "date-fns";
+import { endOfMonth, startOfMonth, subMonths } from "date-fns";
 
 import { DataTable } from "@/components/dataTable";
 import { bookingColumns } from "./columns";
@@ -25,7 +25,7 @@ export default function BookingsPage() {
 
   React.useEffect(() => {
     const now = new Date();
-    const start = startOfMonth(now);
+    const start = startOfMonth(subMonths(now, 3));
     const end = endOfMonth(now);
 
     setSearchParams({
@@ -82,7 +82,7 @@ export default function BookingsPage() {
           setPage(pageIndex);
           setLimit(pageSize);
         }}
-        onRowClick={(booking) => router.replace(`/bookings/${booking.id}`)}
+        // onRowClick={(booking) => router.replace(`/bookings/${booking.id}`)}
         onDateSearchClick={(from, to) => {
           setSearchParams({
             startDate: from ? from.toISOString() : undefined,

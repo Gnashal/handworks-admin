@@ -16,3 +16,36 @@ export function normalizeServiceName(serviceType: IMainServiceType) {
       return serviceType;
   }
 }
+
+const SERVICE_TYPE_ALIASES: Record<string, IMainServiceType> = {
+  GENERAL_CLEANING: "GENERAL_CLEANING",
+  GENERAL: "GENERAL_CLEANING",
+  COUCH: "COUCH",
+  COUCH_CLEANING: "COUCH",
+  MATTRESS: "MATTRESS",
+  MATTRESS_CLEANING: "MATTRESS",
+  CAR: "CAR",
+  CAR_CLEANING: "CAR",
+  POST: "POST",
+  POST_CONSTRUCTION: "POST",
+  POST_CONSTRUCTION_CLEANING: "POST",
+  SERVICE_TYPE_UNSPECIFIED: "SERVICE_TYPE_UNSPECIFIED",
+};
+
+export function normalizeServiceType(
+  service: string,
+): IMainServiceType | undefined {
+  const key = service.trim().toUpperCase().replace(/\s+/g, "_");
+
+  return SERVICE_TYPE_ALIASES[key];
+}
+
+export function normalizeServiceNameFromValue(service: string): string {
+  const normalizedType = normalizeServiceType(service);
+
+  if (normalizedType) {
+    return normalizeServiceName(normalizedType);
+  }
+
+  return service;
+}

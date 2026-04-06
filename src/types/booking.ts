@@ -1,4 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
+export interface ICalendarBooking {
+  id: string;
+  service: string;
+  schedule?: {
+    date: string;
+    time: string;
+  };
+  customer?: {
+    firstName: string;
+    lastName: string;
+  };
+}
+export interface ICalendarBookingResponse {
+  bookings: ICalendarBooking[];
+}
 export interface IBookingAllocation {
   cleaningAllocation?: ICleaningAllocation | null;
   cleanerAssigned: ICleanerAssigned[];
@@ -205,11 +221,20 @@ export interface IAcceptBookingResponse {
   bookingId: string;
   status: string;
 }
-export interface ICalendarBooking {
-  id: string;
-  date: string; // YYYY-MM-DD
-  time: string;
-  service: string;
-  client: string;
-  note?: string;
+export interface IBookingsTodayResponse {
+  bookings:
+    | {
+        id?: string;
+        date?: string;
+        service: string;
+        time: string;
+        client: string;
+      }
+    | {
+        id?: string;
+        date?: string;
+        service: string;
+        time: string;
+        client: string;
+      }[];
 }

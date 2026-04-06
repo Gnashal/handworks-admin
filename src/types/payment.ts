@@ -71,3 +71,32 @@ export interface ICustomerRequest {
 export interface IQuotesResponse {
   quotes: IQuoteResponse[];
 }
+export interface ICreateOrderRequest {
+  quoteId: string;
+  customerId: string;
+  paymentMethod: string;
+  subtotal: number;
+  addonTotal: number;
+  totalAmount: number;
+}
+
+export interface ICreateOrderResponse {
+  order: IOrder;
+}
+
+export interface IOrder {
+  id: string;
+  order_number: string;
+  customer_id: string;
+  quote_id: string;
+  currency: string;
+  subtotal: number;
+  addon_total: number;
+  total_amount: number;
+  downpayment_required: number;
+  remaining_balance: number;
+  payment_status: string;
+  payment_method: string;
+  created_at: string;
+  updated_at: string;
+}

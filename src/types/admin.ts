@@ -14,6 +14,40 @@ export interface IAdminDashboardResponse {
   activeSessions: number;
   clients: number;
   growthIndex: IGrowthIndex;
+  activeClients: number;
+  employeesActive: number;
+  employeesTotal: number;
+  inactiveClients: number;
+  lowStockItems: [
+    {
+      id: number;
+      name: string;
+      stock: number;
+    },
+  ];
+  newClients: number;
+  paid: number;
+  pendingActions: number;
+  recentActivities: [
+    {
+      id: number;
+      time: string;
+      title: string;
+      type: string;
+    },
+  ];
+  returningClients: number;
+  revenue: number;
+  todayBookings: number;
+  topServices: [
+    {
+      bookings: number;
+      id: number;
+      name: string;
+    },
+  ];
+  unpaid: number;
+  unreadMessages: number;
 }
 
 export interface IGrowthIndex {

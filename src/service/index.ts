@@ -13,10 +13,12 @@ import {
 import {
   IAcceptBookingResponse,
   IBooking,
+  IBookingsTodayResponse,
+  ICalendarBookingResponse,
   IFetchAllBookingsResponse,
 } from "@/types/booking";
 import { IInventoryListResponse } from "@/types/inventory";
-import { IFetchAllQuotesResponse } from "@/types/payment";
+import { IFetchAllQuotesResponse, IOrder } from "@/types/payment";
 
 const fetchWithAuth = async <T>(
   url: string,
@@ -340,6 +342,54 @@ const fetchQuotes = async (
   }
 };
 
+const fetchBookingToday = async (
+  token: string,
+): Promise<IBookingsTodayResponse> => {
+  try {
+    const res = await fetchWithAuth<IBookingsTodayResponse>(
+      `/api/booking/fetchBookingsToday`,
+      token,
+      { method: "GET" },
+    );
+    return res;
+  } catch (error) {
+    console.error("fetchBookingToday Error:", error);
+    throw error;
+  }
+};
+const fetchOrder = async (token: string, orderId: string): Promise<IOrder> => {
+  try {
+    const res = await fetchWithAuth<IOrder>(
+      `/api/fetchOrder?orderId=${orderId}`,
+      token,
+      { method: "GET" },
+    );
+    return res;
+  } catch (error) {
+    console.error("fetchOrder Error:", error);
+    throw error;
+  }
+};
+const fetchCalendarBookings = async (
+  token: string,
+  month: string,
+): Promise<ICalendarBookingResponse> => {
+  try {
+    const params = new URLSearchParams();
+    if (month) {
+      params.append("month", month);
+    }
+    const res = await fetchWithAuth<ICalendarBookingResponse>(
+      `/api/booking/fetchCalendarBookings?${params.toString()}`,
+      token,
+      { method: "GET" },
+    );
+    return res;
+  } catch (error) {
+    console.error("fetchCalendarBookings Error:", error);
+    throw error;
+  }
+};
 export {
   signUpAdmin,
   fetchAdminDashboardData,
@@ -350,6 +400,9 @@ export {
   fetchEmployees,
   fetchEmployee,
   onboardEmployee,
+  fetchOrder,
   fetchQuotes,
   approveBooking,
+  fetchBookingToday,
+  fetchCalendarBookings,
 };
