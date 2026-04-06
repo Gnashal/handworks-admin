@@ -1,10 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { normalizeServiceName } from "@/lib/normalize";
-import { useBookingsTodayQuery } from "@/queries/bookingQueries";
-import type { IMainServiceType } from "@/types/booking";
-import { mockBookings } from "@/data/mockBookings";
+import {
+  normalizeServiceNameFromValue,
+  normalizeServiceType,
+} from "@/lib/normalize";
+import {
+  useBookingsTodayQuery,
+  useCalendarBookingsQuery,
+} from "@/queries/bookingQueries";
+import type { ICalendarBooking, IMainServiceType } from "@/types/booking";
 
 const TIME_SLOTS = ["08:00 AM", "10:00 AM", "01:00 PM", "03:00 PM", "05:00 PM"];
 
@@ -16,50 +21,13 @@ type CalendarDay = {
   date: Date;
 };
 
-// ✅ NEW TYPE (fixes all 'any' errors)
-type CalendarBooking = {
-  id: string;
-  service: string;
-  schedule?: {
-    date: string;
-    time: string;
-  };
-  customer?: {
-    firstName: string;
-    lastName: string;
-  };
-};
-
-const SERVICE_COLORS: Record<string, string> = {
-  "General Cleaning": "bg-green-100 text-green-800 border-green-200",
-  "Couch Cleaning": "bg-yellow-100 text-yellow-800 border-yellow-200",
-  "Mattress Cleaning": "bg-purple-100 text-purple-800 border-purple-200",
-  "Car Cleaning": "bg-blue-100 text-blue-800 border-blue-200",
-  "Post Construction Cleaning":
-    "bg-orange-100 text-orange-800 border-orange-200",
-};
-
-const SERVICE_TYPE_VALUES: IMainServiceType[] = [
-  "SERVICE_TYPE_UNSPECIFIED",
-  "GENERAL_CLEANING",
-  "COUCH",
-  "MATTRESS",
-  "CAR",
-  "POST",
-];
-
-const isMainServiceType = (service: string): service is IMainServiceType => {
-  return SERVICE_TYPE_VALUES.includes(service as IMainServiceType);
-};
-
-const formatServiceName = (service: string) => {
-  const normalized = service.trim().toUpperCase();
-
-  if (isMainServiceType(normalized)) {
-    return normalizeServiceName(normalized);
-  }
-
-  return service;
+const SERVICE_COLORS: Record<IMainServiceType, string> = {
+  GENERAL_CLEANING: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  COUCH: "bg-amber-100 text-amber-800 border-amber-200",
+  MATTRESS: "bg-violet-100 text-violet-800 border-violet-200",
+  CAR: "bg-sky-100 text-sky-800 border-sky-200",
+  POST: "bg-orange-100 text-orange-800 border-orange-200",
+  SERVICE_TYPE_UNSPECIFIED: "bg-slate-100 text-slate-700 border-slate-200",
 };
 
 const parseTimeToMinutes = (time: string) => {
@@ -78,16 +46,27 @@ const parseTimeToMinutes = (time: string) => {
 };
 
 export default function BookingCalendar() {
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 2));
-  const [selectedDate, setSelectedDate] = useState("2026-03-24");
+  const today = new Date();
+  const [currentDate, setCurrentDate] = useState(
+    new Date(today.getFullYear(), today.getMonth(), 1),
+  );
+  const [selectedDate, setSelectedDate] = useState(
+    today.toISOString().split("T")[0],
+  );
   const { data: bookingsTodayData, isLoading: isLoadingBookingsToday } =
     useBookingsTodayQuery();
 
-  // ✅ typed bookings
-  const bookings: CalendarBooking[] = mockBookings;
-
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
+  const monthKey = `${year}-${String(month + 1).padStart(2, "0")}`;
+
+  const {
+    data: calendarBookingsData,
+    isLoading: isLoadingCalendarBookings,
+    error: calendarBookingsError,
+  } = useCalendarBookingsQuery(monthKey);
+
+  const bookings: ICalendarBooking[] = calendarBookingsData?.bookings ?? [];
 
   const generateCalendarDays = (): CalendarDay[] => {
     const days: CalendarDay[] = [];
@@ -133,7 +112,7 @@ export default function BookingCalendar() {
   const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
   const getDayBookings = (date: string) => {
-    return bookings.filter((b: CalendarBooking) => b.schedule?.date === date);
+    return bookings.filter((b: ICalendarBooking) => b.schedule?.date === date);
   };
 
   const getDayInfo = (date: string) => {
@@ -148,9 +127,13 @@ export default function BookingCalendar() {
   };
 
   const getServiceColor = (service: string) => {
-    return (
-      SERVICE_COLORS[service] || "bg-gray-100 text-gray-700 border-gray-200"
-    );
+    const normalizedType = normalizeServiceType(service);
+
+    if (normalizedType) {
+      return SERVICE_COLORS[normalizedType];
+    }
+
+    return "bg-gray-100 text-gray-700 border-gray-200";
   };
 
   const todayBookingsRaw = bookingsTodayData?.bookings;
@@ -218,6 +201,16 @@ export default function BookingCalendar() {
           </div>
         </div>
 
+        {calendarBookingsError && (
+          <p className="mb-4 text-xs text-red-500">
+            Failed to load calendar bookings.
+          </p>
+        )}
+
+        {isLoadingCalendarBookings && (
+          <p className="mb-4 text-xs text-gray-500">Loading calendar...</p>
+        )}
+
         {/* CALENDAR */}
         <div className="border rounded-xl overflow-hidden">
           <div className="grid grid-cols-7 bg-gray-50 border-b">
@@ -283,14 +276,15 @@ export default function BookingCalendar() {
 
                   {/* MINI BOOKINGS */}
                   <div className="space-y-0.5 overflow-hidden">
-                    {dayBookings.slice(0, 2).map((b: CalendarBooking) => (
+                    {dayBookings.slice(0, 2).map((b: ICalendarBooking) => (
                       <div
                         key={b.id}
                         className={`text-[10px] px-1 py-0.5 rounded border truncate ${getServiceColor(
                           b.service,
                         )}`}
                       >
-                        {b.schedule?.time} {b.service}
+                        {b.schedule?.time}{" "}
+                        {normalizeServiceNameFromValue(b.service)}
                       </div>
                     ))}
 
@@ -312,7 +306,11 @@ export default function BookingCalendar() {
         <div className="mb-4">
           <p className="text-sm text-gray-400">Details Schedule</p>
           <h2 className="text-sm font-semibold">
-            {new Date().toISOString().split("T")[0]}
+            {new Date().toLocaleDateString("default", {
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            })}
           </h2>
         </div>
 
@@ -329,11 +327,11 @@ export default function BookingCalendar() {
                   <div
                     key={`${booking.client}-${booking.time}-${index}`}
                     className={`rounded-xl p-4 border ${getServiceColor(
-                      formatServiceName(booking.service),
+                      booking.service,
                     )}`}
                   >
                     <h3 className="text-sm font-semibold">
-                      {formatServiceName(booking.service)}
+                      {normalizeServiceNameFromValue(booking.service)}
                     </h3>
 
                     <div className="mt-2 text-xs space-y-1">

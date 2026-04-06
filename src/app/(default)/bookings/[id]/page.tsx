@@ -290,14 +290,18 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
   const addonTotal = addons?.reduce((sum, a) => sum + (a.price ?? 0), 0) ?? 0;
   const effectiveReviewStatus = localReviewStatus ?? booking.base.reviewStatus;
   const paymentStatus = order.payment_status;
-  const isPaymentCompleted = normalizeStatus(paymentStatus) === "COMPLETED";
+  const normalizedPaymentStatus = normalizeStatus(paymentStatus);
+  const showDownpaymentPaidPill =
+    normalizedPaymentStatus === "PENDING_FULLPAYMENT" ||
+    normalizedPaymentStatus === "COMPLETED";
+  const showFullpaymentPaidPill = normalizedPaymentStatus === "COMPLETED";
   const serviceType = booking.mainService.serviceType as IMainServiceType;
   const heroTheme =
     serviceHeroThemeConfig[serviceType] ??
     serviceHeroThemeConfig.SERVICE_TYPE_UNSPECIFIED;
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.08),transparent_45%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.08),transparent_40%)] bg-background">
+    <div className="min-h-screen">
       <div className="mx-auto max-w-7xl px-4 pt-6 pb-10 space-y-6 sm:px-6 lg:px-8">
         <Link
           href="/bookings"
@@ -397,22 +401,6 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
                 ) : (
                   <Button variant="destructive">Cancel booking</Button>
                 )}
-
-                <div
-                  className={`mt-2 rounded-xl border p-4 ${heroTheme.urgencyCardClass}`}
-                >
-                  <p
-                    className={`text-xs font-semibold uppercase tracking-wide ${heroTheme.subtleTextClass}`}
-                  >
-                    Payment urgency
-                  </p>
-                  <p className="mt-1 text-2xl font-bold">
-                    {isPaymentCompleted ? "Settled" : "Action Needed"}
-                  </p>
-                  <p className={`mt-1 text-xs ${heroTheme.subtleTextClass}`}>
-                    Status updates here in real time as transactions are posted.
-                  </p>
-                </div>
               </div>
             </div>
           </CardContent>
@@ -440,8 +428,15 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
 
           <Card>
             <CardContent className="pt-5 pb-5">
-              <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500/10 text-sky-700">
-                <CreditCard className="h-4 w-4" />
+              <div className="mb-3 flex items-start justify-between gap-2">
+                <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500/10 text-sky-700">
+                  <CreditCard className="h-4 w-4" />
+                </div>
+                {showDownpaymentPaidPill && (
+                  <span className="inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                    Paid
+                  </span>
+                )}
               </div>
               <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Downpayment Required
@@ -457,8 +452,15 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
 
           <Card>
             <CardContent className="pt-5 pb-5">
-              <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10 text-amber-700">
-                <Wallet className="h-4 w-4" />
+              <div className="mb-3 flex items-start justify-between gap-2">
+                <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10 text-amber-700">
+                  <Wallet className="h-4 w-4" />
+                </div>
+                {showFullpaymentPaidPill && (
+                  <span className="inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                    Paid
+                  </span>
+                )}
               </div>
               <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Remaining Balance

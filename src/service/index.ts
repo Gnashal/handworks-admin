@@ -14,6 +14,7 @@ import {
   IAcceptBookingResponse,
   IBooking,
   IBookingsTodayResponse,
+  ICalendarBookingResponse,
   IFetchAllBookingsResponse,
 } from "@/types/booking";
 import { IInventoryListResponse } from "@/types/inventory";
@@ -369,6 +370,26 @@ const fetchOrder = async (token: string, orderId: string): Promise<IOrder> => {
     throw error;
   }
 };
+const fetchCalendarBookings = async (
+  token: string,
+  month: string,
+): Promise<ICalendarBookingResponse> => {
+  try {
+    const params = new URLSearchParams();
+    if (month) {
+      params.append("month", month);
+    }
+    const res = await fetchWithAuth<ICalendarBookingResponse>(
+      `/api/booking/fetchCalendarBookings?${params.toString()}`,
+      token,
+      { method: "GET" },
+    );
+    return res;
+  } catch (error) {
+    console.error("fetchCalendarBookings Error:", error);
+    throw error;
+  }
+};
 export {
   signUpAdmin,
   fetchAdminDashboardData,
@@ -383,4 +404,5 @@ export {
   fetchQuotes,
   approveBooking,
   fetchBookingToday,
+  fetchCalendarBookings,
 };
