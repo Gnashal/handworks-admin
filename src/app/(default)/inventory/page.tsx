@@ -5,6 +5,7 @@ import { useState } from "react";
 import { DataTable } from "@/components/dataTable";
 import { columns } from "./columns";
 import {
+  ICreateItemRequest,
   ItemCategory,
   ItemStatus,
   ItemType,
@@ -20,8 +21,14 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { InventoryDetailsDialog } from "@/components/inventory/inventoryDetails";
-import { AddInventoryDialog } from "@/components/inventory/addItem";
-import { useInventoryQuery } from "@/queries/inventoryQueries";
+import {
+  AddInventoryDialog,
+  IAddInventoryFormData,
+} from "@/components/inventory/addItem";
+import {
+  useCreateInventoryItemMutation,
+  useInventoryQuery,
+} from "@/queries/inventoryQueries";
 import { DataTableSkeleton } from "@/components/dataTableSkeleton";
 
 export default function InventoryPage() {
@@ -34,6 +41,7 @@ export default function InventoryPage() {
 
   const [selectedItem, setSelectedItem] = useState<IInventoryItem | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const createInventoryMutation = useCreateInventoryItemMutation();
 
   const typeFilter = type === "ALL" ? undefined : type;
   const statusFilter = status === "ALL" ? undefined : status;
@@ -52,6 +60,21 @@ export default function InventoryPage() {
   const totalPages = Math.max(1, Math.ceil(totalItems / limit));
   const canNextPage = page + 1 < totalPages;
   const canPreviousPage = page > 0;
+
+  const handleCreateItem = async (formData: IAddInventoryFormData) => {
+    const payload: ICreateItemRequest = {
+      name: formData.name.trim(),
+      quantity: formData.quantity,
+      unit: formData.unit.trim(),
+      type: formData.type,
+      category: formData.category,
+    };
+
+    await createInventoryMutation.mutateAsync({
+      item: payload,
+      imageFile: formData.image_file,
+    });
+  };
 
   return (
     <div className="w-full h-screen p-6 space-y-4">
@@ -158,7 +181,8 @@ export default function InventoryPage() {
       <AddInventoryDialog
         open={addOpen}
         onClose={() => setAddOpen(false)}
-        onCreate={(data) => console.log("create", data)}
+        onCreate={handleCreateItem}
+        submitting={createInventoryMutation.isPending}
       />
     </div>
   );

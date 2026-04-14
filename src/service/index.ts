@@ -12,12 +12,21 @@ import {
 } from "@/types/admin";
 import {
   IAcceptBookingResponse,
+  IAssignEquipmentToBookingRequest,
+  IAssignInventoryResponse,
+  IAssignResourcesToBookingRequest,
   IBooking,
   IBookingsTodayResponse,
   ICalendarBookingResponse,
   IFetchAllBookingsResponse,
+  IItemQuantity,
 } from "@/types/booking";
-import { IInventoryListResponse } from "@/types/inventory";
+import {
+  ICreateItemRequest,
+  IInventoryItem,
+  IInventoryListResponse,
+} from "@/types/inventory";
+import { IBookingMapRequest, IBookingMapResponse } from "@/types/location";
 import { IFetchAllQuotesResponse, IOrder } from "@/types/payment";
 
 const fetchWithAuth = async <T>(
@@ -180,7 +189,7 @@ const fetchInventoryItems = async (
     }
 
     const res = await fetchWithAuth<IInventoryListResponse>(
-      `/api/fetchInventory?${params.toString()}`,
+      `/api/inventory/fetchInventory?${params.toString()}`,
       token,
       { method: "GET" },
     );
@@ -390,6 +399,113 @@ const fetchCalendarBookings = async (
     throw error;
   }
 };
+const fetchBookingMapData = async (
+  token: string,
+  latitude: number,
+  longitude: number,
+  address?: string,
+): Promise<IBookingMapResponse> => {
+  try {
+    const body: IBookingMapRequest = {
+      latitude,
+      longitude,
+      address,
+    };
+
+    const res = await fetchWithAuth<IBookingMapResponse>(
+      "/api/location/openstreetmap",
+      token,
+      {
+        method: "POST",
+        data: body,
+      },
+    );
+
+    return res;
+  } catch (error) {
+    console.error("fetchBookingMapData Error:", error);
+    throw error;
+  }
+};
+const attachEquipmentToBooking = async (
+  token: string,
+  bookingId: string,
+  equipment: IItemQuantity[],
+): Promise<IAssignInventoryResponse> => {
+  try {
+    const body: IAssignEquipmentToBookingRequest = {
+      bookingId,
+      equipment: equipment,
+    };
+    const res = await fetchWithAuth<IAssignInventoryResponse>(
+      `/api/inventory/attachEquipment`,
+      token,
+      {
+        method: "POST",
+        data: body,
+      },
+    );
+    return res;
+  } catch (error) {
+    console.error("attachEquipmentToBooking Error:", error);
+    throw error;
+  }
+};
+const attachResourcesToBooking = async (
+  token: string,
+  bookingId: string,
+  resources: IItemQuantity[],
+): Promise<IAssignInventoryResponse> => {
+  try {
+    const body: IAssignResourcesToBookingRequest = {
+      bookingId,
+      resources: resources,
+    };
+    const res = await fetchWithAuth<IAssignInventoryResponse>(
+      `/api/inventory/attachResources`,
+      token,
+      {
+        method: "POST",
+        data: body,
+      },
+    );
+    return res;
+  } catch (error) {
+    console.error("attachResourcesToBooking Error:", error);
+    throw error;
+  }
+};
+const createInventoryItem = async (
+  token: string,
+  newItem: ICreateItemRequest,
+): Promise<IInventoryItem> => {
+  try {
+    const res = await fetchWithAuth<IInventoryItem>(
+      `/api/inventory/createInventory`,
+      token,
+      {
+        method: "POST",
+        data: newItem,
+      },
+    );
+    return res;
+  } catch (error) {
+    console.error("createInventoryItem Error:", error);
+    throw error;
+  }
+};
+const uploadImage = async (formData: FormData) => {
+  try {
+    const { data } = await axios.post<{ url: string }>(
+      "/api/uploadPhoto",
+      formData,
+    );
+    return data;
+  } catch (error) {
+    console.error("uploadImage Error:", error);
+    throw error;
+  }
+};
 export {
   signUpAdmin,
   fetchAdminDashboardData,
@@ -405,4 +521,9 @@ export {
   approveBooking,
   fetchBookingToday,
   fetchCalendarBookings,
+  fetchBookingMapData,
+  attachEquipmentToBooking,
+  attachResourcesToBooking,
+  createInventoryItem,
+  uploadImage,
 };

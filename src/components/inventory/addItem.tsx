@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import * as React from "react";
 import Image from "next/image";
+
 import {
   Dialog,
   DialogContent,
@@ -12,31 +12,97 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ItemCategory, ItemType } from "@/types/inventory";
+
+export interface IAddInventoryFormData {
+  name: string;
+  quantity: number;
+  unit: string;
+  type: ItemType;
+  category: ItemCategory;
+  image_file: File | null;
+}
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  onCreate: (data: any) => void;
+  onCreate: (data: IAddInventoryFormData) => Promise<void>;
+  submitting?: boolean;
 }
 
-export function AddInventoryDialog({ open, onClose, onCreate }: Props) {
-  const [form, setForm] = React.useState({
-    name: "",
-    quantity: 0,
-    max_quantity: 0,
-    unit: "",
-    image_file: null as File | null,
-  });
+const initialFormState: IAddInventoryFormData = {
+  name: "",
+  quantity: 0,
+  unit: "",
+  type: "RESOURCE",
+  category: "GENERAL",
+  image_file: null,
+};
 
-  const update = (k: string, v: any) => setForm({ ...form, [k]: v });
+export function AddInventoryDialog({
+  open,
+  onClose,
+  onCreate,
+  submitting,
+}: Props) {
+  const [form, setForm] =
+    React.useState<IAddInventoryFormData>(initialFormState);
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
 
-  const imagePreview = React.useMemo(() => {
-    if (!form.image_file) return null;
-    return URL.createObjectURL(form.image_file);
+  const update = <K extends keyof IAddInventoryFormData>(
+    key: K,
+    value: IAddInventoryFormData[K],
+  ) => setForm((prev) => ({ ...prev, [key]: value }));
+
+  const canSubmit =
+    form.name.trim().length > 0 &&
+    form.unit.trim().length > 0 &&
+    Number.isFinite(form.quantity) &&
+    form.quantity >= 0;
+
+  const resetForm = () => {
+    setForm(initialFormState);
+    setPreviewUrl(null);
+  };
+
+  const handleSubmit = async () => {
+    if (!canSubmit || submitting) return;
+
+    await onCreate(form);
+    resetForm();
+    onClose();
+  };
+
+  const handleDialogStateChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      resetForm();
+      onClose();
+    }
+  };
+
+  React.useEffect(() => {
+    if (!form.image_file) {
+      setPreviewUrl(null);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(form.image_file);
+    setPreviewUrl(objectUrl);
+
+    return () => {
+      URL.revokeObjectURL(objectUrl);
+    };
   }, [form.image_file]);
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleDialogStateChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Add Inventory Item</DialogTitle>
@@ -56,30 +122,61 @@ export function AddInventoryDialog({ open, onClose, onCreate }: Props) {
               <Label>Quantity</Label>
               <Input
                 type="number"
+                min={0}
                 value={form.quantity}
                 onChange={(e) => update("quantity", Number(e.target.value))}
               />
             </div>
 
             <div>
-              <Label>Max Quantity</Label>
+              <Label>Unit</Label>
               <Input
-                type="number"
-                value={form.max_quantity}
-                onChange={(e) => update("max_quantity", Number(e.target.value))}
+                value={form.unit}
+                onChange={(e) => update("unit", e.target.value)}
               />
             </div>
           </div>
 
-          <div>
-            <Label>Unit</Label>
-            <Input
-              value={form.unit}
-              onChange={(e) => update("unit", e.target.value)}
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Type</Label>
+              <Select
+                value={form.type}
+                onValueChange={(value) => update("type", value as ItemType)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="RESOURCE">Resource</SelectItem>
+                  <SelectItem value="EQUIPMENT">Equipment</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Category</Label>
+              <Select
+                value={form.category}
+                onValueChange={(value) =>
+                  update("category", value as ItemCategory)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="GENERAL">General</SelectItem>
+                  <SelectItem value="ELECTRONICS">Electronics</SelectItem>
+                  <SelectItem value="FURNITURE">Furniture</SelectItem>
+                  <SelectItem value="APPLIANCES">Appliances</SelectItem>
+                  <SelectItem value="VEHICLES">Vehicles</SelectItem>
+                  <SelectItem value="OTHER">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          {/* Image Upload */}
           <div className="space-y-2">
             <Label>Image</Label>
             <Input
@@ -91,10 +188,10 @@ export function AddInventoryDialog({ open, onClose, onCreate }: Props) {
               }
             />
 
-            {imagePreview && (
+            {previewUrl && (
               <div className="relative h-32 w-full overflow-hidden rounded-md border">
                 <Image
-                  src={imagePreview}
+                  src={previewUrl}
                   alt="Preview"
                   fill
                   className="object-cover"
@@ -105,16 +202,11 @@ export function AddInventoryDialog({ open, onClose, onCreate }: Props) {
         </div>
 
         <div className="flex justify-end gap-2 pt-4">
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="ghost" onClick={onClose} disabled={submitting}>
             Cancel
           </Button>
-          <Button
-            onClick={() => {
-              onCreate(form);
-              onClose();
-            }}
-          >
-            Add Item
+          <Button onClick={handleSubmit} disabled={!canSubmit || submitting}>
+            {submitting ? "Adding..." : "Add Item"}
           </Button>
         </div>
       </DialogContent>
