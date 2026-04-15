@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
         cloudinary.uploader
           .upload_stream(
             {
-              folder: "HandworksCleaning/Booking",
+              folder: "HandworksCleaning/Inventory",
               resource_type: "image",
             },
             (error, result) => {

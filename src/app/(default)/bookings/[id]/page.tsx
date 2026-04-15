@@ -16,6 +16,7 @@ import {
   CreditCard,
   ReceiptText,
   ShieldCheck,
+  CheckCircle2,
   Sparkles,
   User2Icon,
   Wallet,
@@ -69,6 +70,10 @@ const bookingStatusConfig: Record<
 
 const reviewStatusConfig: Record<string, { label: string; className: string }> =
   {
+    SCHEDULED: {
+      label: "Scheduled",
+      className: "bg-sky-500/15 text-sky-600 border border-sky-500/30",
+    },
     PENDING: {
       label: "Review Pending",
       className: "bg-amber-500/15 text-amber-600 border border-amber-500/30",
@@ -293,7 +298,13 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
   const addonTotal = addons?.reduce((sum, a) => sum + (a.price ?? 0), 0) ?? 0;
   const effectiveReviewStatus = localReviewStatus ?? booking.base.reviewStatus;
   const paymentStatus = order.payment_status;
+  const normalizedReviewStatus = normalizeStatus(effectiveReviewStatus);
+  // const normalizedBookingStatus = normalizeStatus(booking.base.status);
   const normalizedPaymentStatus = normalizeStatus(paymentStatus);
+  const canApproveBooking =
+    normalizedReviewStatus === "PENDING" &&
+    normalizedPaymentStatus === "PENDING_FULLPAYMENT";
+  const canCompleteBooking = normalizedReviewStatus === "SCHEDULED";
   const showDownpaymentPaidPill =
     normalizedPaymentStatus === "PENDING_FULLPAYMENT" ||
     normalizedPaymentStatus === "COMPLETED";
@@ -399,30 +410,30 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
                 </div>
               </div>
 
-              <div className="flex shrink-0 flex-col gap-2.5 lg:min-w-55">
+              <div className="flex shrink-0 flex-wrap gap-2.5 lg:min-w-55">
                 <Button
-                  variant="secondary"
-                  className={`border ${heroTheme.secondaryButtonClass}`}
+                  disabled={approveLoading || !canApproveBooking}
+                  onClick={async () => {
+                    if (!canApproveBooking) return;
+
+                    const res = await handleApproveBooking(booking.id);
+                    if (res?.status) {
+                      setLocalReviewStatus(res.status);
+                    }
+                  }}
+                  className="bg-emerald-500 text-white hover:bg-emerald-600"
                 >
-                  Edit booking
+                  <ShieldCheck className="mr-1.5 h-4 w-4" />
+                  Approve booking
                 </Button>
-                {effectiveReviewStatus === "PENDING" ? (
-                  <Button
-                    disabled={approveLoading}
-                    onClick={async () => {
-                      const res = await handleApproveBooking(booking.id);
-                      if (res?.status) {
-                        setLocalReviewStatus(res.status);
-                      }
-                    }}
-                    className="bg-emerald-500 text-white hover:bg-emerald-600"
-                  >
-                    <ShieldCheck className="mr-1.5 h-4 w-4" />
-                    Approve booking
-                  </Button>
-                ) : (
-                  <Button variant="destructive">Cancel booking</Button>
-                )}
+
+                <Button
+                  disabled={!canCompleteBooking}
+                  className="bg-blue-500 text-white hover:bg-blue-600"
+                >
+                  <CheckCircle2 className="mr-1.5 h-4 w-4" />
+                  Complete booking
+                </Button>
               </div>
             </div>
           </CardContent>
