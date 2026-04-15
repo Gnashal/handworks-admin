@@ -262,6 +262,13 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
     error: orderError,
   } = useOrderQuery(orderId);
 
+  const orderId = data?.base.orderId ?? "";
+  const {
+    data: order,
+    isLoading: orderLoading,
+    error: orderError,
+  } = useOrderQuery(orderId);
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
