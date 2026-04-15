@@ -1,21 +1,36 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import { useQuery, UseQueryResult } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  UseMutationResult,
+  UseQueryResult,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import {
+  attachEquipmentToBooking,
+  attachResourcesToBooking,
   fetchBooking,
   fetchBookings,
   fetchBookingToday,
   fetchCalendarBookings,
 } from "@/service";
 import type {
+  IAssignInventoryResponse,
   IBooking,
   IBookingsTodayResponse,
   ICalendarBookingResponse,
   IFetchAllBookingsResponse,
+  IItemQuantity,
 } from "@/types/booking";
+
+interface IAttachInventoryMutationInput {
+  bookingId: string;
+  items: IItemQuantity[];
+}
 
 export function useBookingDetailsQuery(
   bookingId: string | undefined,
@@ -122,7 +137,79 @@ export function useCalendarBookingsQuery(
   });
 }
 
+export function useAttachEquipmentToBookingMutation(): UseMutationResult<
+  IAssignInventoryResponse,
+  Error,
+  IAttachInventoryMutationInput
+> {
+  const { getToken } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ bookingId, items }) => {
+      const token = await getToken();
+      if (!token) {
+        toast.error("No active session token found");
+        throw new Error("No active session token found");
+      }
+
+      return attachEquipmentToBooking(token, bookingId, items);
+    },
+    onSuccess: async (_data, variables) => {
+      toast.success("Equipment attached successfully");
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["booking", variables.bookingId],
+        }),
+        queryClient.invalidateQueries({ queryKey: ["bookings"] }),
+        queryClient.invalidateQueries({ queryKey: ["bookingsToday"] }),
+        queryClient.invalidateQueries({ queryKey: ["calendarBookings"] }),
+      ]);
+    },
+    onError: () => {
+      toast.error("Failed to attach equipment");
+    },
+  });
+}
+
+export function useAttachResourcesToBookingMutation(): UseMutationResult<
+  IAssignInventoryResponse,
+  Error,
+  IAttachInventoryMutationInput
+> {
+  const { getToken } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ bookingId, items }) => {
+      const token = await getToken();
+      if (!token) {
+        toast.error("No active session token found");
+        throw new Error("No active session token found");
+      }
+
+      return attachResourcesToBooking(token, bookingId, items);
+    },
+    onSuccess: async (_data, variables) => {
+      toast.success("Resources attached successfully");
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["booking", variables.bookingId],
+        }),
+        queryClient.invalidateQueries({ queryKey: ["bookings"] }),
+        queryClient.invalidateQueries({ queryKey: ["bookingsToday"] }),
+        queryClient.invalidateQueries({ queryKey: ["calendarBookings"] }),
+      ]);
+    },
+    onError: () => {
+      toast.error("Failed to attach resources");
+    },
+  });
+}
+
 export {
+  attachEquipmentToBooking,
+  attachResourcesToBooking,
   fetchBooking,
   fetchBookings,
   fetchBookingToday,

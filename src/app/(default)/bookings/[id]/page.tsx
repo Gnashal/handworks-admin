@@ -2,11 +2,13 @@
 "use client";
 
 import { use, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import {
   ArrowLeft,
+  ArrowRight,
   Banknote,
   CalendarDays,
   User,
@@ -14,23 +16,24 @@ import {
   CreditCard,
   ReceiptText,
   ShieldCheck,
+  CheckCircle2,
   Sparkles,
   User2Icon,
   Wallet,
   PinIcon,
+  Images,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 
 import { mapAddonDetails, mapServiceDetails } from "@/lib/factory";
 import { IBooking, IMainServiceType } from "@/types/booking";
 import { normalizeServiceName } from "@/lib/normalize";
 
 import { BookingServiceDetails } from "@/components/bookings/bookingServiceDetails";
-import { BookingAddons } from "@/components/bookings/bookingAddons";
 import { BookingOperationalDetails } from "@/components/bookings/operationalDetails";
+import { BookingAddressMap } from "@/components/bookings/bookingAddressMap";
 import { useBookingDetailsQuery } from "@/queries/bookingQueries";
 import { useOrderQuery } from "@/queries/paymentQueries";
 import Loader from "@/components/loader";
@@ -67,6 +70,10 @@ const bookingStatusConfig: Record<
 
 const reviewStatusConfig: Record<string, { label: string; className: string }> =
   {
+    SCHEDULED: {
+      label: "Scheduled",
+      className: "bg-sky-500/15 text-sky-600 border border-sky-500/30",
+    },
     PENDING: {
       label: "Review Pending",
       className: "bg-amber-500/15 text-amber-600 border border-amber-500/30",
@@ -246,7 +253,7 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
   const [localReviewStatus, setLocalReviewStatus] = useState<string | null>(
     null,
   );
-
+  const [mediaIndex, setMediaIndex] = useState(0);
   const orderId = data?.base.orderId ?? "";
   const {
     data: order,
@@ -290,7 +297,13 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
   const addonTotal = addons?.reduce((sum, a) => sum + (a.price ?? 0), 0) ?? 0;
   const effectiveReviewStatus = localReviewStatus ?? booking.base.reviewStatus;
   const paymentStatus = order.payment_status;
+  const normalizedReviewStatus = normalizeStatus(effectiveReviewStatus);
+  // const normalizedBookingStatus = normalizeStatus(booking.base.status);
   const normalizedPaymentStatus = normalizeStatus(paymentStatus);
+  const canApproveBooking =
+    normalizedReviewStatus === "PENDING" &&
+    normalizedPaymentStatus === "PENDING_FULLPAYMENT";
+  const canCompleteBooking = normalizedReviewStatus === "SCHEDULED";
   const showDownpaymentPaidPill =
     normalizedPaymentStatus === "PENDING_FULLPAYMENT" ||
     normalizedPaymentStatus === "COMPLETED";
@@ -299,6 +312,25 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
   const heroTheme =
     serviceHeroThemeConfig[serviceType] ??
     serviceHeroThemeConfig.SERVICE_TYPE_UNSPECIFIED;
+  const photos = booking.base.photos ?? [];
+  const activeMediaIndex =
+    photos.length > 0 ? Math.min(mediaIndex, photos.length - 1) : 0;
+
+  const handlePrevMedia = () => {
+    if (!photos.length) return;
+
+    setMediaIndex((current) =>
+      current === 0 ? photos.length - 1 : current - 1,
+    );
+  };
+
+  const handleNextMedia = () => {
+    if (!photos.length) return;
+
+    setMediaIndex((current) =>
+      current === photos.length - 1 ? 0 : current + 1,
+    );
+  };
 
   return (
     <div className="min-h-screen">
@@ -377,30 +409,30 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
                 </div>
               </div>
 
-              <div className="flex shrink-0 flex-col gap-2.5 lg:min-w-55">
+              <div className="flex shrink-0 flex-wrap gap-2.5 lg:min-w-55">
                 <Button
-                  variant="secondary"
-                  className={`border ${heroTheme.secondaryButtonClass}`}
+                  disabled={approveLoading || !canApproveBooking}
+                  onClick={async () => {
+                    if (!canApproveBooking) return;
+
+                    const res = await handleApproveBooking(booking.id);
+                    if (res?.status) {
+                      setLocalReviewStatus(res.status);
+                    }
+                  }}
+                  className="bg-emerald-500 text-white hover:bg-emerald-600"
                 >
-                  Edit booking
+                  <ShieldCheck className="mr-1.5 h-4 w-4" />
+                  Approve booking
                 </Button>
-                {effectiveReviewStatus === "PENDING" ? (
-                  <Button
-                    disabled={approveLoading}
-                    onClick={async () => {
-                      const res = await handleApproveBooking(booking.id);
-                      if (res?.status) {
-                        setLocalReviewStatus(res.status);
-                      }
-                    }}
-                    className="bg-emerald-500 text-white hover:bg-emerald-600"
-                  >
-                    <ShieldCheck className="mr-1.5 h-4 w-4" />
-                    Approve booking
-                  </Button>
-                ) : (
-                  <Button variant="destructive">Cancel booking</Button>
-                )}
+
+                <Button
+                  disabled={!canCompleteBooking}
+                  className="bg-blue-500 text-white hover:bg-blue-600"
+                >
+                  <CheckCircle2 className="mr-1.5 h-4 w-4" />
+                  Complete booking
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -541,6 +573,90 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
           <div className="space-y-6">
+            <Card className="border-2 border-sky-500/25 bg-linear-to-br from-sky-500/6 via-background to-sky-500/12">
+              <CardHeader className="pb-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <Images className="h-4 w-4 text-sky-700" />
+                    <CardTitle className="text-base">Media uploads</CardTitle>
+                  </div>
+                  <div className="inline-flex items-center rounded-full border border-sky-500/30 bg-sky-500/10 px-2.5 py-1 text-xs font-semibold text-sky-700">
+                    {photos.length} file{photos.length === 1 ? "" : "s"}
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {!photos.length ? (
+                  <p className="text-sm italic text-muted-foreground">
+                    Customer has not uploaded media for this booking.
+                  </p>
+                ) : (
+                  <>
+                    <div className="relative aspect-video overflow-hidden rounded-xl border bg-muted">
+                      <Image
+                        src={photos[activeMediaIndex]}
+                        alt={`Booking upload ${activeMediaIndex + 1}`}
+                        fill
+                        className="object-cover"
+                        sizes="(min-width: 1024px) 900px, 100vw"
+                      />
+
+                      {photos.length > 1 ? (
+                        <>
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="secondary"
+                            onClick={handlePrevMedia}
+                            className="absolute left-3 top-1/2 h-8 w-8 -translate-y-1/2 border bg-background/90"
+                          >
+                            <ArrowLeft className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="secondary"
+                            onClick={handleNextMedia}
+                            className="absolute right-3 top-1/2 h-8 w-8 -translate-y-1/2 border bg-background/90"
+                          >
+                            <ArrowRight className="h-4 w-4" />
+                          </Button>
+                          <div className="absolute bottom-3 right-3 rounded-full bg-black/60 px-2 py-1 text-xs font-medium text-white">
+                            {activeMediaIndex + 1} / {photos.length}
+                          </div>
+                        </>
+                      ) : null}
+                    </div>
+
+                    {photos.length > 1 ? (
+                      <div className="flex gap-2 overflow-x-auto pb-1">
+                        {photos.map((photo, index) => (
+                          <button
+                            key={`${photo}-${index}`}
+                            type="button"
+                            onClick={() => setMediaIndex(index)}
+                            className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-md border transition ${
+                              index === activeMediaIndex
+                                ? "ring-2 ring-primary"
+                                : "opacity-80"
+                            }`}
+                          >
+                            <Image
+                              src={photo}
+                              alt={`Media thumbnail ${index + 1}`}
+                              fill
+                              className="object-cover"
+                              sizes="96px"
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
             <Card className="border-emerald-500/20">
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-2">
@@ -724,79 +840,38 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
                     </p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            <Card>
-              <CardContent className="pt-5 pb-5">
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <div>
-                    <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                      Service
-                    </p>
-                    <p className="mt-1 text-2xl font-bold">
-                      {normalizeServiceName(
-                        booking.mainService.serviceType as IMainServiceType,
-                      )}
-                    </p>
-                    {hasAddons ? (
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        +{addons!.length} add-on{addons!.length > 1 ? "s" : ""}
-                      </p>
-                    ) : (
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        No add-ons
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                      Extra Hours
-                    </p>
-                    <p className="mt-1 text-2xl font-bold">
-                      {booking.base.extraHours}
-                      <span className="text-lg font-semibold text-muted-foreground">
-                        h
-                      </span>
-                    </p>
-                    {booking.base.extraHourCost > 0 ? (
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {formatMoney(
-                          booking.base.extraHourCost,
-                          order.currency,
-                        )}{" "}
-                        extra
-                      </p>
-                    ) : (
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        No extra cost
-                      </p>
-                    )}
-                  </div>
+                <div className="sm:col-span-2">
+                  <BookingAddressMap
+                    latitude={booking.base.address.addressLat}
+                    longitude={booking.base.address.addressLng}
+                    address={booking.base.address.addressHuman}
+                  />
                 </div>
               </CardContent>
             </Card>
-
-            <Separator />
 
             <BookingServiceDetails
               mainService={mainService as any}
               rawServiceType={
                 booking.mainService.serviceType as IMainServiceType
               }
-              mainServiceId={booking.mainService.id}
+              addons={addons as any}
+              extraHours={booking.base.extraHours}
+              extraHourCost={booking.base.extraHourCost}
+              formattedExtraHourCost={formatMoney(
+                booking.base.extraHourCost,
+                order.currency,
+              )}
             />
-
-            <BookingAddons addons={addons as any} />
           </div>
 
           <div className="space-y-6">
             <BookingOperationalDetails
+              bookingId={booking.id}
               equipments={booking.equipments}
               resources={booking.resources}
               cleaners={booking.cleaners}
-              photos={booking.base.photos}
             />
 
             <Card>

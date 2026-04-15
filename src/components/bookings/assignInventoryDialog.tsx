@@ -2,26 +2,31 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { Package, Wrench, Search } from "lucide-react";
+import { Minus, Package, Plus, Search } from "lucide-react";
 
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 import { useInventoryQuery } from "@/queries/inventoryQueries";
+import { IItemQuantity } from "@/types/booking";
 import { IInventoryItem, ItemType } from "@/types/inventory";
 
 interface AssignInventoryDialogProps {
   open: boolean;
   onClose: () => void;
   defaultTab?: ItemType;
+  onSubmitEquipment: (items: IItemQuantity[]) => Promise<void>;
+  onSubmitResources: (items: IItemQuantity[]) => Promise<void>;
+  isSubmittingEquipment?: boolean;
+  isSubmittingResources?: boolean;
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
@@ -44,11 +49,29 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   },
 };
 
-function InventoryItemRow({ item }: { item: IInventoryItem }) {
+interface InventoryItemRowProps {
+  item: IInventoryItem;
+  selected?: IItemQuantity;
+  isSubmitting: boolean;
+  onAdd: (item: IInventoryItem) => void;
+  onRemove: (itemId: string) => void;
+  onQuantityChange: (itemId: string, quantity: number) => void;
+}
+
+function InventoryItemRow({
+  item,
+  selected,
+  isSubmitting,
+  onAdd,
+  onRemove,
+  onQuantityChange,
+}: InventoryItemRowProps) {
   const status = statusConfig[item.status] ?? {
     label: item.status,
     className: "bg-muted text-muted-foreground border",
   };
+  const quantity = selected?.quantity ?? 1;
+  const isSelected = !!selected;
 
   return (
     <div className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-muted/30">
@@ -85,20 +108,83 @@ function InventoryItemRow({ item }: { item: IInventoryItem }) {
         </p>
       </div>
 
-      <Button
-        size="sm"
-        variant="outline"
-        className="h-7 shrink-0 px-2.5 text-xs"
-        disabled={!item.is_available}
-      >
-        Assign
-      </Button>
+      <div className="flex items-center gap-1.5">
+        {isSelected ? (
+          <div className="flex items-center gap-1 rounded-md border bg-background px-1 py-0.5">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-6 w-6"
+              disabled={isSubmitting || quantity <= 1}
+              onClick={() => onQuantityChange(item.id, quantity - 1)}
+            >
+              <Minus className="h-3.5 w-3.5" />
+            </Button>
+            <span className="min-w-6 text-center text-xs font-semibold">
+              {quantity}
+            </span>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-6 w-6"
+              disabled={isSubmitting || quantity >= item.quantity}
+              onClick={() => onQuantityChange(item.id, quantity + 1)}
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        ) : null}
+
+        {isSelected ? (
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 shrink-0 px-2.5 text-xs"
+            onClick={() => onRemove(item.id)}
+            disabled={isSubmitting}
+          >
+            Remove
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 shrink-0 px-2.5 text-xs"
+            disabled={!item.is_available || item.quantity < 1 || isSubmitting}
+            onClick={() => onAdd(item)}
+          >
+            Assign
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
 
-function ItemList({ type, search }: { type: ItemType; search: string }) {
+interface ItemListProps {
+  type: ItemType;
+  search: string;
+  selectedItems: IItemQuantity[];
+  isSubmitting: boolean;
+  onAdd: (item: IInventoryItem) => void;
+  onRemove: (itemId: string) => void;
+  onQuantityChange: (itemId: string, quantity: number) => void;
+}
+
+function ItemList({
+  type,
+  search,
+  selectedItems,
+  isSubmitting,
+  onAdd,
+  onRemove,
+  onQuantityChange,
+}: ItemListProps) {
   const { data, isLoading } = useInventoryQuery(0, 50, type);
+  const selectedMap = React.useMemo(
+    () => new Map(selectedItems.map((item) => [item.itemId, item])),
+    [selectedItems],
+  );
 
   const filtered = React.useMemo(() => {
     if (!data?.items) return [];
@@ -135,7 +221,15 @@ function ItemList({ type, search }: { type: ItemType; search: string }) {
   return (
     <div className="space-y-2">
       {filtered.map((item) => (
-        <InventoryItemRow key={item.id} item={item} />
+        <InventoryItemRow
+          key={item.id}
+          item={item}
+          selected={selectedMap.get(item.id)}
+          isSubmitting={isSubmitting}
+          onAdd={onAdd}
+          onRemove={onRemove}
+          onQuantityChange={onQuantityChange}
+        />
       ))}
     </div>
   );
@@ -145,12 +239,96 @@ export function AssignInventoryDialog({
   open,
   onClose,
   defaultTab = "EQUIPMENT",
+  onSubmitEquipment,
+  onSubmitResources,
+  isSubmittingEquipment = false,
+  isSubmittingResources = false,
 }: AssignInventoryDialogProps) {
   const [search, setSearch] = React.useState("");
+  const [selectedEquipment, setSelectedEquipment] = React.useState<
+    IItemQuantity[]
+  >([]);
+  const [selectedResources, setSelectedResources] = React.useState<
+    IItemQuantity[]
+  >([]);
 
-  // Reset search when dialog opens/closes
+  const activeTab = defaultTab;
+
+  const isSubmitting =
+    activeTab === "EQUIPMENT" ? isSubmittingEquipment : isSubmittingResources;
+
+  const selectedItems =
+    activeTab === "EQUIPMENT" ? selectedEquipment : selectedResources;
+
+  const addSelectedItem = React.useCallback(
+    (type: ItemType, item: IInventoryItem) => {
+      const quantity = 1;
+      const setter =
+        type === "EQUIPMENT" ? setSelectedEquipment : setSelectedResources;
+
+      setter((prev) => {
+        const existing = prev.find((entry) => entry.itemId === item.id);
+        if (existing) {
+          return prev.map((entry) =>
+            entry.itemId === item.id
+              ? {
+                  ...entry,
+                  quantity: Math.min(entry.quantity + 1, item.quantity),
+                }
+              : entry,
+          );
+        }
+
+        return [...prev, { itemId: item.id, quantity }];
+      });
+    },
+    [],
+  );
+
+  const removeSelectedItem = React.useCallback(
+    (type: ItemType, itemId: string) => {
+      const setter =
+        type === "EQUIPMENT" ? setSelectedEquipment : setSelectedResources;
+      setter((prev) => prev.filter((entry) => entry.itemId !== itemId));
+    },
+    [],
+  );
+
+  const updateSelectedQuantity = React.useCallback(
+    (type: ItemType, itemId: string, quantity: number) => {
+      const setter =
+        type === "EQUIPMENT" ? setSelectedEquipment : setSelectedResources;
+      const safeQuantity = Math.max(1, quantity);
+
+      setter((prev) =>
+        prev.map((entry) =>
+          entry.itemId === itemId
+            ? { ...entry, quantity: safeQuantity }
+            : entry,
+        ),
+      );
+    },
+    [],
+  );
+
+  const handleSubmit = React.useCallback(async () => {
+    if (!selectedItems.length) return;
+
+    if (activeTab === "EQUIPMENT") {
+      await onSubmitEquipment(selectedItems);
+      return;
+    }
+
+    await onSubmitResources(selectedItems);
+  }, [activeTab, onSubmitEquipment, onSubmitResources, selectedItems]);
+
+  // Reset selection and search whenever the dialog is closed.
   React.useEffect(() => {
-    if (!open) setSearch("");
+    if (!open) {
+      setSearch("");
+      setSelectedEquipment([]);
+      setSelectedResources([]);
+    }
   }, [open]);
 
   return (
@@ -162,45 +340,64 @@ export function AssignInventoryDialog({
     >
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Assign inventory to booking</DialogTitle>
+          <DialogTitle>
+            {activeTab === "EQUIPMENT"
+              ? "Assign equipment to booking"
+              : "Assign resources to booking"}
+          </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue={defaultTab} key={defaultTab}>
-          <TabsList className="w-full">
-            <TabsTrigger value="EQUIPMENT" className="flex-1 gap-1.5">
-              <Wrench className="h-3.5 w-3.5" />
-              Equipment
-            </TabsTrigger>
-            <TabsTrigger value="RESOURCE" className="flex-1 gap-1.5">
-              <Package className="h-3.5 w-3.5" />
-              Resources
-            </TabsTrigger>
-          </TabsList>
+        <div className="relative mt-1">
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            className="pl-8 text-sm"
+            placeholder={`Search ${activeTab === "EQUIPMENT" ? "equipment" : "resources"}...`}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
 
-          <div className="relative mt-3">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              className="pl-8 text-sm"
-              placeholder="Search items..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+        <div className="mt-3 max-h-95 overflow-y-auto pr-0.5">
+          {activeTab === "EQUIPMENT" ? (
+            <ItemList
+              type="EQUIPMENT"
+              search={search}
+              selectedItems={selectedEquipment}
+              isSubmitting={isSubmittingEquipment}
+              onAdd={(item) => addSelectedItem("EQUIPMENT", item)}
+              onRemove={(itemId) => removeSelectedItem("EQUIPMENT", itemId)}
+              onQuantityChange={(itemId, quantity) =>
+                updateSelectedQuantity("EQUIPMENT", itemId, quantity)
+              }
             />
-          </div>
+          ) : (
+            <ItemList
+              type="RESOURCE"
+              search={search}
+              selectedItems={selectedResources}
+              isSubmitting={isSubmittingResources}
+              onAdd={(item) => addSelectedItem("RESOURCE", item)}
+              onRemove={(itemId) => removeSelectedItem("RESOURCE", itemId)}
+              onQuantityChange={(itemId, quantity) =>
+                updateSelectedQuantity("RESOURCE", itemId, quantity)
+              }
+            />
+          )}
+        </div>
 
-          <TabsContent
-            value="EQUIPMENT"
-            className="mt-3 max-h-95 overflow-y-auto pr-0.5"
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={!selectedItems.length || isSubmitting}
           >
-            <ItemList type="EQUIPMENT" search={search} />
-          </TabsContent>
-
-          <TabsContent
-            value="RESOURCE"
-            className="mt-3 max-h-95 overflow-y-auto pr-0.5"
-          >
-            <ItemList type="RESOURCE" search={search} />
-          </TabsContent>
-        </Tabs>
+            {isSubmitting
+              ? "Assigning..."
+              : `Assign selected (${selectedItems.length})`}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
