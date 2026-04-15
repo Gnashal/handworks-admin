@@ -31,6 +31,73 @@ export function BookingAddons({
 }: BookingAddonsProps) {
   const hasAddons = addons && addons.length > 0;
 
+  const normalizeLabel = (value: string | undefined) => {
+    if (!value) {
+      return "Unspecified";
+    }
+
+    return value
+      .replace(/[_-]+/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (char) => char.toUpperCase())
+      .trim();
+  };
+
+  const formatDimension = (value: number | undefined) => {
+    if (typeof value !== "number" || Number.isNaN(value)) {
+      return "0";
+    }
+
+    return Number.isInteger(value) ? String(value) : value.toFixed(1);
+  };
+
+  const renderSpecGrid = (
+    specs: Array<{
+      typeLabel: string;
+      quantity?: number;
+      dimensions?: {
+        widthCm?: number;
+        depthCm?: number;
+        heightCm?: number;
+      };
+    }>,
+  ) => {
+    if (!specs.length) {
+      return (
+        <p className="text-xs italic text-muted-foreground">
+          No item specs captured.
+        </p>
+      );
+    }
+
+    return (
+      <div className="grid gap-2 sm:grid-cols-2">
+        {specs.map((spec, idx) => (
+          <div
+            key={`${spec.typeLabel}-${idx}`}
+            className="space-y-2 rounded-md border bg-muted/25 p-2.5"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <Badge variant="outline" className="text-[11px]">
+                {normalizeLabel(spec.typeLabel)}
+              </Badge>
+              <p className="text-xs text-muted-foreground">
+                Qty: {spec.quantity ?? 0}
+              </p>
+            </div>
+            {spec.dimensions ? (
+              <p className="text-xs text-muted-foreground">
+                {formatDimension(spec.dimensions.widthCm)} x{" "}
+                {formatDimension(spec.dimensions.depthCm)} x{" "}
+                {formatDimension(spec.dimensions.heightCm)} cm
+              </p>
+            ) : null}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   const isSelected = (addon: ITypedAddon<IServiceDetailConcrete>) =>
     selectedAddons.some((a) => a.id === addon.id);
 
@@ -51,53 +118,86 @@ export function BookingAddons({
       case "GENERAL_CLEANING": {
         const d = addon.details as IGeneralCleaningDetails;
         return (
-          <p className="text-xs text-muted-foreground">
-            {d.homeType} · {d.sqm} sqm
-          </p>
+          <div className="grid gap-2 text-sm sm:grid-cols-2">
+            <div className="rounded-md border bg-muted/25 p-2.5">
+              <p className="text-[11px] font-semibold uppercase text-muted-foreground">
+                Home type
+              </p>
+              <p className="mt-1 text-xs font-medium">
+                {normalizeLabel(d.homeType)}
+              </p>
+            </div>
+            <div className="rounded-md border bg-muted/25 p-2.5">
+              <p className="text-[11px] font-semibold uppercase text-muted-foreground">
+                Area
+              </p>
+              <p className="mt-1 text-xs font-medium">{d.sqm ?? 0} sqm</p>
+            </div>
+          </div>
         );
       }
       case "COUCH": {
         const d = addon.details as ICouchCleaningDetails;
-        const count = d.cleaningSpecs.reduce(
-          (sum, spec) => sum + spec.quantity,
-          0,
-        );
+        const specs =
+          d.cleaningSpecs?.map((spec) => ({
+            typeLabel: spec.couchType,
+            quantity: spec.quantity,
+            dimensions: {
+              widthCm: spec.widthCm,
+              depthCm: spec.depthCm,
+              heightCm: spec.heightCm,
+            },
+          })) ?? [];
+
         return (
-          <p className="text-xs text-muted-foreground">
-            {count} couch{count > 1 ? "es" : ""} · pillows {d.bedPillows}
-          </p>
+          <div className="space-y-2.5">
+            {renderSpecGrid(specs)}
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Bed pillows: {d.bedPillows ?? 0}
+            </p>
+          </div>
         );
       }
       case "MATTRESS": {
         const d = addon.details as IMattressCleaningDetails;
-        const count = d.cleaningSpecs.reduce(
-          (sum, spec) => sum + spec.quantity,
-          0,
-        );
-        return (
-          <p className="text-xs text-muted-foreground">
-            {count} mattress{count > 1 ? "es" : ""}
-          </p>
-        );
+        const specs =
+          d.cleaningSpecs?.map((spec) => ({
+            typeLabel: spec.bedType,
+            quantity: spec.quantity,
+            dimensions: {
+              widthCm: spec.widthCm,
+              depthCm: spec.depthCm,
+              heightCm: spec.heightCm,
+            },
+          })) ?? [];
+        return <div className="space-y-2.5">{renderSpecGrid(specs)}</div>;
       }
       case "CAR": {
         const d = addon.details as ICarCleaningDetails;
-        const count = d.cleaningSpecs.reduce(
-          (sum, spec) => sum + spec.quantity,
-          0,
-        );
+        const specs =
+          d.cleaningSpecs?.map((spec) => ({
+            typeLabel: spec.carType,
+            quantity: spec.quantity,
+          })) ?? [];
+
         return (
-          <p className="text-xs text-muted-foreground">
-            {count} car{count > 1 ? "s" : ""} · child seats {d.childSeats}
-          </p>
+          <div className="space-y-2.5">
+            {renderSpecGrid(specs)}
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Child seats: {d.childSeats ?? 0}
+            </p>
+          </div>
         );
       }
       case "POST": {
         const d = addon.details as IPostConstructionDetails;
         return (
-          <p className="text-xs text-muted-foreground">
-            Post-construction · {d.sqm} sqm
-          </p>
+          <div className="rounded-md border bg-muted/25 p-2.5 text-sm">
+            <p className="text-[11px] font-semibold uppercase text-muted-foreground">
+              Area
+            </p>
+            <p className="mt-1 text-xs font-medium">{d.sqm ?? 0} sqm</p>
+          </div>
         );
       }
       default:
@@ -131,7 +231,7 @@ export function BookingAddons({
                   className={`flex flex-col rounded-lg border p-3 shadow-sm transition ${
                     selectable && checked
                       ? "border-primary bg-primary/5"
-                      : "bg-card/60"
+                      : "bg-card/50"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">

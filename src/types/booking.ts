@@ -238,3 +238,23 @@ export interface IBookingsTodayResponse {
         client: string;
       }[];
 }
+
+export interface IItemQuantity {
+  itemId: string;
+  quantity: number;
+}
+
+export interface IAssignResourcesToBookingRequest {
+  bookingId: string;
+  resources: IItemQuantity[];
+}
+
+export interface IAssignEquipmentToBookingRequest {
+  bookingId: string;
+  equipment: IItemQuantity[];
+}
+
+export interface IAssignInventoryResponse {
+  bookingId: string;
+  message: string;
+}

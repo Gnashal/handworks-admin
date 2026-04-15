@@ -9,11 +9,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
+import { IItemQuantity } from "@/types/booking";
 import { ItemType } from "@/types/inventory";
-import { BookingMediaDialog } from "./mediaDalogue";
+import {
+  useAttachEquipmentToBookingMutation,
+  useAttachResourcesToBookingMutation,
+} from "@/queries/bookingQueries";
 import { AssignInventoryDialog } from "./assignInventoryDialog";
 
 interface BookingOperationalDetailsProps {
+  bookingId: string;
   equipments: {
     id: string;
     name: string;
@@ -32,7 +37,6 @@ interface BookingOperationalDetailsProps {
     cleanerLastName: string;
     pfpUrl: string;
   }[];
-  photos: string[];
 }
 
 function getInitials(firstName: string, lastName: string) {
@@ -40,28 +44,48 @@ function getInitials(firstName: string, lastName: string) {
 }
 
 export function BookingOperationalDetails({
+  bookingId,
   equipments,
   resources,
   cleaners,
-  photos,
 }: BookingOperationalDetailsProps) {
+  const attachEquipmentMutation = useAttachEquipmentToBookingMutation();
+  const attachResourcesMutation = useAttachResourcesToBookingMutation();
+
   const [assignDialog, setAssignDialog] = useState<{
     open: boolean;
     type: ItemType;
   }>({ open: false, type: "EQUIPMENT" });
 
+  const closeAssignDialog = () => {
+    setAssignDialog((prev) => ({ ...prev, open: false }));
+  };
+
+  const handleAssignEquipment = async (items: IItemQuantity[]) => {
+    await attachEquipmentMutation.mutateAsync({ bookingId, items });
+    closeAssignDialog();
+  };
+
+  const handleAssignResources = async (items: IItemQuantity[]) => {
+    await attachResourcesMutation.mutateAsync({ bookingId, items });
+    closeAssignDialog();
+  };
+
   return (
     <>
       <AssignInventoryDialog
         open={assignDialog.open}
-        onClose={() => setAssignDialog((prev) => ({ ...prev, open: false }))}
+        onClose={closeAssignDialog}
         defaultTab={assignDialog.type}
+        onSubmitEquipment={handleAssignEquipment}
+        onSubmitResources={handleAssignResources}
+        isSubmittingEquipment={attachEquipmentMutation.isPending}
+        isSubmittingResources={attachResourcesMutation.isPending}
       />
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-3 pb-3">
+        <CardHeader className="pb-3">
           <CardTitle className="text-base">Operational details</CardTitle>
-          <BookingMediaDialog photos={photos} />
         </CardHeader>
 
         <CardContent className="space-y-5">
