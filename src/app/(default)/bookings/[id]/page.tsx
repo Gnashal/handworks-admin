@@ -254,14 +254,6 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
     null,
   );
   const [mediaIndex, setMediaIndex] = useState(0);
-
-  const orderId = data?.base.orderId ?? "";
-  const {
-    data: order,
-    isLoading: orderLoading,
-    error: orderError,
-  } = useOrderQuery(orderId);
-
   const orderId = data?.base.orderId ?? "";
   const {
     data: order,
