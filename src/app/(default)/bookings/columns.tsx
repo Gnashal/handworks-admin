@@ -75,7 +75,7 @@ export const bookingColumns: ColumnDef<IBooking>[] = [
       }
 
       if (status === "ONGOING") {
-        return <Badge variant="secondary">Ongoing</Badge>;
+        return <Badge variant="tertiary">Ongoing</Badge>;
       }
 
       return <Badge variant="default">Completed</Badge>;

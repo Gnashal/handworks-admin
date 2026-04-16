@@ -31,6 +31,7 @@ export interface ICleaningEquipment {
   name: string;
   type: string;
   photoUrl: string;
+  quantityUsed: number;
 }
 
 export interface ICleaningResources {
@@ -38,6 +39,7 @@ export interface ICleaningResources {
   name: string;
   type: string;
   photoUrl: string;
+  quantityUsed: number;
 }
 
 export interface ICleanerAssigned {
