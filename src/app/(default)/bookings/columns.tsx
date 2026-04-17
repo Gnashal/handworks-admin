@@ -31,7 +31,7 @@ export const bookingColumns: ColumnDef<IBooking>[] = [
       const base = row.original.base;
       return (
         <Link
-          href={`/customers/${base.custId}`}
+          href={`/clients/${base.custId}`}
           className="font-medium text-md text-blue-500 hover:underline"
         >
           {base.customerFirstName} {base.customerLastName}
