@@ -1,41 +1,39 @@
 import { ColumnDef } from "@tanstack/react-table";
-
-interface ClientRow {
-  custId: string;
-  firstName: string;
-  lastName: string;
-}
+import type { ICustomer } from "@/types/account";
 
 export const clientColumns = (
   watchList: string[],
-  setWatchList: React.Dispatch<React.SetStateAction<string[]>>
-): ColumnDef<ClientRow>[] => [
+  setWatchList: React.Dispatch<React.SetStateAction<string[]>>,
+): ColumnDef<ICustomer>[] => [
   {
-    accessorKey: "custId",
+    accessorKey: "id",
     header: "Customer ID",
   },
   {
-    accessorKey: "firstName",
-    header: "First Name",
+    id: "name",
+    header: "Name",
+    cell: ({ row }) => {
+      const { first_name, last_name } = row.original.account;
+      return `${first_name} ${last_name}`;
+    },
   },
   {
-    accessorKey: "lastName",
-    header: "Last Name",
+    id: "email",
+    header: "Email",
+    cell: ({ row }) => row.original.account.email,
   },
   {
     id: "watch",
     header: "Watch",
     cell: ({ row }) => {
-      const custId = row.original.custId;
-      const isWatched = watchList.includes(custId);
+      const customerId = row.original.id;
+      const isWatched = watchList.includes(customerId);
 
       const toggleWatch = () => {
         if (isWatched) {
-          setWatchList((prev) =>
-            prev.filter((id) => id !== custId)
-          );
+          setWatchList((prev) => prev.filter((id) => id !== customerId));
         } else {
-          setWatchList((prev) => [...prev, custId]);
+          setWatchList((prev) => [...prev, customerId]);
         }
       };
 

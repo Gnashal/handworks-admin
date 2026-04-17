@@ -24,12 +24,14 @@ interface BookingOperationalDetailsProps {
     name: string;
     type: string;
     photoUrl: string;
+    quantityUsed: number;
   }[];
   resources: {
     id: string;
     name: string;
     type: string;
     photoUrl: string;
+    quantityUsed: number;
   }[];
   cleaners: {
     id: string;
@@ -171,11 +173,16 @@ export function BookingOperationalDetails({
                         </div>
                       )}
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">{eq.name}</p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {eq.type}
-                      </p>
+                    <div className="flex items-center justify-between w-full px-2">
+                      <div>
+                        <p className="text-sm font-medium">{eq.name}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {eq.type}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-lg font-bold">{eq.quantityUsed}</p>
+                      </div>
                     </div>
                   </div>
                 ))}

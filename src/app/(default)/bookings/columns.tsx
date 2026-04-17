@@ -31,7 +31,7 @@ export const bookingColumns: ColumnDef<IBooking>[] = [
       const base = row.original.base;
       return (
         <Link
-          href={`/customers/${base.custId}`}
+          href={`/clients/${base.custId}`}
           className="font-medium text-md text-blue-500 hover:underline"
         >
           {base.customerFirstName} {base.customerLastName}
@@ -75,7 +75,7 @@ export const bookingColumns: ColumnDef<IBooking>[] = [
       }
 
       if (status === "ONGOING") {
-        return <Badge variant="secondary">Ongoing</Badge>;
+        return <Badge variant="tertiary">Ongoing</Badge>;
       }
 
       return <Badge variant="default">Completed</Badge>;
