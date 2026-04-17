@@ -29,6 +29,9 @@ export interface IEmployee {
 export interface IGetEmployee {
   employee: IEmployee;
 }
+export interface IGetCustomer {
+  customer: ICustomer;
+}
 export interface ICustomers {
   customers: ICustomer[];
 }

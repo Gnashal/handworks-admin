@@ -1,7 +1,9 @@
 import axios, { AxiosRequestConfig } from "axios";
 import {
   IAdmin,
+  ICustomers,
   IEmployees,
+  IGetCustomer,
   IGetEmployee,
   ISignUpAdminRequest,
   ISignUpEmployeeResponse,
@@ -199,6 +201,85 @@ const fetchInventoryItems = async (
     throw error;
   }
 };
+const fetchCustomers = async (
+  token: string,
+  page = 0,
+  limit = 10,
+): Promise<ICustomers> => {
+  try {
+    const params = new URLSearchParams();
+    if (page !== null && limit !== null) {
+      params.append("page", page.toString());
+      params.append("limit", limit.toString());
+    }
+
+    const res = await fetchWithAuth<ICustomers>(
+      `/api/customer/fetchCustomers?${params.toString()}`,
+      token,
+      { method: "GET" },
+    );
+    return res;
+  } catch (error) {
+    console.error("fetchCustomers Error:", error);
+    throw error;
+  }
+};
+const fetchCustomer = async (
+  token: string,
+  customerId: string,
+): Promise<IGetCustomer> => {
+  try {
+    const params = new URLSearchParams();
+    if (customerId) {
+      params.append("customerId", customerId);
+    }
+
+    const res = await fetchWithAuth<IGetCustomer>(
+      `/api/customer/fetchCustomer?${params.toString()}`,
+      token,
+      { method: "GET" },
+    );
+    return res;
+  } catch (error) {
+    console.error("fetchCustomer Error:", error);
+    throw error;
+  }
+};
+const fetchCustomerBookings = async (
+  token: string,
+  customerId: string,
+  startDate: string,
+  endDate: string,
+  page: number,
+  limit: number,
+): Promise<IFetchAllBookingsResponse> => {
+  try {
+    const params = new URLSearchParams();
+    if (
+      customerId &&
+      page !== null &&
+      limit != null &&
+      startDate !== null &&
+      endDate != null
+    ) {
+      params.append("customerId", customerId);
+      params.append("page", page.toString());
+      params.append("limit", limit.toString());
+      params.append("startDate", startDate);
+      params.append("endDate", endDate);
+    }
+
+    const res = await fetchWithAuth<IFetchAllBookingsResponse>(
+      `/api/customer/fetchCustomerBookings?${params.toString()}`,
+      token,
+      { method: "GET" },
+    );
+    return res;
+  } catch (error) {
+    console.error("fetchCustomerBookings Error:", error);
+    throw error;
+  }
+};
 const fetchEmployees = async (
   token: string,
   page = 0,
@@ -274,7 +355,7 @@ const fetchEmployeeAssignments = async (
     );
     return res;
   } catch (error) {
-    console.error("fetchEmployee Error:", error);
+    console.error("fetchCustomerBookings Error:", error);
     throw error;
   }
 };
@@ -513,6 +594,9 @@ export {
   fetchBooking,
   fetchBookings,
   fetchInventoryItems,
+  fetchCustomers,
+  fetchCustomer,
+  fetchCustomerBookings,
   fetchEmployees,
   fetchEmployee,
   onboardEmployee,

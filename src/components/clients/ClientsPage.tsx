@@ -4,11 +4,11 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/dataTable";
 import { Button } from "@/components/ui/button";
+import { DataTableSkeleton } from "@/components/dataTableSkeleton";
 
 import { clientColumns } from "@/components/clients/ClientsColumns";
-import { useBookingsQuery } from "@/queries/bookingQueries";
-import type { IBooking } from "@/types/booking";
-import { mockClients } from "@/data/mockClients";
+import { useCustomersQuery } from "@/queries/customerQueries";
+import type { ICustomer } from "@/types/account";
 
 export default function ClientsPage() {
   const router = useRouter();
@@ -21,41 +21,30 @@ export default function ClientsPage() {
     return [];
   });
   const [showWatchedOnly, setShowWatchedOnly] = React.useState(false);
+  const [page, setPage] = React.useState(0);
+  const [limit, setLimit] = React.useState(10);
 
   React.useEffect(() => {
     localStorage.setItem("watchList", JSON.stringify(watchList));
   }, [watchList]);
 
-  const { data, isLoading } = useBookingsQuery("", "", 0, 1000);
-
-  const bookings: IBooking[] = data?.bookings ?? [];
+  const { data, isLoading } = useCustomersQuery(page, limit);
 
   const allClients = React.useMemo(() => {
-    // TEMP: show mock clients when there are no bookings yet
-    if (bookings.length === 0) {
-      return mockClients;
-    }
-
-    const map = new Map();
-
-    bookings.forEach((booking) => {
-      const custId = booking.base.custId;
-
-      if (!map.has(custId)) {
-        map.set(custId, {
-          custId,
-          firstName: booking.base.customerFirstName,
-          lastName: booking.base.customerLastName,
-        });
-      }
-    });
-
-    return Array.from(map.values());
-  }, [bookings]);
+    return data?.customers ?? [];
+  }, [data?.customers]);
 
   const clients = showWatchedOnly
-    ? allClients.filter((c) => watchList.includes(c.custId))
+    ? allClients.filter((c) => watchList.includes(c.id))
     : allClients;
+
+  if (isLoading) {
+    return (
+      <div className="w-full h-screen p-6 space-y-4">
+        <DataTableSkeleton columnCount={4} rowCount={10} />
+      </div>
+    );
+  }
 
   return (
     <div className="block w-full h-screen p-6 space-y-6">
@@ -82,10 +71,14 @@ export default function ClientsPage() {
       )}
 
       {clients.length > 0 && (
-        <DataTable
+        <DataTable<ICustomer, unknown>
           columns={clientColumns(watchList, setWatchList)}
           data={clients}
-          onRowClick={(row) => router.push(`/clients/${row.custId}`)}
+          onRowClick={(row) => router.push(`/clients/${row.id}`)}
+          onPaginationChange={(pageIndex, pageSize) => {
+            setPage(pageIndex);
+            setLimit(pageSize);
+          }}
         />
       )}
     </div>
