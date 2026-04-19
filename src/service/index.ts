@@ -10,6 +10,7 @@ import {
 } from "@/types/account";
 import {
   IAdminDashboardResponse,
+  IFetchBookingTrendsResponse,
   IOnboardEmployeeRequest,
 } from "@/types/admin";
 import {
@@ -31,7 +32,7 @@ import {
 import { IBookingMapRequest, IBookingMapResponse } from "@/types/location";
 import { IFetchAllQuotesResponse, IOrder } from "@/types/payment";
 
-const fetchWithAuth = async <T>(
+export const fetchWithAuth = async <T>(
   url: string,
   token: string,
   requestObj?: AxiosRequestConfig,
@@ -46,7 +47,7 @@ const fetchWithAuth = async <T>(
   });
   return data;
 };
-const fetchPublic = async <T>(
+export const fetchPublic = async <T>(
   url: string,
   requestObj?: AxiosRequestConfig,
 ): Promise<T> => {
@@ -587,6 +588,21 @@ const uploadImage = async (formData: FormData) => {
     throw error;
   }
 };
+const fetchBookingTrends = async (
+  token: string,
+): Promise<IFetchBookingTrendsResponse> => {
+  try {
+    const res = await fetchWithAuth<IFetchBookingTrendsResponse>(
+      `/api/fetchBookingTrends`,
+      token,
+      { method: "GET" },
+    );
+    return res;
+  } catch (error) {
+    console.error("fetchBookingTrends Error:", error);
+    throw error;
+  }
+};
 export {
   signUpAdmin,
   fetchAdminDashboardData,
@@ -610,4 +626,5 @@ export {
   attachResourcesToBooking,
   createInventoryItem,
   uploadImage,
+  fetchBookingTrends,
 };

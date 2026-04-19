@@ -71,3 +71,13 @@ export interface IOnboardEmployeeRequest {
   organizationId: string;
   role: string;
 }
+
+export interface ServiceDynamicsData {
+  label: string;
+  value: number;
+}
+
+export interface IFetchBookingTrendsResponse {
+  weeklyData: ServiceDynamicsData[];
+  monthlyData: ServiceDynamicsData[];
+}

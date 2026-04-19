@@ -1,6 +1,5 @@
 "use client";
 import Sidebar from "../navigation/sideNav";
-import bgImage from "../../../public/assets/bg/rm222-mind-26.jpg";
 import { useAuth } from "@clerk/nextjs";
 import Loader from "../loader";
 
@@ -16,12 +15,7 @@ export default function DefaultLayout({
     <div className="flex h-screen w-full overflow-hidden">
       <Sidebar />
 
-      <div
-        className="flex-1 overflow-y-auto bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: `url(${bgImage.src})`,
-        }}
-      >
+      <div className="flex-1 overflow-y-auto bg-cover bg-center bg-no-repeat">
         {children}
       </div>
     </div>

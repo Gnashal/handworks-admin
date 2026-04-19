@@ -26,6 +26,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { mapAddonDetails, mapServiceDetails } from "@/lib/factory";
 import { IBooking, IMainServiceType } from "@/types/booking";
@@ -36,6 +37,7 @@ import { BookingOperationalDetails } from "@/components/bookings/operationalDeta
 import { BookingAddressMap } from "@/components/bookings/bookingAddressMap";
 import { useBookingDetailsQuery } from "@/queries/bookingQueries";
 import { useOrderQuery } from "@/queries/paymentQueries";
+import { normalizeStatus, formatMoney } from "@/lib/normalize";
 import Loader from "@/components/loader";
 import useBooking from "@/hooks/bookingHook";
 
@@ -176,32 +178,6 @@ const serviceHeroThemeConfig: Record<
   },
 };
 
-function normalizeStatus(status: string) {
-  return status.trim().replace(/\s+/g, "_").toUpperCase();
-}
-
-function formatMoney(amount: number, currency?: string) {
-  const normalizedCurrency = currency?.toUpperCase();
-
-  if (normalizedCurrency && /^[A-Z]{3}$/.test(normalizedCurrency)) {
-    try {
-      return new Intl.NumberFormat("en-PH", {
-        style: "currency",
-        currency: normalizedCurrency,
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }).format(amount);
-    } catch {
-      // Fallback to peso format when backend sends an invalid currency code.
-    }
-  }
-
-  return `₱${amount.toLocaleString("en-PH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
-
 function StatusPill({ status }: { status: string }) {
   const c = bookingStatusConfig[status] ?? {
     label: status,
@@ -243,6 +219,25 @@ function PaymentPill({ status }: { status: string }) {
     >
       {c.label}
     </span>
+  );
+}
+
+function SectionHeading({
+  title,
+  description,
+}: {
+  title: string;
+  description?: string;
+}) {
+  return (
+    <div className="space-y-1">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        {title}
+      </h2>
+      {description ? (
+        <p className="text-sm text-muted-foreground">{description}</p>
+      ) : null}
+    </div>
   );
 }
 
@@ -333,8 +328,8 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
   };
 
   return (
-    <div className="min-h-screen">
-      <div className="mx-auto max-w-7xl px-4 pt-6 pb-10 space-y-6 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto max-w-7xl space-y-4 px-4 pt-5 pb-8 sm:px-6 lg:px-8">
         <Link
           href="/bookings"
           className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
@@ -344,26 +339,28 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
         </Link>
 
         <Card
-          className={`border bg-linear-to-r shadow-xl backdrop-blur-sm ${heroTheme.cardClass}`}
+          className={`border shadow-sm backdrop-blur-sm ${heroTheme.cardClass}`}
         >
-          <CardContent className="pt-7 pb-7">
-            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
-              <div className="space-y-5">
+          <CardContent className="py-5">
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+              <div className="space-y-3">
                 <div
-                  className={`inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${heroTheme.chipClass}`}
+                  className={`inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wide ${heroTheme.chipClass}`}
                 >
                   <Sparkles className="h-3.5 w-3.5" />
                   Booking intelligence
                 </div>
 
-                <div className="space-y-2">
-                  <CardTitle className="text-3xl font-bold tracking-tight sm:text-4xl">
-                    Booking overview
+                <div className="space-y-1">
+                  <CardTitle className="text-2xl font-bold tracking-tight sm:text-3xl">
+                    Booking #{booking.id}
                   </CardTitle>
                   <p
-                    className={`font-mono text-sm ${heroTheme.subtleTextClass}`}
+                    className={`text-sm font-medium ${heroTheme.subtleTextClass}`}
                   >
-                    #{booking.id}
+                    {normalizeServiceName(
+                      booking.mainService.serviceType as IMainServiceType,
+                    )}
                   </p>
                 </div>
 
@@ -373,9 +370,9 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
                   <PaymentPill status={paymentStatus} />
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-2">
                   <div
-                    className={`rounded-xl border p-4 backdrop-blur-sm ${heroTheme.glassPanelClass}`}
+                    className={`rounded-lg border p-3 ${heroTheme.glassPanelClass}`}
                   >
                     <div
                       className={`mb-2 flex items-center gap-2 ${heroTheme.subtleTextClass}`}
@@ -392,7 +389,7 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
                   </div>
 
                   <div
-                    className={`rounded-xl border p-4 backdrop-blur-sm ${heroTheme.glassPanelClass}`}
+                    className={`rounded-lg border p-3 ${heroTheme.glassPanelClass}`}
                   >
                     <div
                       className={`mb-2 flex items-center gap-2 ${heroTheme.subtleTextClass}`}
@@ -409,7 +406,7 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
                 </div>
               </div>
 
-              <div className="flex shrink-0 flex-wrap gap-2.5 lg:min-w-55">
+              <div className="flex shrink-0 flex-wrap gap-2.5 lg:min-w-55 lg:justify-end">
                 <Button
                   disabled={approveLoading || !canApproveBooking}
                   onClick={async () => {
@@ -435,144 +432,487 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
                 </Button>
               </div>
             </div>
+
+            <div className="mt-4 grid gap-2 border-t border-white/60 pt-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div
+                className={`rounded-lg border p-3 ${heroTheme.glassPanelClass}`}
+              >
+                <div className="mb-2 inline-flex h-8 w-8 items-center justify-center rounded-md bg-emerald-500/10 text-emerald-700">
+                  <Banknote className="h-4 w-4" />
+                </div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Booking Total
+                </p>
+                <p className="mt-1 text-2xl font-bold tracking-tight">
+                  {formatMoney(booking.totalPrice, order.currency)}
+                </p>
+              </div>
+
+              <div
+                className={`rounded-lg border p-3 ${heroTheme.glassPanelClass}`}
+              >
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <div className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-sky-500/10 text-sky-700">
+                    <CreditCard className="h-4 w-4" />
+                  </div>
+                  {showDownpaymentPaidPill ? (
+                    <span className="inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
+                      Paid
+                    </span>
+                  ) : null}
+                </div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Downpayment
+                </p>
+                <p className="mt-1 text-2xl font-bold tracking-tight">
+                  {formatMoney(order.downpayment_required, order.currency)}
+                </p>
+              </div>
+
+              <div
+                className={`rounded-lg border p-3 ${heroTheme.glassPanelClass}`}
+              >
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <div className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-amber-500/10 text-amber-700">
+                    <Wallet className="h-4 w-4" />
+                  </div>
+                  {showFullpaymentPaidPill ? (
+                    <span className="inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
+                      Paid
+                    </span>
+                  ) : null}
+                </div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Remaining Balance
+                </p>
+                <p className="mt-1 text-2xl font-bold tracking-tight">
+                  {formatMoney(order.remaining_balance, order.currency)}
+                </p>
+              </div>
+
+              <div
+                className={`rounded-lg border p-3 ${heroTheme.glassPanelClass}`}
+              >
+                <div className="mb-2 inline-flex h-8 w-8 items-center justify-center rounded-md bg-violet-500/10 text-violet-700">
+                  <Clock className="h-4 w-4" />
+                </div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Dirty Scale
+                </p>
+                <p className="mt-1 text-2xl font-bold tracking-tight">
+                  {booking.base.dirtyScale}
+                  <span className="text-base font-semibold text-muted-foreground">
+                    /5
+                  </span>
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Card>
-            <CardContent className="pt-5 pb-5">
-              <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-700">
-                <Banknote className="h-4 w-4" />
+        <Tabs defaultValue="overview" className="space-y-3">
+          <TabsList
+            variant="line"
+            className="h-auto w-full flex-wrap justify-start"
+          >
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="operations">Operations</TabsTrigger>
+            <TabsTrigger value="financials">Financials</TabsTrigger>
+            <TabsTrigger value="media">Media</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-4">
+            <SectionHeading
+              title="Overview"
+              description="Core booking context, service specifications, and customer schedule data."
+            />
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center gap-2">
+                      <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                      <CardTitle className="text-base">Schedule</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="grid gap-4 text-sm sm:grid-cols-2">
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          Start
+                        </p>
+                        <p className="mt-0.5 font-semibold">
+                          {format(
+                            new Date(booking.base.startSched),
+                            "MMM dd, yyyy",
+                          )}
+                        </p>
+                        <p className="text-muted-foreground">
+                          {format(new Date(booking.base.startSched), "hh:mm a")}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          End
+                        </p>
+                        <p className="mt-0.5 font-semibold">
+                          {format(
+                            new Date(booking.base.endSched),
+                            "MMM dd, yyyy",
+                          )}
+                        </p>
+                        <p className="text-muted-foreground">
+                          {format(new Date(booking.base.endSched), "hh:mm a")}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          Payment Method
+                        </p>
+                        <p className="mt-0.5 font-medium capitalize">
+                          {order.payment_method.toLowerCase()}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          Service
+                        </p>
+                        <p className="mt-0.5 font-medium">
+                          {normalizeServiceName(
+                            booking.mainService.serviceType as IMainServiceType,
+                          )}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          Add-ons
+                        </p>
+                        <p className="mt-0.5 text-muted-foreground">
+                          {hasAddons
+                            ? `+${addons!.length} add-on${addons!.length > 1 ? "s" : ""}`
+                            : "No add-ons"}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <CardTitle className="text-base">Customer</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="grid gap-4 text-sm sm:grid-cols-2">
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          Name
+                        </p>
+                        <p className="mt-0.5 text-base font-semibold">
+                          {booking.base.customerFirstName}{" "}
+                          {booking.base.customerLastName}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          Customer ID
+                        </p>
+                        <p className="mt-0.5 font-mono text-xs">
+                          {booking.base.custId}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          Address
+                        </p>
+                        <p className="mt-0.5 leading-relaxed">
+                          {booking.base.address.addressHuman}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          Coordinates
+                        </p>
+                        <p className="mt-0.5 font-mono text-xs text-muted-foreground">
+                          {booking.base.address.addressLat.toFixed(5)},{" "}
+                          {booking.base.address.addressLng.toFixed(5)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <BookingAddressMap
+                        latitude={booking.base.address.addressLat}
+                        longitude={booking.base.address.addressLng}
+                        address={booking.base.address.addressHuman}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <BookingServiceDetails
+                  mainService={mainService as any}
+                  rawServiceType={
+                    booking.mainService.serviceType as IMainServiceType
+                  }
+                  addons={addons as any}
+                  extraHours={booking.base.extraHours}
+                  extraHourCost={booking.base.extraHourCost}
+                  formattedExtraHourCost={formatMoney(
+                    booking.base.extraHourCost,
+                    order.currency,
+                  )}
+                />
               </div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Booking Total
-              </p>
-              <p className="mt-2 text-3xl font-bold tracking-tight">
-                {formatMoney(booking.totalPrice, order.currency)}
-              </p>
-              {hasAddons && (
-                <p className="mt-1 text-sm text-muted-foreground">
-                  incl. {formatMoney(addonTotal, order.currency)} in add-ons
-                </p>
-              )}
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardContent className="pt-5 pb-5">
-              <div className="mb-3 flex items-start justify-between gap-2">
-                <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500/10 text-sky-700">
-                  <CreditCard className="h-4 w-4" />
-                </div>
-                {showDownpaymentPaidPill && (
-                  <span className="inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">
-                    Paid
-                  </span>
-                )}
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">
+                      Booking metadata
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 text-sm">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-muted-foreground">Booking ID</span>
+                      <span className="font-mono text-xs">{booking.id}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-muted-foreground">
+                        Review Status
+                      </span>
+                      <ReviewPill status={effectiveReviewStatus} />
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-muted-foreground">
+                        Payment Status
+                      </span>
+                      <PaymentPill status={paymentStatus} />
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-muted-foreground">
+                        Order Created
+                      </span>
+                      <span>{format(new Date(order.created_at), "PPp")}</span>
+                    </div>
+                    {order.updated_at ? (
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-muted-foreground">
+                          Order Updated
+                        </span>
+                        <span>{format(new Date(order.updated_at), "PPp")}</span>
+                      </div>
+                    ) : null}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Extra effort</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <div className="flex items-end justify-between gap-2">
+                      <span className="text-muted-foreground">Extra Hours</span>
+                      <p className="text-3xl font-bold tracking-tight">
+                        {booking.base.extraHours}
+                        <span className="text-base font-semibold text-muted-foreground">
+                          {" "}
+                          h
+                        </span>
+                      </p>
+                    </div>
+                    <p className="text-muted-foreground">
+                      {booking.base.extraHourCost > 0
+                        ? `Additional charge: ${formatMoney(booking.base.extraHourCost, order.currency)}`
+                        : "No extra-hour charge"}
+                    </p>
+                  </CardContent>
+                </Card>
               </div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Downpayment Required
-              </p>
-              <p className="mt-2 text-3xl font-bold tracking-tight">
-                {formatMoney(order.downpayment_required, order.currency)}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground capitalize">
-                {order.payment_method.toLowerCase()} payment method
-              </p>
-            </CardContent>
-          </Card>
+            </div>
+          </TabsContent>
 
-          <Card>
-            <CardContent className="pt-5 pb-5">
-              <div className="mb-3 flex items-start justify-between gap-2">
-                <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10 text-amber-700">
-                  <Wallet className="h-4 w-4" />
-                </div>
-                {showFullpaymentPaidPill && (
-                  <span className="inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">
-                    Paid
-                  </span>
-                )}
+          <TabsContent value="operations" className="space-y-4">
+            <SectionHeading
+              title="Operations"
+              description="Cleaner assignments, equipment provisioning, and fulfillment readiness."
+            />
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+              <BookingOperationalDetails
+                bookingId={booking.id}
+                equipments={booking.equipments}
+                resources={booking.resources}
+                cleaners={booking.cleaners}
+              />
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">
+                    Operational snapshot
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Dirty Scale</span>
+                    <span className="font-semibold">
+                      {booking.base.dirtyScale}/5
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Extra Hours</span>
+                    <span className="font-semibold">
+                      {booking.base.extraHours} h
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">
+                      Booking Status
+                    </span>
+                    <StatusPill status={booking.base.status} />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="financials" className="space-y-4">
+            <SectionHeading
+              title="Financials"
+              description="Order records, totals, downpayment progress, and balance snapshots."
+            />
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+              <Card className="border-emerald-500/20">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2">
+                    <ReceiptText className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-base">Order & Payment</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="grid gap-5 text-sm lg:grid-cols-2">
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Order Number
+                      </p>
+                      <p className="mt-0.5 text-base font-semibold">
+                        {order.order_number}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Order ID
+                      </p>
+                      <p className="mt-0.5 break-all font-mono text-xs">
+                        {order.id}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Linked Booking Order ID
+                      </p>
+                      <p className="mt-0.5 break-all font-mono text-xs">
+                        {booking.base.orderId}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 rounded-xl border bg-muted/35 p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span className="font-semibold">
+                        {formatMoney(order.subtotal, order.currency)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Add-ons</span>
+                      <span className="font-semibold">
+                        {formatMoney(order.addon_total, order.currency)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between border-t pt-3">
+                      <span className="font-semibold">Total Amount</span>
+                      <span className="text-base font-bold">
+                        {formatMoney(order.total_amount, order.currency)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Downpayment</span>
+                      <span className="font-semibold">
+                        {formatMoney(
+                          order.downpayment_required,
+                          order.currency,
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Remaining</span>
+                      <span className="font-semibold">
+                        {formatMoney(order.remaining_balance, order.currency)}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="h-4 w-4 text-muted-foreground" />
+                      <CardTitle className="text-base">
+                        Payment Snapshot
+                      </CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Status</span>
+                      <PaymentPill status={paymentStatus} />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Total</span>
+                      <span className="font-semibold">
+                        {formatMoney(order.total_amount, order.currency)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Remaining</span>
+                      <span className="font-semibold">
+                        {formatMoney(order.remaining_balance, order.currency)}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Payment method</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm">
+                    <p className="font-medium capitalize">
+                      {order.payment_method.toLowerCase()} payment method
+                    </p>
+                    <p className="mt-1 text-muted-foreground">
+                      {hasAddons
+                        ? `Includes ${formatMoney(addonTotal, order.currency)} in add-ons.`
+                        : "No add-on charges on this booking."}
+                    </p>
+                  </CardContent>
+                </Card>
               </div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Remaining Balance
-              </p>
-              <p className="mt-2 text-3xl font-bold tracking-tight">
-                {formatMoney(order.remaining_balance, order.currency)}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Pending after posted payments
-              </p>
-            </CardContent>
-          </Card>
+            </div>
+          </TabsContent>
 
-          <Card>
-            <CardContent className="pt-5 pb-5">
-              <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-violet-500/10 text-violet-700">
-                <Clock className="h-4 w-4" />
-              </div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Dirty Scale
-              </p>
-              <p className="mt-2 text-3xl font-bold tracking-tight">
-                {booking.base.dirtyScale}
-                <span className="text-xl font-semibold text-muted-foreground">
-                  /5
-                </span>
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Customer-reported
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6 pb-6">
-              <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Service
-              </p>
-              <p className="mt-2 text-2xl font-bold">
-                {normalizeServiceName(
-                  booking.mainService.serviceType as IMainServiceType,
-                )}
-              </p>
-              {hasAddons ? (
-                <p className="mt-1 text-sm text-muted-foreground">
-                  +{addons!.length} add-on{addons!.length > 1 ? "s" : ""}
-                </p>
-              ) : (
-                <p className="mt-1 text-sm text-muted-foreground">No add-ons</p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6 pb-6">
-              <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Extra Hours
-              </p>
-              <p className="mt-2 text-4xl font-bold tracking-tight">
-                {booking.base.extraHours}
-                <span className="text-2xl font-semibold text-muted-foreground">
-                  {" "}
-                  h
-                </span>
-              </p>
-              {booking.base.extraHourCost > 0 ? (
-                <p className="mt-1 text-sm text-muted-foreground">
-                  ₱{booking.base.extraHourCost.toLocaleString("en-PH")} extra
-                </p>
-              ) : (
-                <p className="mt-1 text-sm text-muted-foreground">
-                  No extra cost
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="space-y-6">
+          <TabsContent value="media" className="space-y-4">
+            <SectionHeading
+              title="Media"
+              description="Customer-uploaded files linked to this booking."
+            />
             <Card className="border-2 border-sky-500/25 bg-linear-to-br from-sky-500/6 via-background to-sky-500/12">
               <CardHeader className="pb-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -656,252 +996,8 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
                 )}
               </CardContent>
             </Card>
-
-            <Card className="border-emerald-500/20">
-              <CardHeader className="pb-2">
-                <div className="flex items-center gap-2">
-                  <ReceiptText className="h-4 w-4 text-muted-foreground" />
-                  <CardTitle className="text-base">Order & Payment</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="grid gap-6 lg:grid-cols-2 text-sm">
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Order Number
-                    </p>
-                    <p className="mt-0.5 text-base font-semibold">
-                      {order.order_number}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Order ID
-                    </p>
-                    <p className="mt-0.5 break-all font-mono text-xs">
-                      {order.id}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Linked Booking Order ID
-                    </p>
-                    <p className="mt-0.5 break-all font-mono text-xs">
-                      {booking.base.orderId}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-3 rounded-xl border bg-muted/35 p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span className="font-semibold">
-                      {formatMoney(order.subtotal, order.currency)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Add-ons</span>
-                    <span className="font-semibold">
-                      {formatMoney(order.addon_total, order.currency)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between border-t pt-3">
-                    <span className="font-semibold">Total Amount</span>
-                    <span className="text-base font-bold">
-                      {formatMoney(order.total_amount, order.currency)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Downpayment</span>
-                    <span className="font-semibold">
-                      {formatMoney(order.downpayment_required, order.currency)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Remaining</span>
-                    <span className="font-semibold">
-                      {formatMoney(order.remaining_balance, order.currency)}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                  <CardTitle className="text-base">Schedule</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="grid gap-6 sm:grid-cols-2 text-sm">
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Start
-                    </p>
-                    <p className="mt-0.5 font-semibold">
-                      {format(
-                        new Date(booking.base.startSched),
-                        "MMM dd, yyyy",
-                      )}
-                    </p>
-                    <p className="text-muted-foreground">
-                      {format(new Date(booking.base.startSched), "hh:mm a")}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      End
-                    </p>
-                    <p className="mt-0.5 font-semibold">
-                      {format(new Date(booking.base.endSched), "MMM dd, yyyy")}
-                    </p>
-                    <p className="text-muted-foreground">
-                      {format(new Date(booking.base.endSched), "hh:mm a")}
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Payment Method
-                    </p>
-                    <p className="mt-0.5 font-medium capitalize">
-                      {order.payment_method.toLowerCase()}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Order Created
-                    </p>
-                    <p className="mt-0.5">
-                      {format(new Date(order.created_at), "PPp")}
-                    </p>
-                  </div>
-                  {order.updated_at && (
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Order Updated
-                      </p>
-                      <p className="mt-0.5">
-                        {format(new Date(order.updated_at), "PPp")}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Customer */}
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <CardTitle className="text-base">Customer</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="grid gap-4 sm:grid-cols-2 text-sm">
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Name
-                    </p>
-                    <p className="mt-0.5 text-base font-semibold">
-                      {booking.base.customerFirstName}{" "}
-                      {booking.base.customerLastName}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Customer ID
-                    </p>
-                    <p className="mt-0.5 font-mono text-xs">
-                      {booking.base.custId}
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Address
-                    </p>
-                    <p className="mt-0.5 leading-relaxed">
-                      {booking.base.address.addressHuman}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Coordinates
-                    </p>
-                    <p className="mt-0.5 font-mono text-xs text-muted-foreground">
-                      {booking.base.address.addressLat.toFixed(5)},{" "}
-                      {booking.base.address.addressLng.toFixed(5)}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <BookingAddressMap
-                    latitude={booking.base.address.addressLat}
-                    longitude={booking.base.address.addressLng}
-                    address={booking.base.address.addressHuman}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <BookingServiceDetails
-              mainService={mainService as any}
-              rawServiceType={
-                booking.mainService.serviceType as IMainServiceType
-              }
-              addons={addons as any}
-              extraHours={booking.base.extraHours}
-              extraHourCost={booking.base.extraHourCost}
-              formattedExtraHourCost={formatMoney(
-                booking.base.extraHourCost,
-                order.currency,
-              )}
-            />
-          </div>
-
-          <div className="space-y-6">
-            <BookingOperationalDetails
-              bookingId={booking.id}
-              equipments={booking.equipments}
-              resources={booking.resources}
-              cleaners={booking.cleaners}
-            />
-
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  <CreditCard className="h-4 w-4 text-muted-foreground" />
-                  <CardTitle className="text-base">Payment Snapshot</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Status</span>
-                  <PaymentPill status={paymentStatus} />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Total</span>
-                  <span className="font-semibold">
-                    {formatMoney(order.total_amount, order.currency)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Remaining</span>
-                  <span className="font-semibold">
-                    {formatMoney(order.remaining_balance, order.currency)}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

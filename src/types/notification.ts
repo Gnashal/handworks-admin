@@ -1,9 +1,7 @@
 export interface ISubscribeNotificationRequest {
   token: string;
   role: string;
-  employeeId?: string;
   adminId?: string;
-  customerId?: string;
   installationId?: string;
   platform?: string;
 }

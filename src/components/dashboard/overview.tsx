@@ -16,9 +16,11 @@ import RecentActivity from "./recentActivity";
 import TopServicesCard from "./topServicesCard";
 import InventoryAlertsCard from "./inventoryAlertsCard";
 import FinancialCard from "./financialCard";
+import FcmNotificationBridge from "../notifications/fcmNotificationBridge";
 import type { IAdminDashboardResponse } from "@/types/admin";
 import { normalizeServiceName } from "@/lib/normalize";
 import type { IMainServiceType } from "@/types/booking";
+import { useBookingTrendsQuery } from "@/queries/dashboardQueries";
 
 const SERVICE_TYPE_VALUES: IMainServiceType[] = [
   "SERVICE_TYPE_UNSPECIFIED",
@@ -80,6 +82,8 @@ export default function DashboardOverview({
     ...activity,
     type: toActivityType(activity.type),
   }));
+
+  const { data: bookingTrendsData } = useBookingTrendsQuery();
 
   return (
     <div className="flex flex-col gap-6">
@@ -155,24 +159,13 @@ export default function DashboardOverview({
 
           {/* CHART + SECONDARY CARDS */}
           <div className="flex flex-col gap-6 pt-2 border-t">
-            <ServiceDynamics
-              weeklyData={[
-                { label: "Mon", value: 4 },
-                { label: "Tue", value: 6 },
-                { label: "Wed", value: 5 },
-                { label: "Thu", value: 8 },
-                { label: "Fri", value: 10 },
-                { label: "Sat", value: 12 },
-                { label: "Sun", value: 3 },
-              ]}
-              monthlyData={[
-                { label: "Week 1", value: 30 },
-                { label: "Week 2", value: 45 },
-                { label: "Week 3", value: 50 },
-                { label: "Week 4", value: 60 },
-              ]}
-            />
-
+            {bookingTrendsData ? (
+              <ServiceDynamics bookingTrendsData={bookingTrendsData} />
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Failed to load booking trends data
+              </p>
+            )}
             {/* SECOND ROW UNDER CHART */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
               <TopServicesCard services={topServices} />
@@ -184,6 +177,8 @@ export default function DashboardOverview({
         {/* RIGHT SIDEBAR */}
         <div className="lg:col-span-2 xl:col-span-1 flex flex-col gap-5">
           <QuickActions />
+
+          <FcmNotificationBridge />
 
           <RecentActivity activities={recentActivities} />
 
