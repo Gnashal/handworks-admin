@@ -5,8 +5,11 @@ import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { useAdmin } from "@/context/adminContext";
-import { fetchAdminDashboardData } from "@/service";
-import type { IAdminDashboardResponse } from "@/types/admin";
+import { fetchAdminDashboardData, fetchBookingTrends } from "@/service";
+import type {
+  IAdminDashboardResponse,
+  IFetchBookingTrendsResponse,
+} from "@/types/admin";
 
 export function useDashboardQuery(
   dateFilter: string,
@@ -34,6 +37,29 @@ export function useDashboardQuery(
         return await fetchAdminDashboardData(token, id, dateFilter);
       } catch (err) {
         toast.error("Failed to fetch admin data");
+        throw err;
+      }
+    },
+  });
+}
+export function useBookingTrendsQuery(): UseQueryResult<IFetchBookingTrendsResponse> {
+  const { isLoaded, getToken } = useAuth();
+
+  return useQuery({
+    queryKey: ["bookingTrends"],
+    enabled: isLoaded,
+    queryFn: async () => {
+      const token = await getToken();
+
+      if (!token) {
+        toast.error("No active session token found");
+        throw new Error("No active session token found");
+      }
+
+      try {
+        return await fetchBookingTrends(token);
+      } catch (err) {
+        toast.error("Failed to fetch booking trends data");
         throw err;
       }
     },

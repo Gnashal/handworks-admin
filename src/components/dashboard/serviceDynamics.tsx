@@ -12,20 +12,14 @@ import {
 
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
-
-interface ServiceDynamicsData {
-  label: string;
-  value: number;
-}
+import { IFetchBookingTrendsResponse } from "@/types/admin";
 
 interface ServiceDynamicsProps {
-  weeklyData: ServiceDynamicsData[];
-  monthlyData: ServiceDynamicsData[];
+  bookingTrendsData: IFetchBookingTrendsResponse;
 }
 
 export default function ServiceDynamics({
-  weeklyData,
-  monthlyData,
+  bookingTrendsData: { weeklyData, monthlyData },
 }: ServiceDynamicsProps) {
   const [mode, setMode] = useState<"week" | "month">("week");
 
