@@ -49,3 +49,29 @@ export function normalizeServiceNameFromValue(service: string): string {
 
   return service;
 }
+
+export function normalizeStatus(status: string) {
+  return status.trim().replace(/\s+/g, "_").toUpperCase();
+}
+
+export function formatMoney(amount: number, currency?: string) {
+  const normalizedCurrency = currency?.toUpperCase();
+
+  if (normalizedCurrency && /^[A-Z]{3}$/.test(normalizedCurrency)) {
+    try {
+      return new Intl.NumberFormat("en-PH", {
+        style: "currency",
+        currency: normalizedCurrency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(amount);
+    } catch {
+      // Fallback to peso format when backend sends an invalid currency code.
+    }
+  }
+
+  return `₱${amount.toLocaleString("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
