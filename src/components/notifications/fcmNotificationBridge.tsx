@@ -3,7 +3,7 @@
 import { useAuth } from "@clerk/nextjs";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getToken, onMessage } from "firebase/messaging";
-import { BellRing, CalendarPlus, PackageX } from "lucide-react";
+import { BellRing, CalendarPlus, PackageX, Timer } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAdmin } from "@/context/adminContext";
@@ -20,7 +20,11 @@ import {
   unsubscribeFromNotifications,
 } from "@/service/notification.service";
 
-type NotificationEvent = "booking.created" | "inventory.low" | "unknown";
+type NotificationEvent =
+  | "booking.created"
+  | "booking.ongoing"
+  | "inventory.low"
+  | "unknown";
 
 type NotificationItem = {
   id: string;
@@ -35,8 +39,72 @@ type FcmPayloadData = {
   payload?: string;
 };
 
+const NOTIFICATION_EVENT_META: Record<
+  Exclude<NotificationEvent, "unknown">,
+  {
+    title: string;
+    body: string;
+    rowClassName: string;
+    iconClassName: string;
+    chipClassName: string;
+  }
+> = {
+  "booking.created": {
+    title: "New booking created",
+    body: "A new booking was created and is waiting for review.",
+    rowClassName: "border-blue-200/80 bg-blue-50/40",
+    iconClassName: "text-blue-600",
+    chipClassName: "border-blue-200 bg-blue-100/70 text-blue-900",
+  },
+  "booking.ongoing": {
+    title: "Booking in progress",
+    body: "A booking moved to ongoing status.",
+    rowClassName: "border-violet-200/80 bg-violet-50/40",
+    iconClassName: "text-violet-600",
+    chipClassName: "border-violet-200 bg-violet-100/70 text-violet-900",
+  },
+  "inventory.low": {
+    title: "Inventory is running low",
+    body: "One or more inventory items need restocking.",
+    rowClassName: "border-amber-200/80 bg-amber-50/40",
+    iconClassName: "text-amber-600",
+    chipClassName: "border-amber-200 bg-amber-100/70 text-amber-900",
+  },
+};
+
+function isNotificationEvent(
+  event: string,
+): event is Exclude<NotificationEvent, "unknown"> {
+  return event in NOTIFICATION_EVENT_META;
+}
+
 const FCM_INSTALLATION_ID_KEY = "fcm.installationId";
 const FCM_TOKEN_KEY = "fcm.currentToken";
+
+const SW_FIREBASE_CONFIG = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "",
+  authDomain: process.env.NEXT_PUBLIC_AUTH_DOMAIN ?? "",
+  projectId: process.env.NEXT_PUBLIC_PROJECT_ID ?? "",
+  storageBucket: process.env.NEXT_PUBLIC_STORAGE_BUCKET ?? "",
+  messagingSenderId: process.env.NEXT_PUBLIC_MESSAGING_SENDER_ID ?? "",
+  appId: process.env.NEXT_PUBLIC_APP_ID ?? "",
+  measurementId: process.env.NEXT_PUBLIC_MEASUREMENT_ID ?? "",
+};
+
+function getServiceWorkerScriptUrl(): string {
+  const params = new URLSearchParams();
+
+  Object.entries(SW_FIREBASE_CONFIG).forEach(([key, value]) => {
+    if (value) {
+      params.set(key, value);
+    }
+  });
+
+  const query = params.toString();
+  return query
+    ? `/firebase-messaging-sw.js?${query}`
+    : "/firebase-messaging-sw.js";
+}
 
 function getInstallationId(): string {
   const existing = localStorage.getItem(FCM_INSTALLATION_ID_KEY);
@@ -58,25 +126,14 @@ function createUiItem(payload: {
   body?: string;
   data?: FcmPayloadData;
 }): NotificationItem {
-  const eventRaw = payload.data?.event ?? "";
-  const event: NotificationEvent =
-    eventRaw === "booking.created" || eventRaw === "inventory.low"
-      ? eventRaw
-      : "unknown";
+  const eventRaw = (payload.data?.event ?? "").replace(",", ".");
+  const event: NotificationEvent = isNotificationEvent(eventRaw)
+    ? eventRaw
+    : "unknown";
 
-  const defaultTitle =
-    event === "booking.created"
-      ? "New booking created"
-      : event === "inventory.low"
-        ? "Inventory is running low"
-        : "New notification";
-
-  const defaultBody =
-    event === "booking.created"
-      ? "A new booking was created and is waiting for review."
-      : event === "inventory.low"
-        ? "One or more inventory items need restocking."
-        : "You received an admin notification.";
+  const meta = event === "unknown" ? null : NOTIFICATION_EVENT_META[event];
+  const defaultTitle = meta?.title ?? "New notification";
+  const defaultBody = meta?.body ?? "You received an admin notification.";
 
   return {
     id:
@@ -145,7 +202,7 @@ export default function FcmNotificationBridge() {
         }
 
         const registration = await navigator.serviceWorker.register(
-          "/firebase-messaging-sw.js",
+          getServiceWorkerScriptUrl(),
         );
 
         const fcmToken = await getToken(messaging, {
@@ -197,6 +254,7 @@ export default function FcmNotificationBridge() {
 
           if (
             item.event !== "booking.created" &&
+            item.event !== "booking.ongoing" &&
             item.event !== "inventory.low"
           ) {
             return;
@@ -309,15 +367,49 @@ export default function FcmNotificationBridge() {
             items.map((item) => (
               <article
                 key={item.id}
-                className="rounded-lg border border-border/70 bg-card px-3 py-2"
+                className={cn(
+                  "rounded-lg border px-3 py-2",
+                  item.event === "unknown"
+                    ? "border-border/70 bg-card"
+                    : NOTIFICATION_EVENT_META[item.event].rowClassName,
+                )}
               >
                 <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
                   {item.event === "booking.created" ? (
-                    <CalendarPlus className="h-3.5 w-3.5 text-blue-600" />
+                    <CalendarPlus
+                      className={cn(
+                        "h-3.5 w-3.5",
+                        NOTIFICATION_EVENT_META["booking.created"]
+                          .iconClassName,
+                      )}
+                    />
+                  ) : item.event === "booking.ongoing" ? (
+                    <Timer
+                      className={cn(
+                        "h-3.5 w-3.5",
+                        NOTIFICATION_EVENT_META["booking.ongoing"]
+                          .iconClassName,
+                      )}
+                    />
                   ) : (
-                    <PackageX className="h-3.5 w-3.5 text-amber-600" />
+                    <PackageX
+                      className={cn(
+                        "h-3.5 w-3.5",
+                        NOTIFICATION_EVENT_META["inventory.low"].iconClassName,
+                      )}
+                    />
                   )}
-                  <span>{item.event}</span>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "rounded-md px-1.5 py-0 text-[10px] font-medium",
+                      item.event === "unknown"
+                        ? ""
+                        : NOTIFICATION_EVENT_META[item.event].chipClassName,
+                    )}
+                  >
+                    {item.event}
+                  </Badge>
                   <span className="ml-auto">
                     {new Date(item.createdAt).toLocaleTimeString()}
                   </span>
