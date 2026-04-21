@@ -70,6 +70,7 @@ export default function DashboardOverview({
   data?: IAdminDashboardResponse;
 }) {
   const activeClients = data?.activeClients ?? 0;
+  const todayBookings = data?.todayBookings ?? 0;
 
   const topServices = (data?.topServices ?? []).map((service) => ({
     ...service,
@@ -99,7 +100,8 @@ export default function DashboardOverview({
               icon={<CalendarDays />}
               data={{
                 title: "Bookings",
-                value: data?.todayBookings ?? 0,
+                value: data?.bookings ?? 0,
+                todayStat: `${todayBookings} booking${todayBookings === 1 ? "" : "s"} today`,
                 change: data?.growthIndex?.bookingsGrowthIndex,
                 trend:
                   (data?.growthIndex?.bookingsGrowthIndex ?? 0) >= 0
