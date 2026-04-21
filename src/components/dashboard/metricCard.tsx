@@ -5,12 +5,14 @@ import { ArrowUpRight, ArrowDownRight, ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
 import clsx from "clsx";
 import CountUp from "react-countup";
+import { Badge } from "@/components/ui/badge";
 
 export interface MetricCardData {
   title: string;
   value: string | number;
   change?: number;
   trend?: "up" | "down";
+  todayStat?: string;
 }
 
 type Variant = "default" | "info" | "success" | "warning" | "danger";
@@ -73,6 +75,18 @@ export default function MetricCard({
           <div className="text-2xl font-bold">
             <AnimatedMetricValue value={data.value} />
           </div>
+
+          {/* TODAY HIGHLIGHT */}
+          {data.todayStat ? (
+            <div className="mt-2">
+              <Badge
+                variant="outline"
+                className="border-red-200 bg-red-50 text-red-500 px-2 py-1"
+              >
+                <p className="uppercase">{data.todayStat}</p>
+              </Badge>
+            </div>
+          ) : null}
 
           {/* TREND (fixed height to prevent shifting) */}
           <div className="mt-2 h-5">

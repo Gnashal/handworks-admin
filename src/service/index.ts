@@ -544,7 +544,7 @@ const attachResourcesToBooking = async (
       resources: resources,
     };
     const res = await fetchWithAuth<IAssignInventoryResponse>(
-      `/api/inventory/attachResources`,
+      `/api/inventory/attachResource`,
       token,
       {
         method: "POST",
