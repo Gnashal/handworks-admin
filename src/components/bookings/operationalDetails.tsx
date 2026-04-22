@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Plus, Wrench, Package } from "lucide-react";
+import { Plus, Wrench, Package, UserPlus, UserMinus } from "lucide-react";
 
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,10 @@ import {
   useAttachEquipmentToBookingMutation,
   useAttachResourcesToBookingMutation,
 } from "@/queries/bookingQueries";
+import {
+  useAssignEmployeeToBookingMutation,
+  useAvailableCleanersQuery,
+} from "@/queries/employeeQueries";
 import { AssignInventoryDialog } from "./assignInventoryDialog";
 
 interface BookingOperationalDetailsProps {
@@ -53,6 +57,15 @@ export function BookingOperationalDetails({
 }: BookingOperationalDetailsProps) {
   const attachEquipmentMutation = useAttachEquipmentToBookingMutation();
   const attachResourcesMutation = useAttachResourcesToBookingMutation();
+  const { data: availableCleaners, isLoading: availableCleanersLoading } =
+    useAvailableCleanersQuery(bookingId);
+  const assignCleanerMutation = useAssignEmployeeToBookingMutation();
+
+  const assignedCleanerIds = new Set(cleaners.map((cleaner) => cleaner.id));
+  const availableCleanerList =
+    availableCleaners?.cleaners?.filter(
+      (cleaner) => !assignedCleanerIds.has(cleaner.employeeId),
+    ) ?? [];
 
   const [assignDialog, setAssignDialog] = useState<{
     open: boolean;
@@ -71,6 +84,22 @@ export function BookingOperationalDetails({
   const handleAssignResources = async (items: IItemQuantity[]) => {
     await attachResourcesMutation.mutateAsync({ bookingId, items });
     closeAssignDialog();
+  };
+
+  const handleAddCleaner = async (employeeId: string) => {
+    await assignCleanerMutation.mutateAsync({
+      bookingId,
+      employeeId,
+      action: "ADD",
+    });
+  };
+
+  const handleRemoveCleaner = async (employeeId: string) => {
+    await assignCleanerMutation.mutateAsync({
+      bookingId,
+      employeeId,
+      action: "REMOVE",
+    });
   };
 
   return (
@@ -105,22 +134,86 @@ export function BookingOperationalDetails({
                 {cleaners.map((c) => (
                   <div
                     key={c.id}
-                    className="flex items-center gap-2.5 rounded-lg border bg-muted/30 px-3 py-2"
+                    className="flex items-center justify-between gap-2.5 rounded-lg border bg-muted/30 px-3 py-2"
                   >
-                    <Avatar className="h-8 w-8 shrink-0">
-                      {c.pfpUrl ? (
-                        <AvatarImage
-                          src={c.pfpUrl}
-                          alt={`${c.cleanerFirstName} ${c.cleanerLastName}`}
-                        />
-                      ) : null}
-                      <AvatarFallback className="text-[11px] font-semibold">
-                        {getInitials(c.cleanerFirstName, c.cleanerLastName)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <p className="text-sm font-medium">
-                      {c.cleanerFirstName} {c.cleanerLastName}
-                    </p>
+                    <div className="flex items-center gap-2.5">
+                      <Avatar className="h-8 w-8 shrink-0">
+                        {c.pfpUrl ? (
+                          <AvatarImage
+                            src={c.pfpUrl}
+                            alt={`${c.cleanerFirstName} ${c.cleanerLastName}`}
+                          />
+                        ) : null}
+                        <AvatarFallback className="text-[11px] font-semibold">
+                          {getInitials(c.cleanerFirstName, c.cleanerLastName)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <p className="text-sm font-medium">
+                        {c.cleanerFirstName} {c.cleanerLastName}
+                      </p>
+                    </div>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8"
+                      onClick={() => handleRemoveCleaner(c.id)}
+                      disabled={assignCleanerMutation.isPending}
+                    >
+                      <UserMinus className="mr-1.5 h-3.5 w-3.5" />
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2.5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Available cleaners
+            </p>
+            {availableCleanersLoading ? (
+              <p className="text-xs italic text-muted-foreground">
+                Loading available cleaners...
+              </p>
+            ) : !availableCleanerList.length ? (
+              <p className="text-xs italic text-muted-foreground">
+                No available cleaners found.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {availableCleanerList.map((c) => (
+                  <div
+                    key={c.employeeId}
+                    className="flex items-center justify-between gap-2.5 rounded-lg border bg-muted/30 px-3 py-2"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Avatar className="h-8 w-8 shrink-0">
+                        {c.pfpUrl ? (
+                          <AvatarImage
+                            src={c.pfpUrl}
+                            alt={`${c.firstName} ${c.lastName}`}
+                          />
+                        ) : null}
+                        <AvatarFallback className="text-[11px] font-semibold">
+                          {getInitials(c.firstName, c.lastName)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <p className="text-sm font-medium">
+                        {c.firstName} {c.lastName}
+                      </p>
+                    </div>
+
+                    <Button
+                      size="sm"
+                      className="h-8"
+                      onClick={() => handleAddCleaner(c.employeeId)}
+                      disabled={assignCleanerMutation.isPending}
+                    >
+                      <UserPlus className="mr-1.5 h-3.5 w-3.5" />
+                      Add
+                    </Button>
                   </div>
                 ))}
               </div>

@@ -10,6 +10,9 @@ import {
 } from "@/types/account";
 import {
   IAdminDashboardResponse,
+  IAssignEmployeeToBookingRequest,
+  IAssignEmployeeToBookingResponse,
+  IAvailableCleanersResponse,
   IFetchBookingTrendsResponse,
   IOnboardEmployeeRequest,
 } from "@/types/admin";
@@ -603,6 +606,52 @@ const fetchBookingTrends = async (
     throw error;
   }
 };
+const fetchAvailableCleaners = async (
+  token: string,
+  bookingId: string,
+): Promise<IAvailableCleanersResponse> => {
+  try {
+    const params = new URLSearchParams();
+    if (bookingId) {
+      params.append("bookingId", bookingId);
+    }
+    const res = await fetchWithAuth<IAvailableCleanersResponse>(
+      `/api/employee/fetchAvailableCleaners?${params.toString()}`,
+      token,
+      { method: "GET" },
+    );
+    return res;
+  } catch (error) {
+    console.error("fetchAvailableCleaners Error:", error);
+    throw error;
+  }
+};
+const assignEmployeeToBooking = async (
+  token: string,
+  bookingId: string,
+  employeeId: string,
+  action: "ADD" | "REMOVE",
+): Promise<IAssignEmployeeToBookingResponse> => {
+  try {
+    const body: IAssignEmployeeToBookingRequest = {
+      bookingId,
+      employeeId,
+      action,
+    };
+    const res = await fetchWithAuth<IAssignEmployeeToBookingResponse>(
+      `/api/employee/assignEmployeeToBooking`,
+      token,
+      {
+        method: "POST",
+        data: body,
+      },
+    );
+    return res;
+  } catch (error) {
+    console.error("assignEmployeeToBooking Error:", error);
+    throw error;
+  }
+};
 export {
   signUpAdmin,
   fetchAdminDashboardData,
@@ -627,4 +676,6 @@ export {
   createInventoryItem,
   uploadImage,
   fetchBookingTrends,
+  fetchAvailableCleaners,
+  assignEmployeeToBooking,
 };
