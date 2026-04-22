@@ -81,3 +81,33 @@ export interface IFetchBookingTrendsResponse {
   weeklyData: ServiceDynamicsData[];
   monthlyData: ServiceDynamicsData[];
 }
+
+export type AssignEmployeeAction = "ADD" | "REMOVE";
+
+export interface IAssignEmployeeToBookingRequest {
+  bookingId: string;
+  employeeId: string;
+  action: AssignEmployeeAction;
+}
+
+export interface IAssignEmployeeToBookingResponse {
+  bookingId: string;
+  employeeId: string;
+  action: string;
+  message: string;
+}
+
+export interface IAvailableCleaner {
+  employeeId: string;
+  firstName: string;
+  lastName: string;
+  pfpUrl: string;
+}
+
+export interface IAvailableCleanersResponse {
+  bookingId: string;
+  startSched: string;
+  endSched: string;
+  cleaners: IAvailableCleaner[];
+  cleanerCount: number;
+}
