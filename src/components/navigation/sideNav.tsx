@@ -20,8 +20,10 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { useClerk } from "@clerk/nextjs";
+import { useBookingAlertBadge } from "@/hooks/useBookingAlertBadge";
 // import { useMessages } from "@/context/messagesContext";
 import SettingsDialog from "@/components/settings/SettingsDialog";
+import { setBookingUnread } from "@/lib/fcmAlertState";
 
 import {
   AlertDialog,
@@ -39,17 +41,28 @@ type Route = {
   label: string;
   path: string;
   badge?: number;
+  highlight?: boolean;
 };
 
 const MenuItem: React.FC<{
   icon: React.ReactNode;
   label: string;
   badge?: number;
+  highlight?: boolean;
   active?: boolean;
   hoverClass?: string;
   collapsed?: boolean;
   onClick?: () => void;
-}> = ({ icon, label, badge, active, hoverClass, collapsed, onClick }) => {
+}> = ({
+  icon,
+  label,
+  badge,
+  highlight,
+  active,
+  hoverClass,
+  collapsed,
+  onClick,
+}) => {
   return (
     <Button
       variant="ghost"
@@ -66,14 +79,24 @@ const MenuItem: React.FC<{
           {icon}
         </div>
 
-        {collapsed && badge && (
-          <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500" />
+        {collapsed && (badge || highlight) && (
+          <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500" />
         )}
       </div>
 
       {!collapsed && (
         <div className="flex items-center justify-between w-full">
-          <span className="text-sm">{label}</span>
+          <span className="text-sm flex items-center gap-2">
+            {label}
+            {highlight && (
+              <span
+                className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500"
+                aria-label="New booking alert"
+              >
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500/70" />
+              </span>
+            )}
+          </span>
 
           {badge && (
             <span className="ml-2 text-xs bg-red-500 text-white rounded-full px-2 py-0.5">
@@ -89,11 +112,17 @@ const MenuItem: React.FC<{
 export default function Sidebar() {
   const location = usePathname();
   const { signOut } = useClerk();
+  const { hasBookingAlert } = useBookingAlertBadge();
   // const { unreadCount } = useMessages();
 
   const routes: Route[] = [
     { icon: <LayoutDashboard />, label: "Dashboard", path: "/" },
-    { icon: <BookOpenIcon />, label: "Bookings", path: "/bookings" },
+    {
+      icon: <BookOpenIcon />,
+      label: "Bookings",
+      path: "/bookings",
+      highlight: hasBookingAlert,
+    },
     { icon: <CalendarDays />, label: "Calendar", path: "/calendar" },
     { icon: <Package />, label: "Inventory", path: "/inventory" },
     { icon: <Users />, label: "Clients", path: "/clients" },
@@ -120,6 +149,12 @@ export default function Sidebar() {
 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    if (location.startsWith("/bookings")) {
+      setBookingUnread(false);
+    }
+  }, [location]);
 
   const handleSettingsClick = () => {
     setSettingsOpen(true);
@@ -173,6 +208,7 @@ export default function Sidebar() {
                   icon={route.icon}
                   label={route.label}
                   badge={route.badge}
+                  highlight={route.highlight}
                   active={isActive}
                   collapsed={collapsed}
                 />

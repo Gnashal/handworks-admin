@@ -8,13 +8,17 @@ import { endOfMonth, format, startOfMonth } from "date-fns";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DataTable } from "@/components/dataTable";
 import { bookingColumns } from "@/app/(default)/bookings/columns";
+import { timesheetColumns } from "./timesheetColumns";
 
 import type { IBooking, IFetchAllBookingsResponse } from "@/types/booking";
+import type { IEmployeeTimesheet } from "@/types/employee";
 import {
   useEmployeeAssignmentsQuery,
   useEmployeeQuery,
+  useEmployeeTimesheetQuery,
 } from "@/queries/employeeQueries";
 import { DataTableSkeleton } from "@/components/dataTableSkeleton";
 
@@ -29,8 +33,14 @@ export default function EmployeeDetailsPage(props: EmployeeDetailsPageProps) {
   const { id } = use(props.params);
   const [page, setPage] = React.useState(0);
   const [limit, setLimit] = React.useState(10);
+  const [timesheetPage, setTimesheetPage] = React.useState(0);
+  const [timesheetLimit, setTimesheetLimit] = React.useState(10);
 
   const [searchParams, setSearchParams] = React.useState<{
+    startDate?: string;
+    endDate?: string;
+  }>({});
+  const [timesheetSearchParams, setTimesheetSearchParams] = React.useState<{
     startDate?: string;
     endDate?: string;
   }>({});
@@ -43,6 +53,11 @@ export default function EmployeeDetailsPage(props: EmployeeDetailsPageProps) {
     setSearchParams({
       startDate: start.toISOString(),
       endDate: end.toISOString(),
+    });
+
+    setTimesheetSearchParams({
+      startDate: format(start, "yyyy-MM-dd"),
+      endDate: format(end, "yyyy-MM-dd"),
     });
   }, []);
 
@@ -66,6 +81,18 @@ export default function EmployeeDetailsPage(props: EmployeeDetailsPageProps) {
     limit,
   });
 
+  const {
+    data: timesheet,
+    isLoading: isTimesheetLoading,
+    isError: isTimesheetError,
+  } = useEmployeeTimesheetQuery({
+    employeeId: id,
+    startDate: timesheetSearchParams.startDate,
+    endDate: timesheetSearchParams.endDate,
+    page: timesheetPage,
+    limit: timesheetLimit,
+  });
+
   const assignedBookings: IBooking[] =
     assignments?.bookings ?? ([] as IFetchAllBookingsResponse["bookings"]);
   const totalPages = assignments
@@ -73,6 +100,36 @@ export default function EmployeeDetailsPage(props: EmployeeDetailsPageProps) {
     : 1;
   const canNextPage = page + 1 < totalPages;
   const canPreviousPage = page > 0;
+  const timesheetRows: IEmployeeTimesheet[] = React.useMemo(() => {
+    if (!timesheet) return [];
+
+    if (Array.isArray(timesheet.timesheets)) {
+      return timesheet.timesheets;
+    }
+
+    if (Array.isArray(timesheet.timesheet)) {
+      return timesheet.timesheet;
+    }
+
+    if (timesheet.timesheet) {
+      return [timesheet.timesheet];
+    }
+
+    return [];
+  }, [timesheet]);
+
+  const totalTimesheetRecords =
+    timesheet?.totalTimesheets ??
+    timesheet?.totalRecords ??
+    timesheet?.total ??
+    timesheetRows.length;
+
+  const totalTimesheetPages = Math.max(
+    1,
+    Math.ceil(totalTimesheetRecords / timesheetLimit),
+  );
+  const canTimesheetNextPage = timesheetPage + 1 < totalTimesheetPages;
+  const canTimesheetPreviousPage = timesheetPage > 0;
 
   if (employeeError) {
     return (
@@ -91,26 +148,31 @@ export default function EmployeeDetailsPage(props: EmployeeDetailsPageProps) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-linear-to-b from-muted/40 to-background p-4">
+    <div className="min-h-screen bg-linear-to-b from-slate-50 via-background to-background p-4 sm:p-6">
       <Link
         href="/employees"
-        className="inline-flex items-center text-md font-medium text-muted-foreground hover:text-foreground p-4"
+        className="mx-auto inline-flex w-full max-w-7xl items-center px-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         Back to employees
       </Link>
 
       {/* Employee card */}
-      <Card className="w-full max-w-7xl mx-auto mb-6">
-        <CardHeader className="flex items-center justify-between pb-3">
+      <Card className="w-full max-w-7xl mx-auto mb-6 border-slate-200/80 shadow-sm">
+        <CardHeader className="flex flex-col gap-4 pb-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <div className="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center text-2xl font-semibold text-gray-600">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-linear-to-br from-slate-200 via-slate-100 to-white text-2xl font-semibold text-slate-700 ring-1 ring-slate-200">
               {employee.employee.account.first_name[0]}
               {employee.employee.account.last_name[0]}
             </div>
-            <CardTitle className="text-3xl font-semibold">
-              {employee.employee.account.first_name}{" "}
-              {employee.employee.account.last_name}
-            </CardTitle>
+            <div>
+              <CardTitle className="text-2xl font-semibold sm:text-3xl">
+                {employee.employee.account.first_name}{" "}
+                {employee.employee.account.last_name}
+              </CardTitle>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Employee profile and activity overview
+              </p>
+            </div>
           </div>
 
           <Button variant="destructive" size="sm">
@@ -159,48 +221,128 @@ export default function EmployeeDetailsPage(props: EmployeeDetailsPageProps) {
         </CardContent>
       </Card>
 
-      {/* Assigned Cleanings Table */}
-      <section className="w-full max-w-7xl mx-auto space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-semibold">
-            Assigned Cleanings ({assignments?.totalBookings})
-          </h3>
-          {isAssignmentsError && (
-            <p className="text-xs text-destructive">
-              Failed to load assignments.
-            </p>
-          )}
-        </div>
+      <section className="w-full max-w-7xl mx-auto space-y-6">
+        <Tabs defaultValue="assignments" className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight">
+                Work Panels
+              </h2>
+            </div>
 
-        {isAssignmentsLoading ? (
-          <div className="w-full">
-            <DataTableSkeleton
-              columnCount={bookingColumns.length}
-              rowCount={10}
-            />
+            <TabsList className="w-full justify-start sm:w-auto" variant="line">
+              <TabsTrigger value="assignments">
+                Assigned Cleanings ({assignments?.totalBookings ?? 0})
+              </TabsTrigger>
+              <TabsTrigger value="timesheet">
+                Timesheet ({totalTimesheetRecords})
+              </TabsTrigger>
+            </TabsList>
           </div>
-        ) : (
-          <DataTable<IBooking, unknown>
-            columns={bookingColumns}
-            data={assignedBookings}
-            enableDateFilter
-            onPaginationChange={(pageIndex, pageSize) => {
-              setPage(pageIndex);
-              setLimit(pageSize);
-            }}
-            onRowClick={(booking) => router.replace(`/bookings/${booking.id}`)}
-            onDateSearchClick={(from, to) => {
-              setSearchParams({
-                startDate: from ? from.toISOString() : undefined,
-                endDate: to ? to.toISOString() : undefined,
-              });
-              setPage(0);
-            }}
-            pageCount={totalPages}
-            canNextPage={canNextPage}
-            canPreviousPage={canPreviousPage}
-          />
-        )}
+
+          <TabsContent value="assignments" className="mt-0">
+            <Card className="border-slate-200/80 shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between gap-4">
+                <div>
+                  <CardTitle className="text-xl">Assigned Cleanings</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Monthly assignments and booking workload
+                  </p>
+                </div>
+                {isAssignmentsError && (
+                  <p className="text-xs text-destructive">
+                    Failed to load assignments.
+                  </p>
+                )}
+              </CardHeader>
+
+              <CardContent>
+                {isAssignmentsLoading ? (
+                  <div className="w-full">
+                    <DataTableSkeleton
+                      columnCount={bookingColumns.length}
+                      rowCount={10}
+                    />
+                  </div>
+                ) : (
+                  <DataTable<IBooking, unknown>
+                    columns={bookingColumns}
+                    data={assignedBookings}
+                    enableDateFilter
+                    onPaginationChange={(pageIndex, pageSize) => {
+                      setPage(pageIndex);
+                      setLimit(pageSize);
+                    }}
+                    onRowClick={(booking) =>
+                      router.replace(`/bookings/${booking.id}`)
+                    }
+                    onDateSearchClick={(from, to) => {
+                      setSearchParams({
+                        startDate: from ? from.toISOString() : undefined,
+                        endDate: to ? to.toISOString() : undefined,
+                      });
+                      setPage(0);
+                    }}
+                    pageCount={totalPages}
+                    canNextPage={canNextPage}
+                    canPreviousPage={canPreviousPage}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="timesheet" className="mt-0">
+            <Card className="border-slate-200/80 shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between gap-4">
+                <div>
+                  <CardTitle className="text-xl">Employee Timesheet</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Attendance history for the selected month
+                  </p>
+                </div>
+                {isTimesheetError && (
+                  <p className="text-xs text-destructive">
+                    Failed to load employee timesheet.
+                  </p>
+                )}
+              </CardHeader>
+
+              <CardContent>
+                {isTimesheetLoading ? (
+                  <div className="w-full">
+                    <DataTableSkeleton
+                      columnCount={timesheetColumns.length}
+                      rowCount={10}
+                    />
+                  </div>
+                ) : (
+                  <DataTable<IEmployeeTimesheet, unknown>
+                    columns={timesheetColumns}
+                    data={timesheetRows}
+                    enableDateFilter
+                    onPaginationChange={(pageIndex, pageSize) => {
+                      setTimesheetPage(pageIndex);
+                      setTimesheetLimit(pageSize);
+                    }}
+                    onDateSearchClick={(from, to) => {
+                      setTimesheetSearchParams({
+                        startDate: from
+                          ? format(from, "yyyy-MM-dd")
+                          : undefined,
+                        endDate: to ? format(to, "yyyy-MM-dd") : undefined,
+                      });
+                      setTimesheetPage(0);
+                    }}
+                    pageCount={totalTimesheetPages}
+                    canNextPage={canTimesheetNextPage}
+                    canPreviousPage={canTimesheetPreviousPage}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </section>
     </div>
   );

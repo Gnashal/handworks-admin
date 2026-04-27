@@ -16,23 +16,17 @@ import {
   getMessagingIfSupported,
 } from "@/lib/firebaseClient";
 import {
+  FCM_ALERTS_UPDATED_EVENT,
+  type NotificationEvent,
+  type NotificationItem,
+  pushAlertItem,
+  readAlertState,
+  setAlertsConnected,
+} from "@/lib/fcmAlertState";
+import {
   subscribeToNotifications,
   unsubscribeFromNotifications,
 } from "@/service/notification.service";
-
-type NotificationEvent =
-  | "booking.created"
-  | "booking.ongoing"
-  | "inventory.low"
-  | "unknown";
-
-type NotificationItem = {
-  id: string;
-  title: string;
-  body: string;
-  event: NotificationEvent;
-  createdAt: string;
-};
 
 type FcmPayloadData = {
   event?: string;
@@ -80,6 +74,7 @@ function isNotificationEvent(
 
 const FCM_INSTALLATION_ID_KEY = "fcm.installationId";
 const FCM_TOKEN_KEY = "fcm.currentToken";
+const FCM_SUBSCRIPTION_KEY = "fcm.subscription.v1";
 
 const SW_FIREBASE_CONFIG = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "",
@@ -147,11 +142,37 @@ function createUiItem(payload: {
   };
 }
 
-export default function FcmNotificationBridge() {
+type FcmNotificationBridgeProps = {
+  renderCard?: boolean;
+  listen?: boolean;
+};
+
+function readStoredSubscription() {
+  try {
+    const raw = localStorage.getItem(FCM_SUBSCRIPTION_KEY);
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw) as { adminId?: string; token?: string };
+    if (!parsed.adminId || !parsed.token) {
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export default function FcmNotificationBridge({
+  renderCard = true,
+  listen = true,
+}: FcmNotificationBridgeProps) {
   const { isLoaded, isSignedIn, getToken: getClerkToken } = useAuth();
   const { adminId } = useAdmin();
   const [items, setItems] = useState<NotificationItem[]>([]);
-  const [enabled, setEnabled] = useState(false);
+  const [enabled, setEnabled] = useState(readAlertState().enabled);
   const [isConnecting, setIsConnecting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [retryTick, setRetryTick] = useState(0);
@@ -163,7 +184,25 @@ export default function FcmNotificationBridge() {
   );
 
   useEffect(() => {
-    if (!canEnable || hasAutoStarted.current) {
+    const syncFromStorage = () => {
+      const state = readAlertState();
+      setEnabled(state.enabled);
+      setItems(state.items);
+    };
+
+    syncFromStorage();
+
+    window.addEventListener(FCM_ALERTS_UPDATED_EVENT, syncFromStorage);
+    window.addEventListener("storage", syncFromStorage);
+
+    return () => {
+      window.removeEventListener(FCM_ALERTS_UPDATED_EVENT, syncFromStorage);
+      window.removeEventListener("storage", syncFromStorage);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!listen || !canEnable || hasAutoStarted.current) {
       return;
     }
 
@@ -228,18 +267,33 @@ export default function FcmNotificationBridge() {
 
         const installationId = getInstallationId();
 
-        await subscribeToNotifications(jwt, {
-          token: fcmToken,
-          role: "admin",
-          adminId,
-          installationId,
-          platform: "web",
-        });
+        const existingSubscription = readStoredSubscription();
+        const needsSubscription =
+          existingSubscription?.adminId !== adminId ||
+          existingSubscription?.token !== fcmToken;
+
+        if (needsSubscription) {
+          await subscribeToNotifications(jwt, {
+            token: fcmToken,
+            role: "admin",
+            adminId,
+            installationId,
+            platform: "web",
+          });
+
+          localStorage.setItem(
+            FCM_SUBSCRIPTION_KEY,
+            JSON.stringify({ adminId, token: fcmToken }),
+          );
+        }
 
         localStorage.setItem(FCM_TOKEN_KEY, fcmToken);
 
-        setEnabled(true);
-        toast.success("FCM notifications enabled.");
+        setAlertsConnected(true);
+
+        if (!enabled) {
+          toast.success("Notifications enabled.");
+        }
 
         unsubscribeForeground = onMessage(messaging, (payload) => {
           if (cancelled) {
@@ -260,7 +314,7 @@ export default function FcmNotificationBridge() {
             return;
           }
 
-          setItems((prev) => [item, ...prev].slice(0, 10));
+          pushAlertItem(item);
           toast.info(item.title, {
             description: item.body,
           });
@@ -284,9 +338,13 @@ export default function FcmNotificationBridge() {
         unsubscribeForeground();
       }
     };
-  }, [adminId, canEnable, getClerkToken, retryTick]);
+  }, [adminId, canEnable, enabled, getClerkToken, listen, retryTick]);
 
   if (!isSignedIn) {
+    return null;
+  }
+
+  if (!renderCard) {
     return null;
   }
 
@@ -311,52 +369,55 @@ export default function FcmNotificationBridge() {
           <p className="text-xs text-destructive">{errorMessage}</p>
         )}
 
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={!canEnable || !enabled || isConnecting}
-            onClick={async () => {
-              try {
-                setIsConnecting(true);
-                const jwt = await getClerkToken();
-                const fcmToken = localStorage.getItem(FCM_TOKEN_KEY);
-                if (!jwt || !fcmToken || !adminId) {
-                  return;
+        {listen ? (
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={!canEnable || !enabled || isConnecting}
+              onClick={async () => {
+                try {
+                  setIsConnecting(true);
+                  const jwt = await getClerkToken();
+                  const fcmToken = localStorage.getItem(FCM_TOKEN_KEY);
+                  if (!jwt || !fcmToken || !adminId) {
+                    return;
+                  }
+
+                  await unsubscribeFromNotifications(jwt, {
+                    token: fcmToken,
+                    role: "admin",
+                    adminId,
+                  });
+
+                  localStorage.removeItem(FCM_SUBSCRIPTION_KEY);
+                  setAlertsConnected(false);
+                  toast.success("FCM notifications disabled.");
+                } catch (error) {
+                  console.error("Failed to unsubscribe from FCM", error);
+                  toast.error("Failed to disable FCM notifications.");
+                } finally {
+                  setIsConnecting(false);
                 }
+              }}
+            >
+              Disable
+            </Button>
 
-                await unsubscribeFromNotifications(jwt, {
-                  token: fcmToken,
-                  role: "admin",
-                  adminId,
-                });
-
-                setEnabled(false);
-                toast.success("FCM notifications disabled.");
-              } catch (error) {
-                console.error("Failed to unsubscribe from FCM", error);
-                toast.error("Failed to disable FCM notifications.");
-              } finally {
-                setIsConnecting(false);
-              }
-            }}
-          >
-            Disable
-          </Button>
-
-          <Button
-            size="sm"
-            disabled={!canEnable || isConnecting}
-            onClick={() => {
-              hasAutoStarted.current = false;
-              setEnabled(false);
-              setErrorMessage(null);
-              setRetryTick((prev) => prev + 1);
-            }}
-          >
-            Reconnect
-          </Button>
-        </div>
+            <Button
+              size="sm"
+              disabled={!canEnable || isConnecting}
+              onClick={() => {
+                hasAutoStarted.current = false;
+                setAlertsConnected(false);
+                setErrorMessage(null);
+                setRetryTick((prev) => prev + 1);
+              }}
+            >
+              Reconnect
+            </Button>
+          </div>
+        ) : null}
 
         <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
           {items.length === 0 ? (

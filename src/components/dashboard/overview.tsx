@@ -21,6 +21,7 @@ import type { IAdminDashboardResponse } from "@/types/admin";
 import { normalizeServiceName } from "@/lib/normalize";
 import type { IMainServiceType } from "@/types/booking";
 import { useBookingTrendsQuery } from "@/queries/dashboardQueries";
+import { useBookingAlertBadge } from "@/hooks/useBookingAlertBadge";
 
 const SERVICE_TYPE_VALUES: IMainServiceType[] = [
   "SERVICE_TYPE_UNSPECIFIED",
@@ -69,6 +70,7 @@ export default function DashboardOverview({
 }: {
   data?: IAdminDashboardResponse;
 }) {
+  const { hasBookingAlert } = useBookingAlertBadge();
   const activeClients = data?.activeClients ?? 0;
   const todayBookings = data?.todayBookings ?? 0;
 
@@ -97,6 +99,7 @@ export default function DashboardOverview({
             <MetricCard
               href="/bookings"
               variant="info"
+              showAlertDot={hasBookingAlert}
               icon={<CalendarDays />}
               data={{
                 title: "Bookings",
@@ -180,7 +183,7 @@ export default function DashboardOverview({
         <div className="lg:col-span-2 xl:col-span-1 flex flex-col gap-5">
           <QuickActions />
 
-          <FcmNotificationBridge />
+          <FcmNotificationBridge listen={false} />
 
           <RecentActivity activities={recentActivities} />
 

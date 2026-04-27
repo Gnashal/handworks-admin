@@ -34,6 +34,7 @@ import {
 } from "@/types/inventory";
 import { IBookingMapRequest, IBookingMapResponse } from "@/types/location";
 import { IFetchAllQuotesResponse, IOrder } from "@/types/payment";
+import { IEmployeeTimesheetResponse } from "@/types/employee";
 
 export const fetchWithAuth = async <T>(
   url: string,
@@ -652,6 +653,40 @@ const assignEmployeeToBooking = async (
     throw error;
   }
 };
+const fetchEmployeeTimesheet = async (
+  token: string,
+  employeeId: string,
+  startDate: string,
+  endDate: string,
+  page: number,
+  limit: number,
+): Promise<IEmployeeTimesheetResponse> => {
+  try {
+    const params = new URLSearchParams();
+    if (
+      employeeId &&
+      page !== null &&
+      limit != null &&
+      startDate !== null &&
+      endDate != null
+    ) {
+      params.append("id", employeeId);
+      params.append("page", page.toString());
+      params.append("limit", limit.toString());
+      params.append("startDate", startDate);
+      params.append("endDate", endDate);
+    }
+    const res = await fetchWithAuth<IEmployeeTimesheetResponse>(
+      `/api/employee/fetchTimesheet?${params.toString()}`,
+      token,
+      { method: "GET" },
+    );
+    return res;
+  } catch (error) {
+    console.error("fetchEmployeeTimesheet Error:", error);
+    throw error;
+  }
+};
 export {
   signUpAdmin,
   fetchAdminDashboardData,
@@ -678,4 +713,5 @@ export {
   fetchBookingTrends,
   fetchAvailableCleaners,
   assignEmployeeToBooking,
+  fetchEmployeeTimesheet,
 };
