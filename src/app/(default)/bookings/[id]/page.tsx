@@ -295,9 +295,7 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
   const normalizedReviewStatus = normalizeStatus(effectiveReviewStatus);
   // const normalizedBookingStatus = normalizeStatus(booking.base.status);
   const normalizedPaymentStatus = normalizeStatus(paymentStatus);
-  const canApproveBooking =
-    normalizedReviewStatus === "PENDING" &&
-    normalizedPaymentStatus === "PENDING_FULLPAYMENT";
+  const canApproveBooking = normalizedReviewStatus === "PENDING";
   const canCompleteBooking = normalizedReviewStatus === "SCHEDULED";
   const showDownpaymentPaidPill =
     normalizedPaymentStatus === "PENDING_FULLPAYMENT" ||

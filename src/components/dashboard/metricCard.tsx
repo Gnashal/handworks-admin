@@ -41,12 +41,14 @@ export default function MetricCard({
   icon,
   className,
   href,
+  showAlertDot,
   variant = "default",
 }: {
   data: MetricCardData;
   icon: React.ReactNode;
   className?: string;
   href?: string;
+  showAlertDot?: boolean;
   variant?: Variant;
 }) {
   return (
@@ -64,7 +66,17 @@ export default function MetricCard({
     >
       {/* HEADER */}
       <CardHeader className="flex flex-row items-center justify-between pb-1">
-        <CardTitle className="text-sm font-semibold">{data.title}</CardTitle>
+        <CardTitle className="text-sm font-semibold flex items-center gap-2">
+          {data.title}
+          {showAlertDot ? (
+            <span
+              className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500"
+              aria-label="New booking alert"
+            >
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500/70" />
+            </span>
+          ) : null}
+        </CardTitle>
         <div className="text-muted-foreground">{icon}</div>
       </CardHeader>
 

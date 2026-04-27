@@ -16,6 +16,7 @@ import {
   fetchEmployees,
   fetchEmployee,
   fetchEmployeeAssignments,
+  fetchEmployeeTimesheet,
 } from "@/service";
 import type { IEmployees, IGetEmployee } from "@/types/account";
 import {
@@ -24,6 +25,7 @@ import {
   IAvailableCleanersResponse,
 } from "@/types/admin";
 import { IFetchAllBookingsResponse } from "@/types/booking";
+import { IEmployeeTimesheetResponse } from "@/types/employee";
 
 export function useEmployeesQuery(
   page: number,
@@ -77,6 +79,14 @@ export function useEmployeeQuery(
 }
 
 interface UseEmployeeAssignmentsOptions {
+  employeeId?: string;
+  startDate?: string;
+  endDate?: string;
+  page: number;
+  limit: number;
+}
+
+interface UseEmployeeTimesheetOptions {
   employeeId?: string;
   startDate?: string;
   endDate?: string;
@@ -163,6 +173,62 @@ export function useAvailableCleanersQuery(
         return await fetchAvailableCleaners(token, bookingId);
       } catch (err) {
         toast.error("Failed to fetch available cleaners");
+        throw err;
+      }
+    },
+  });
+}
+
+export function useEmployeeTimesheetQuery(
+  options: UseEmployeeTimesheetOptions,
+): UseQueryResult<IEmployeeTimesheetResponse> {
+  const { employeeId, startDate, endDate, page, limit } = options;
+  const { isLoaded, getToken } = useAuth();
+
+  const enabled =
+    isLoaded &&
+    !!employeeId &&
+    !!startDate &&
+    !!endDate &&
+    page !== undefined &&
+    limit !== undefined;
+
+  return useQuery({
+    queryKey: [
+      "employee-timesheet",
+      employeeId,
+      startDate,
+      endDate,
+      page,
+      limit,
+    ],
+    enabled,
+    queryFn: async () => {
+      const token = await getToken();
+      if (!token) {
+        toast.error("No active session token found");
+        throw new Error("No active session token found");
+      }
+      if (!employeeId) {
+        toast.error("No employee Id");
+        throw new Error("No employee Id");
+      }
+      if (!startDate || !endDate) {
+        toast.error("Start and end dates are required");
+        throw new Error("Start and end dates are required");
+      }
+
+      try {
+        return await fetchEmployeeTimesheet(
+          token,
+          employeeId,
+          startDate,
+          endDate,
+          page,
+          limit,
+        );
+      } catch (err) {
+        toast.error("Failed to fetch employee timesheet");
         throw err;
       }
     },
