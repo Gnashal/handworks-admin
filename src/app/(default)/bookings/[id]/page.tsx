@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -40,6 +41,7 @@ import { useOrderQuery } from "@/queries/paymentQueries";
 import { normalizeStatus, formatMoney } from "@/lib/normalize";
 import Loader from "@/components/loader";
 import useBooking from "@/hooks/bookingHook";
+import { useFcmAlertState } from "@/hooks/useFcmAlertState";
 
 interface BookingDetailsPageProps {
   params: Promise<{
@@ -245,6 +247,7 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
   const { id } = use(props.params);
   const { data, isLoading, error } = useBookingDetailsQuery(id);
   const { loading: approveLoading, handleApproveBooking } = useBooking();
+  const { items: alertItems } = useFcmAlertState();
   const [localReviewStatus, setLocalReviewStatus] = useState<string | null>(
     null,
   );
@@ -296,11 +299,15 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
   // const normalizedBookingStatus = normalizeStatus(booking.base.status);
   const normalizedPaymentStatus = normalizeStatus(paymentStatus);
   const canApproveBooking = normalizedReviewStatus === "PENDING";
-  const canCompleteBooking = normalizedReviewStatus === "SCHEDULED";
+  const canCancelBooking = normalizedReviewStatus === "SCHEDULED";
   const showDownpaymentPaidPill =
     normalizedPaymentStatus === "PENDING_FULLPAYMENT" ||
     normalizedPaymentStatus === "COMPLETED";
   const showFullpaymentPaidPill = normalizedPaymentStatus === "COMPLETED";
+  const bookingAlert =
+    alertItems.find(
+      (item) => item.bookingId === booking.id || item.orderId === orderId,
+    ) ?? null;
   const serviceType = booking.mainService.serviceType as IMainServiceType;
   const heroTheme =
     serviceHeroThemeConfig[serviceType] ??
@@ -335,6 +342,29 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
           <ArrowLeft className="h-4 w-4" />
           Back to bookings
         </Link>
+
+        {bookingAlert ? (
+          <Card className="border-sky-500/30 bg-sky-50/70 shadow-sm">
+            <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-sky-700">
+                  Live update
+                </p>
+                <p className="text-sm font-semibold text-sky-950">
+                  {bookingAlert.title}
+                </p>
+                <p className="text-xs text-sky-900/80">{bookingAlert.body}</p>
+              </div>
+
+              <Badge
+                variant="outline"
+                className="w-fit border-sky-200 bg-white/80 text-sky-800"
+              >
+                {bookingAlert.event}
+              </Badge>
+            </CardContent>
+          </Card>
+        ) : null}
 
         <Card
           className={`border shadow-sm backdrop-blur-sm ${heroTheme.cardClass}`}
@@ -422,11 +452,11 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
                 </Button>
 
                 <Button
-                  disabled={!canCompleteBooking}
-                  className="bg-blue-500 text-white hover:bg-blue-600"
+                  disabled={!canCancelBooking}
+                  className="bg-red-500 text-white hover:bg-red-600"
                 >
                   <CheckCircle2 className="mr-1.5 h-4 w-4" />
-                  Complete booking
+                  Cancel booking
                 </Button>
               </div>
             </div>
@@ -699,14 +729,6 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
                       </span>
                       <span>{format(new Date(order.created_at), "PPp")}</span>
                     </div>
-                    {order.updated_at ? (
-                      <div className="flex items-center justify-between gap-4">
-                        <span className="text-muted-foreground">
-                          Order Updated
-                        </span>
-                        <span>{format(new Date(order.updated_at), "PPp")}</span>
-                      </div>
-                    ) : null}
                   </CardContent>
                 </Card>
 

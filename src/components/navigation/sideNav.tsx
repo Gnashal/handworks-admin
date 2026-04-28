@@ -151,7 +151,7 @@ export default function Sidebar() {
   }, []);
 
   useEffect(() => {
-    if (location.startsWith("/bookings")) {
+    if (location === "/bookings") {
       setBookingUnread(false);
     }
   }, [location]);

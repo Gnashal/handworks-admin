@@ -183,7 +183,7 @@ export default function DashboardOverview({
         <div className="lg:col-span-2 xl:col-span-1 flex flex-col gap-5">
           <QuickActions />
 
-          <FcmNotificationBridge listen={false} />
+          <FcmNotificationBridge />
 
           <RecentActivity activities={recentActivities} />
 

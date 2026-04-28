@@ -1,9 +1,18 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
+import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { getToken, onMessage } from "firebase/messaging";
-import { BellRing, CalendarPlus, PackageX, Timer } from "lucide-react";
+import {
+  Banknote,
+  BellRing,
+  CalendarPlus,
+  PackageX,
+  Timer,
+  Wallet,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { useAdmin } from "@/context/adminContext";
@@ -30,6 +39,16 @@ import {
 
 type FcmPayloadData = {
   event?: string;
+  type?: string;
+  payload?: string;
+  bookingId?: string;
+  orderId?: string;
+  customerName?: string;
+  orderNumber?: string;
+  totalAmount?: string | number;
+};
+
+type ParsedFcmPayloadData = FcmPayloadData & {
   payload?: string;
 };
 
@@ -64,6 +83,20 @@ const NOTIFICATION_EVENT_META: Record<
     iconClassName: "text-amber-600",
     chipClassName: "border-amber-200 bg-amber-100/70 text-amber-900",
   },
+  "paid.downpayment": {
+    title: "Downpayment received",
+    body: "A booking downpayment has been recorded.",
+    rowClassName: "border-emerald-200/80 bg-emerald-50/40",
+    iconClassName: "text-emerald-600",
+    chipClassName: "border-emerald-200 bg-emerald-100/70 text-emerald-900",
+  },
+  "paid.fullpayment": {
+    title: "Full payment received",
+    body: "A booking was paid in full.",
+    rowClassName: "border-cyan-200/80 bg-cyan-50/40",
+    iconClassName: "text-cyan-600",
+    chipClassName: "border-cyan-200 bg-cyan-100/70 text-cyan-900",
+  },
 };
 
 function isNotificationEvent(
@@ -72,9 +105,120 @@ function isNotificationEvent(
   return event in NOTIFICATION_EVENT_META;
 }
 
+function normalizeEventName(event?: string): string {
+  const normalized = (event ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[_,\-\s]+/g, ".")
+    .replace(/,+/g, ".")
+    .replace(/\.+/g, ".")
+    .replace(/^\.|\.$/g, "");
+
+  const aliasMap: Record<string, string> = {
+    "paid.down.payment": "paid.downpayment",
+    "paid.full.payment": "paid.fullpayment",
+    "payment.downpayment": "paid.downpayment",
+    "payment.fullpayment": "paid.fullpayment",
+  };
+
+  return aliasMap[normalized] ?? normalized;
+}
+
+function parsePayloadData(data?: ParsedFcmPayloadData): ParsedFcmPayloadData {
+  if (!data?.payload || typeof data.payload !== "string") {
+    return data ?? {};
+  }
+
+  try {
+    const parsed = JSON.parse(data.payload) as Record<string, unknown>;
+    return {
+      ...(parsed as ParsedFcmPayloadData),
+      ...data,
+    };
+  } catch {
+    return data;
+  }
+}
+
+function getNotificationBody(
+  event: NotificationEvent,
+  payload: ParsedFcmPayloadData,
+  fallback: string,
+): string {
+  const customer = payload.customerName?.trim();
+  const orderNumber = payload.orderNumber?.trim();
+  const bookingId = payload.bookingId?.trim();
+  const orderId = payload.orderId?.trim();
+  const amount = payload.totalAmount;
+
+  if (event === "booking.created") {
+    if (customer) {
+      return `${customer} created a new booking${orderNumber ? ` for order ${orderNumber}` : ""}.`;
+    }
+
+    return fallback;
+  }
+
+  if (event === "booking.ongoing") {
+    return bookingId
+      ? `Booking ${bookingId} moved to ongoing status.`
+      : fallback;
+  }
+
+  if (event === "paid.downpayment") {
+    const amountSuffix = amount ? ` Amount: ${amount}.` : "";
+    if (orderNumber || orderId) {
+      return `Downpayment received for order ${orderNumber ?? orderId}.${amountSuffix}`;
+    }
+
+    return `Downpayment received.${amountSuffix}`;
+  }
+
+  if (event === "paid.fullpayment") {
+    const amountSuffix = amount ? ` Amount: ${amount}.` : "";
+    if (orderNumber || orderId) {
+      return `Full payment received for order ${orderNumber ?? orderId}.${amountSuffix}`;
+    }
+
+    return `Full payment received.${amountSuffix}`;
+  }
+
+  return fallback;
+}
+
+function getNotificationIcon(event: NotificationEvent) {
+  const iconClassName =
+    event === "unknown"
+      ? "text-muted-foreground"
+      : NOTIFICATION_EVENT_META[event].iconClassName;
+
+  if (event === "booking.created") {
+    return <CalendarPlus className={cn("h-3.5 w-3.5", iconClassName)} />;
+  }
+
+  if (event === "booking.ongoing") {
+    return <Timer className={cn("h-3.5 w-3.5", iconClassName)} />;
+  }
+
+  if (event === "inventory.low") {
+    return <PackageX className={cn("h-3.5 w-3.5", iconClassName)} />;
+  }
+
+  if (event === "paid.downpayment") {
+    return <Wallet className={cn("h-3.5 w-3.5", iconClassName)} />;
+  }
+
+  if (event === "paid.fullpayment") {
+    return <Banknote className={cn("h-3.5 w-3.5", iconClassName)} />;
+  }
+
+  return <BellRing className={cn("h-3.5 w-3.5", iconClassName)} />;
+}
+
 const FCM_INSTALLATION_ID_KEY = "fcm.installationId";
 const FCM_TOKEN_KEY = "fcm.currentToken";
 const FCM_SUBSCRIPTION_KEY = "fcm.subscription.v1";
+const FCM_SESSION_SYNC_KEY = "fcm.subscription.sessionSynced.v1";
 
 const SW_FIREBASE_CONFIG = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "",
@@ -119,16 +263,23 @@ function getInstallationId(): string {
 function createUiItem(payload: {
   title?: string;
   body?: string;
-  data?: FcmPayloadData;
+  data?: ParsedFcmPayloadData;
 }): NotificationItem {
-  const eventRaw = (payload.data?.event ?? "").replace(",", ".");
+  const normalizedData = parsePayloadData(payload.data);
+  const eventRaw = normalizeEventName(
+    normalizedData.event ?? normalizedData.type,
+  );
   const event: NotificationEvent = isNotificationEvent(eventRaw)
     ? eventRaw
     : "unknown";
 
   const meta = event === "unknown" ? null : NOTIFICATION_EVENT_META[event];
-  const defaultTitle = meta?.title ?? "New notification";
-  const defaultBody = meta?.body ?? "You received an admin notification.";
+  const defaultTitle = payload.title || meta?.title || "New notification";
+  const defaultBody = getNotificationBody(
+    event,
+    normalizedData,
+    payload.body || meta?.body || "You received an admin notification.",
+  );
 
   return {
     id:
@@ -136,9 +287,14 @@ function createUiItem(payload: {
         ? crypto.randomUUID()
         : `evt_${Date.now()}`,
     title: defaultTitle,
-    body: payload.body || defaultBody,
+    body: defaultBody,
     event,
     createdAt: new Date().toISOString(),
+    bookingId: normalizedData.bookingId,
+    orderId: normalizedData.orderId,
+    customerName: normalizedData.customerName,
+    orderNumber: normalizedData.orderNumber,
+    totalAmount: normalizedData.totalAmount,
   };
 }
 
@@ -154,7 +310,11 @@ function readStoredSubscription() {
       return null;
     }
 
-    const parsed = JSON.parse(raw) as { adminId?: string; token?: string };
+    const parsed = JSON.parse(raw) as {
+      adminId?: string;
+      token?: string;
+      syncedAt?: string;
+    };
     if (!parsed.adminId || !parsed.token) {
       return null;
     }
@@ -171,13 +331,18 @@ export default function FcmNotificationBridge({
 }: FcmNotificationBridgeProps) {
   const { isLoaded, isSignedIn, getToken: getClerkToken } = useAuth();
   const { adminId } = useAdmin();
+  const queryClient = useQueryClient();
+  const pathname = usePathname();
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [enabled, setEnabled] = useState(readAlertState().enabled);
   const [isConnecting, setIsConnecting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [retryTick, setRetryTick] = useState(0);
   const hasAutoStarted = useRef(false);
-
+  const activeBookingId = useMemo(() => {
+    const match = pathname.match(/^\/bookings\/([^/?#]+)/);
+    return match?.[1] ?? null;
+  }, [pathname]);
   const canEnable = useMemo(
     () => isLoaded && isSignedIn && Boolean(adminId),
     [adminId, isLoaded, isSignedIn],
@@ -268,11 +433,16 @@ export default function FcmNotificationBridge({
         const installationId = getInstallationId();
 
         const existingSubscription = readStoredSubscription();
-        const needsSubscription =
+        const hasSessionSync =
+          typeof window !== "undefined" &&
+          sessionStorage.getItem(FCM_SESSION_SYNC_KEY) === "true";
+
+        const needsSubscriptionSync =
+          !hasSessionSync ||
           existingSubscription?.adminId !== adminId ||
           existingSubscription?.token !== fcmToken;
 
-        if (needsSubscription) {
+        if (needsSubscriptionSync) {
           await subscribeToNotifications(jwt, {
             token: fcmToken,
             role: "admin",
@@ -283,17 +453,61 @@ export default function FcmNotificationBridge({
 
           localStorage.setItem(
             FCM_SUBSCRIPTION_KEY,
-            JSON.stringify({ adminId, token: fcmToken }),
+            JSON.stringify({
+              adminId,
+              token: fcmToken,
+              syncedAt: new Date().toISOString(),
+            }),
           );
+
+          sessionStorage.setItem(FCM_SESSION_SYNC_KEY, "true");
         }
 
         localStorage.setItem(FCM_TOKEN_KEY, fcmToken);
 
         setAlertsConnected(true);
+        toast.success("Notifications enabled.");
 
-        if (!enabled) {
-          toast.success("Notifications enabled.");
-        }
+        const invalidateNotificationQueries = async (
+          item: NotificationItem,
+        ) => {
+          const invalidations: Promise<unknown>[] = [
+            queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+            queryClient.invalidateQueries({ queryKey: ["bookingTrends"] }),
+          ];
+
+          if (item.event === "booking.created") {
+            invalidations.push(
+              queryClient.invalidateQueries({ queryKey: ["bookings"] }),
+              queryClient.invalidateQueries({ queryKey: ["bookingsToday"] }),
+              queryClient.invalidateQueries({ queryKey: ["calendarBookings"] }),
+            );
+          }
+
+          if (item.bookingId) {
+            invalidations.push(
+              queryClient.invalidateQueries({
+                queryKey: ["booking", item.bookingId],
+              }),
+              queryClient.invalidateQueries({
+                queryKey: ["available-cleaners", item.bookingId],
+              }),
+              queryClient.invalidateQueries({ queryKey: ["bookings"] }),
+              queryClient.invalidateQueries({ queryKey: ["bookingsToday"] }),
+              queryClient.invalidateQueries({ queryKey: ["calendarBookings"] }),
+            );
+          }
+
+          if (item.orderId) {
+            invalidations.push(
+              queryClient.invalidateQueries({
+                queryKey: ["order", item.orderId],
+              }),
+            );
+          }
+
+          await Promise.all(invalidations);
+        };
 
         unsubscribeForeground = onMessage(messaging, (payload) => {
           if (cancelled) {
@@ -306,21 +520,21 @@ export default function FcmNotificationBridge({
             data: payload.data as FcmPayloadData | undefined,
           });
 
-          if (
-            item.event !== "booking.created" &&
-            item.event !== "booking.ongoing" &&
-            item.event !== "inventory.low"
-          ) {
+          pushAlertItem(item);
+
+          if (item.event !== "unknown") {
+            void invalidateNotificationQueries(item);
+          }
+
+          if (activeBookingId && item.bookingId === activeBookingId) {
+            toast.info(item.title);
             return;
           }
 
-          pushAlertItem(item);
-          toast.info(item.title, {
-            description: item.body,
-          });
+          toast.info(item.title);
         });
       } catch (error) {
-        console.error("Failed to bootstrap FCM", error);
+        console.error("[FCM] Bootstrap failed:", error);
         const message = "Failed to initialize FCM notifications.";
         setErrorMessage(message);
         toast.error(message);
@@ -338,7 +552,8 @@ export default function FcmNotificationBridge({
         unsubscribeForeground();
       }
     };
-  }, [adminId, canEnable, enabled, getClerkToken, listen, retryTick]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listen, canEnable, adminId, retryTick]);
 
   if (!isSignedIn) {
     return null;
@@ -347,9 +562,8 @@ export default function FcmNotificationBridge({
   if (!renderCard) {
     return null;
   }
-
   return (
-    <Card>
+    <Card className="h-64 flex flex-col overflow-hidden">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="flex items-center gap-2 text-base">
@@ -364,7 +578,7 @@ export default function FcmNotificationBridge({
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3 pt-0">
+      <CardContent className="space-y-3 pt-0 flex-1 flex flex-col overflow-hidden">
         {errorMessage && (
           <p className="text-xs text-destructive">{errorMessage}</p>
         )}
@@ -391,8 +605,9 @@ export default function FcmNotificationBridge({
                   });
 
                   localStorage.removeItem(FCM_SUBSCRIPTION_KEY);
+                  sessionStorage.removeItem(FCM_SESSION_SYNC_KEY);
                   setAlertsConnected(false);
-                  toast.success("FCM notifications disabled.");
+                  toast.success("Notifications disabled.");
                 } catch (error) {
                   console.error("Failed to unsubscribe from FCM", error);
                   toast.error("Failed to disable FCM notifications.");
@@ -409,6 +624,7 @@ export default function FcmNotificationBridge({
               disabled={!canEnable || isConnecting}
               onClick={() => {
                 hasAutoStarted.current = false;
+                sessionStorage.removeItem(FCM_SESSION_SYNC_KEY);
                 setAlertsConnected(false);
                 setErrorMessage(null);
                 setRetryTick((prev) => prev + 1);
@@ -419,7 +635,7 @@ export default function FcmNotificationBridge({
           </div>
         ) : null}
 
-        <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
+        <div className="flex-1 space-y-2 overflow-y-auto pr-1">
           {items.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               Waiting for notifications.
@@ -429,41 +645,18 @@ export default function FcmNotificationBridge({
               <article
                 key={item.id}
                 className={cn(
-                  "rounded-lg border px-3 py-2",
+                  "rounded-md border px-3 py-2",
                   item.event === "unknown"
                     ? "border-border/70 bg-card"
                     : NOTIFICATION_EVENT_META[item.event].rowClassName,
                 )}
               >
                 <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
-                  {item.event === "booking.created" ? (
-                    <CalendarPlus
-                      className={cn(
-                        "h-3.5 w-3.5",
-                        NOTIFICATION_EVENT_META["booking.created"]
-                          .iconClassName,
-                      )}
-                    />
-                  ) : item.event === "booking.ongoing" ? (
-                    <Timer
-                      className={cn(
-                        "h-3.5 w-3.5",
-                        NOTIFICATION_EVENT_META["booking.ongoing"]
-                          .iconClassName,
-                      )}
-                    />
-                  ) : (
-                    <PackageX
-                      className={cn(
-                        "h-3.5 w-3.5",
-                        NOTIFICATION_EVENT_META["inventory.low"].iconClassName,
-                      )}
-                    />
-                  )}
+                  {getNotificationIcon(item.event)}
                   <Badge
                     variant="outline"
                     className={cn(
-                      "rounded-md px-1.5 py-0 text-[10px] font-medium",
+                      "px-1.5 py-0 text-[10px] font-medium",
                       item.event === "unknown"
                         ? ""
                         : NOTIFICATION_EVENT_META[item.event].chipClassName,
@@ -471,6 +664,11 @@ export default function FcmNotificationBridge({
                   >
                     {item.event}
                   </Badge>
+                  {item.orderNumber ? (
+                    <span className="border border-border/60 bg-background px-1.5 py-0.5 text-[10px] font-medium text-foreground">
+                      Order {item.orderNumber}
+                    </span>
+                  ) : null}
                   <span className="ml-auto">
                     {new Date(item.createdAt).toLocaleTimeString()}
                   </span>
