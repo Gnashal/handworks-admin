@@ -1,19 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { endOfMonth, startOfMonth, subMonths } from "date-fns";
 
 import { DataTable } from "@/components/dataTable";
 import { bookingColumns } from "./columns";
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
 
 import type { IBooking } from "@/types/booking";
 import { useBookingsQuery } from "@/queries/bookingQueries";
 import { DataTableSkeleton } from "@/components/dataTableSkeleton";
 
 export default function BookingsPage() {
-  const router = useRouter();
+  // const router = useRouter();
 
   const [page, setPage] = React.useState(0);
   const [limit, setLimit] = React.useState(10);
@@ -50,7 +50,7 @@ export default function BookingsPage() {
 
   return (
     <div className="block w-full h-screen p-6 space-y-4">
-      <div className="flex items-center justify-between">
+      {/* <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Bookings</h2>
         <Button
           className="bg-black text-white hover:bg-gray-800"
@@ -58,7 +58,7 @@ export default function BookingsPage() {
         >
           + Create Booking
         </Button>
-      </div>
+      </div> */}
 
       {isLoading && (
         <div className="w-full h-screen p-6 space-y-4">
