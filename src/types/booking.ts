@@ -223,6 +223,10 @@ export interface IAcceptBookingResponse {
   bookingId: string;
   status: string;
 }
+export interface ICancelBookingResponse {
+  bookingId: string;
+  status: string;
+}
 export interface IBookingsTodayResponse {
   bookings:
     | {
