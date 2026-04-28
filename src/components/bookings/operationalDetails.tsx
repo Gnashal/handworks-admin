@@ -61,7 +61,9 @@ export function BookingOperationalDetails({
     useAvailableCleanersQuery(bookingId);
   const assignCleanerMutation = useAssignEmployeeToBookingMutation();
 
-  const assignedCleanerIds = new Set(cleaners.map((cleaner) => cleaner.id));
+  const assignedCleanerIds = new Set(
+    (cleaners ?? []).map((cleaner) => cleaner.id),
+  );
   const availableCleanerList =
     availableCleaners?.cleaners?.filter(
       (cleaner) => !assignedCleanerIds.has(cleaner.employeeId),
@@ -127,7 +129,7 @@ export function BookingOperationalDetails({
             </p>
             {!cleaners?.length ? (
               <p className="text-xs italic text-muted-foreground">
-                No cleaners assigned.
+                No cleaners assigned to this booking yet
               </p>
             ) : (
               <div className="space-y-2">

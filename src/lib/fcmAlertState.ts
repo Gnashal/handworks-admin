@@ -2,6 +2,8 @@ export type NotificationEvent =
   | "booking.created"
   | "booking.ongoing"
   | "inventory.low"
+  | "paid.downpayment"
+  | "paid.fullpayment"
   | "unknown";
 
 export type NotificationItem = {
@@ -10,6 +12,11 @@ export type NotificationItem = {
   body: string;
   event: NotificationEvent;
   createdAt: string;
+  bookingId?: string;
+  orderId?: string;
+  customerName?: string;
+  orderNumber?: string;
+  totalAmount?: string | number;
 };
 
 type PersistedAlertState = {
@@ -20,6 +27,13 @@ type PersistedAlertState = {
 const ALERT_STATE_KEY = "fcm.alertState.v1";
 const BOOKING_UNREAD_KEY = "fcm.bookingUnread.v1";
 export const FCM_ALERTS_UPDATED_EVENT = "fcm-alerts-updated";
+
+export const BOOKING_RELEVANT_NOTIFICATION_EVENTS: NotificationEvent[] = [
+  "booking.created",
+  "booking.ongoing",
+  "paid.downpayment",
+  "paid.fullpayment",
+];
 
 const defaultState: PersistedAlertState = {
   enabled: false,
@@ -79,9 +93,13 @@ export function pushAlertItem(item: NotificationItem) {
     items: [item, ...state.items].slice(0, 10),
   });
 
-  if (item.event === "booking.created" || item.event === "booking.ongoing") {
+  if (BOOKING_RELEVANT_NOTIFICATION_EVENTS.includes(item.event)) {
     setBookingUnread(true);
   }
+}
+
+export function isBookingRelevantNotification(item: NotificationItem) {
+  return BOOKING_RELEVANT_NOTIFICATION_EVENTS.includes(item.event);
 }
 
 export function clearAlertItems() {

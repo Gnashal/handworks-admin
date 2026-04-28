@@ -62,6 +62,14 @@ if (!hasRequiredFirebaseConfig(firebaseConfig)) {
         title: "Inventory is running low",
         body: "An inventory item reached a low stock threshold.",
       },
+      "paid.downpayment": {
+        title: "Downpayment received",
+        body: "A booking downpayment has been recorded.",
+      },
+      "paid.fullpayment": {
+        title: "Full payment received",
+        body: "A booking was paid in full.",
+      },
     };
 
     const fallback = fallbackByEvent[eventType] || {
