@@ -24,6 +24,7 @@ import {
   IBooking,
   IBookingsTodayResponse,
   ICalendarBookingResponse,
+  ICancelBookingResponse,
   IFetchAllBookingsResponse,
   IItemQuantity,
 } from "@/types/booking";
@@ -404,6 +405,27 @@ const approveBooking = async (
     throw error;
   }
 };
+const cancelBooking = async (
+  token: string,
+  bookingId: string,
+): Promise<ICancelBookingResponse> => {
+  try {
+    const params = new URLSearchParams();
+    if (bookingId) {
+      params.append("bookingId", bookingId);
+    }
+
+    const res = await fetchWithAuth<ICancelBookingResponse>(
+      `/api/booking/cancelBooking?${params.toString()}`,
+      token,
+      { method: "POST" },
+    );
+    return res;
+  } catch (error) {
+    console.error("cancelBooking Error:", error);
+    throw error;
+  }
+};
 const fetchQuotes = async (
   token: string,
   startDate: string,
@@ -703,6 +725,7 @@ export {
   fetchOrder,
   fetchQuotes,
   approveBooking,
+  cancelBooking,
   fetchBookingToday,
   fetchCalendarBookings,
   fetchBookingMapData,
