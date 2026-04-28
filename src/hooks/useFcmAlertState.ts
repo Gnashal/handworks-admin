@@ -1,15 +1,15 @@
 "use client";
 
-import { readBookingUnread } from "@/lib/fcmAlertState";
 import { useEffect, useState } from "react";
-import { FCM_ALERTS_UPDATED_EVENT } from "@/lib/fcmAlertState";
 
-export function useBookingAlertBadge() {
-  const [hasBookingAlert, setHasBookingAlert] = useState(false);
+import { FCM_ALERTS_UPDATED_EVENT, readAlertState } from "@/lib/fcmAlertState";
+
+export function useFcmAlertState() {
+  const [state, setState] = useState(() => readAlertState());
 
   useEffect(() => {
     const sync = () => {
-      setHasBookingAlert(readBookingUnread());
+      setState(readAlertState());
     };
 
     sync();
@@ -23,5 +23,5 @@ export function useBookingAlertBadge() {
     };
   }, []);
 
-  return { hasBookingAlert };
+  return state;
 }
