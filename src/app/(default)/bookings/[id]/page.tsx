@@ -246,7 +246,11 @@ function SectionHeading({
 export default function BookingDetailsPage(props: BookingDetailsPageProps) {
   const { id } = use(props.params);
   const { data, isLoading, error } = useBookingDetailsQuery(id);
-  const { loading: approveLoading, handleApproveBooking } = useBooking();
+  const {
+    loading: approveLoading,
+    handleApproveBooking,
+    handleCancelBooking,
+  } = useBooking();
   const { items: alertItems } = useFcmAlertState();
   const [localReviewStatus, setLocalReviewStatus] = useState<string | null>(
     null,
@@ -454,6 +458,14 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
                 <Button
                   disabled={!canCancelBooking}
                   className="bg-red-500 text-white hover:bg-red-600"
+                  onClick={async () => {
+                    if (!canCancelBooking) return;
+
+                    const res = await handleCancelBooking(booking.id);
+                    if (res?.status) {
+                      setLocalReviewStatus(res.status);
+                    }
+                  }}
                 >
                   <CheckCircle2 className="mr-1.5 h-4 w-4" />
                   Cancel booking

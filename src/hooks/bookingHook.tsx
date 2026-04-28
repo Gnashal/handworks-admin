@@ -1,4 +1,4 @@
-import { approveBooking } from "@/service";
+import { approveBooking, cancelBooking } from "@/service";
 import { useAuth } from "@clerk/nextjs";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -23,5 +23,22 @@ export default function useBooking() {
       setIsLoading(false);
     }
   };
-  return { handleApproveBooking, loading };
+  const handleCancelBooking = async (bookingId: string) => {
+    const token = await getToken();
+    if (!token) {
+      toast.error("Not authenticated.");
+      return;
+    }
+    try {
+      setIsLoading(true);
+      const res = await cancelBooking(token, bookingId);
+      return res;
+    } catch (err) {
+      console.error("Failed to cancel booking:", err);
+      toast.error("Failed to cancel booking.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  return { handleApproveBooking, handleCancelBooking, loading };
 }
