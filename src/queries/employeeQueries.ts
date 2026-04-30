@@ -17,6 +17,7 @@ import {
   fetchEmployee,
   fetchEmployeeAssignments,
   fetchEmployeeTimesheet,
+  updateEmployeeStatus,
 } from "@/service";
 import type { IEmployees, IGetEmployee } from "@/types/account";
 import {
@@ -284,6 +285,53 @@ export function useAssignEmployeeToBookingMutation(): UseMutationResult<
         variables.action === "ADD"
           ? "Failed to assign employee"
           : "Failed to remove employee",
+      );
+    },
+  });
+}
+
+export function useUpdateEmployeeStatusMutation(): UseMutationResult<
+  { ok: boolean },
+  Error,
+  { id: string; status: "ACTIVE" | "INACTIVE" }
+> {
+  const { getToken } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      status,
+    }: {
+      id: string;
+      status: "ACTIVE" | "INACTIVE";
+    }) => {
+      const token = await getToken();
+      if (!token) {
+        toast.error("No active session token found");
+        throw new Error("No active session token found");
+      }
+
+      return await updateEmployeeStatus(token, id, status);
+    },
+    onSuccess: async (_data, variables) => {
+      toast.success(
+        variables.status === "ACTIVE"
+          ? "Employee activated"
+          : "Employee deactivated",
+      );
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["employee", variables.id] }),
+        queryClient.invalidateQueries({ queryKey: ["employees"] }),
+        queryClient.invalidateQueries({ queryKey: ["employee-assignments"] }),
+      ]);
+    },
+    onError: (_err, variables) => {
+      toast.error(
+        variables.status === "ACTIVE"
+          ? "Failed to activate employee"
+          : "Failed to deactivate employee",
       );
     },
   });

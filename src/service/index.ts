@@ -34,8 +34,15 @@ import {
   IInventoryListResponse,
 } from "@/types/inventory";
 import { IBookingMapRequest, IBookingMapResponse } from "@/types/location";
-import { IFetchAllQuotesResponse, IOrder } from "@/types/payment";
-import { IEmployeeTimesheetResponse } from "@/types/employee";
+import {
+  ICashFlowResponse,
+  IFetchAllQuotesResponse,
+  IOrder,
+} from "@/types/payment";
+import {
+  IEmployeeTimesheetResponse,
+  IUpdateEmployeeStatusRequest,
+} from "@/types/employee";
 
 export const fetchWithAuth = async <T>(
   url: string,
@@ -458,7 +465,38 @@ const fetchQuotes = async (
     throw error;
   }
 };
+const fetchCashFlow = async (
+  token: string,
+  startDate: string,
+  endDate: string,
+  page: number,
+  limit: number,
+): Promise<ICashFlowResponse> => {
+  try {
+    const params = new URLSearchParams();
+    if (
+      page !== null &&
+      limit != null &&
+      startDate !== null &&
+      endDate != null
+    ) {
+      params.append("page", page.toString());
+      params.append("limit", limit.toString());
+      params.append("startDate", startDate);
+      params.append("endDate", endDate);
+    }
 
+    const res = await fetchWithAuth<ICashFlowResponse>(
+      `/api/fetchCashFlow?${params.toString()}`,
+      token,
+      { method: "GET" },
+    );
+    return res;
+  } catch (error) {
+    console.error("fetchCashFlow Error:", error);
+    throw error;
+  }
+};
 const fetchBookingToday = async (
   token: string,
 ): Promise<IBookingsTodayResponse> => {
@@ -709,6 +747,30 @@ const fetchEmployeeTimesheet = async (
     throw error;
   }
 };
+const updateEmployeeStatus = async (
+  token: string,
+  id: string,
+  status: "ACTIVE" | "INACTIVE",
+): Promise<{ ok: boolean }> => {
+  try {
+    const body: IUpdateEmployeeStatusRequest = {
+      id,
+      status,
+    };
+    const res = await fetchWithAuth<{ ok: boolean }>(
+      `/api/employee/updateStatus`,
+      token,
+      {
+        method: "PUT",
+        data: body,
+      },
+    );
+    return res;
+  } catch (error) {
+    console.error("updateEmployeeStatus Error:", error);
+    throw error;
+  }
+};
 export {
   signUpAdmin,
   fetchAdminDashboardData,
@@ -737,4 +799,6 @@ export {
   fetchAvailableCleaners,
   assignEmployeeToBooking,
   fetchEmployeeTimesheet,
+  fetchCashFlow,
+  updateEmployeeStatus,
 };

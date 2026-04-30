@@ -8,11 +8,12 @@ import {
   LayoutDashboard,
   BookOpenIcon,
   CalendarDays,
+  DollarSign,
   Package,
   Users,
   UserCheck,
   // MessageSquare,
-  Settings,
+  // Settings,
   LogOut,
   Menu,
   X,
@@ -124,6 +125,7 @@ export default function Sidebar() {
       highlight: hasBookingAlert,
     },
     { icon: <CalendarDays />, label: "Calendar", path: "/calendar" },
+    { icon: <DollarSign />, label: "Cash Flow", path: "/cash-flow" },
     { icon: <Package />, label: "Inventory", path: "/inventory" },
     { icon: <Users />, label: "Clients", path: "/clients" },
     { icon: <UserCheck />, label: "Employees", path: "/employees" },
@@ -156,9 +158,9 @@ export default function Sidebar() {
     }
   }, [location]);
 
-  const handleSettingsClick = () => {
-    setSettingsOpen(true);
-  };
+  // const handleSettingsClick = () => {
+  //   setSettingsOpen(true);
+  // };
 
   const handleSignOutClick = () => {
     setShowLogoutConfirm(true);
@@ -220,13 +222,13 @@ export default function Sidebar() {
         {/* Bottom Section */}
         <div className="mt-4 space-y-2">
           <div className="border-t border-gray-100 pt-4 space-y-2">
-            <MenuItem
+            {/* <MenuItem
               icon={<Settings />}
               label="Settings"
               collapsed={collapsed}
               hoverClass="hover:bg-green-100 hover:text-green-700"
               onClick={handleSettingsClick}
-            />
+            /> */}
 
             <MenuItem
               icon={<LogOut />}

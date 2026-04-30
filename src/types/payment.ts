@@ -100,3 +100,41 @@ export interface IOrder {
   created_at: string;
   updated_at: string;
 }
+export interface IPayment {
+  id: string;
+  order_id: string;
+
+  type: "DOWNPAYMENT" | "FULLPAYMENT" | "BALANCE" | "REFUND";
+  provider: "PAYMONGO" | "CASH" | "MANUAL";
+  payment_intent_id: string | null;
+  payment_id: string | null;
+  payment_method_id: string | null;
+  amount: number;
+  currency: string;
+  status: string;
+  paid_at: string | null;
+  failed_reason: string | null;
+  raw_response: unknown;
+  created_at: string;
+  updated_at: string;
+  client_key: string;
+}
+export interface ICustomerInfo {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+export interface ICashFlowEntry {
+  order: IOrder;
+  Payments: IPayment[];
+  Customer: ICustomerInfo;
+}
+
+export interface ICashFlowResponse {
+  totalEntries: number;
+  entriesRequested: number;
+  page: number;
+  limit: number;
+  entries: ICashFlowEntry[];
+}

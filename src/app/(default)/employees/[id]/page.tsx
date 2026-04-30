@@ -19,6 +19,7 @@ import {
   useEmployeeAssignmentsQuery,
   useEmployeeQuery,
   useEmployeeTimesheetQuery,
+  useUpdateEmployeeStatusMutation,
 } from "@/queries/employeeQueries";
 import { DataTableSkeleton } from "@/components/dataTableSkeleton";
 
@@ -118,6 +119,16 @@ export default function EmployeeDetailsPage(props: EmployeeDetailsPageProps) {
     return [];
   }, [timesheet]);
 
+  const updateStatusMutation = useUpdateEmployeeStatusMutation();
+
+  const handleSetStatus = async (newStatus: "ACTIVE" | "INACTIVE") => {
+    try {
+      await updateStatusMutation.mutateAsync({ id, status: newStatus });
+    } catch {
+      // error handled in mutation onError toast
+    }
+  };
+
   const totalTimesheetRecords =
     timesheet?.totalTimesheets ??
     timesheet?.totalRecords ??
@@ -175,9 +186,48 @@ export default function EmployeeDetailsPage(props: EmployeeDetailsPageProps) {
             </div>
           </div>
 
-          <Button variant="destructive" size="sm">
-            Terminate Employee
-          </Button>
+          <div className="flex items-center gap-3">
+            <div className="text-sm">
+              Status:{" "}
+              <span className="font-semibold">{employee.employee.status}</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant={
+                  employee.employee.status === "ACTIVE" ? "default" : "outline"
+                }
+                onClick={() => handleSetStatus("ACTIVE")}
+                disabled={
+                  updateStatusMutation.isPending ||
+                  employee.employee.status === "ACTIVE"
+                }
+              >
+                Set Active
+              </Button>
+
+              <Button
+                size="sm"
+                variant={
+                  employee.employee.status === "INACTIVE"
+                    ? "destructive"
+                    : "outline"
+                }
+                onClick={() => handleSetStatus("INACTIVE")}
+                disabled={
+                  updateStatusMutation.isPending ||
+                  employee.employee.status === "INACTIVE"
+                }
+              >
+                Set Inactive
+              </Button>
+            </div>
+
+            {/* <Button variant="destructive" size="sm">
+              Terminate Employee
+            </Button> */}
+          </div>
         </CardHeader>
 
         <CardContent className="grid gap-3 text-sm text-muted-foreground md:grid-cols-2">

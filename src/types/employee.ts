@@ -18,3 +18,11 @@ export interface IEmployeeTimesheetResponse {
   page?: number;
   limit?: number;
 }
+
+export interface IUpdateEmployeeStatusRequest {
+  id: string;
+  status: string;
+}
+export interface IUpdateEmployeeStatusResponse {
+  ok: boolean;
+}
