@@ -24,6 +24,8 @@
     "cypress": "^15.14.1",
     "date-fns": "^4.1.0",
     "firebase": "^12.12.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.7",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.563.0",
     "next": "16.1.4",
