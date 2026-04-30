@@ -50,15 +50,9 @@ export default function BookingsPage() {
 
   return (
     <div className="block w-full h-screen p-6 space-y-4">
-      {/* <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Bookings</h2>
-        <Button
-          className="bg-black text-white hover:bg-gray-800"
-          onClick={() => router.push("/bookings/create")}
-        >
-          + Create Booking
-        </Button>
-      </div> */}
+      </div>
 
       {isLoading && (
         <div className="w-full h-screen p-6 space-y-4">
