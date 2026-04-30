@@ -124,3 +124,39 @@
     @apply bg-background text-foreground;
   }
 }
+
+.cashflow-print-only {
+  display: none;
+}
+
+@media print {
+  aside {
+    display: none !important;
+  }
+
+  .cashflow-report-page {
+    min-height: auto !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  .cashflow-toolbar,
+  .cashflow-screen-only {
+    display: none !important;
+  }
+
+  .cashflow-print-only {
+    display: block !important;
+  }
+
+  .cashflow-table-wrap {
+    max-height: none !important;
+    overflow: visible !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 0 !important;
+  }
+
+  table {
+    font-size: 12px;
+  }
+}
