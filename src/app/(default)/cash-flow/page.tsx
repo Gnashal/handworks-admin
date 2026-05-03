@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { endOfMonth, format, startOfMonth } from "date-fns";
+import { addMonths, format } from "date-fns";
 import { Download } from "lucide-react";
 
 import { useCashFlowQuery } from "@/queries/paymentQueries";
@@ -20,16 +20,17 @@ import {
 } from "@/components/ui/table";
 import { cashFlowColumns, cashFlowMoney } from "./columns";
 
-const defaultStart = startOfMonth(new Date());
-const defaultEnd = endOfMonth(new Date());
+const today = new Date();
+const defaultStart = addMonths(today, -3);
+const defaultEnd = today;
 
 const getPaymentTypes = (entry: ICashFlowEntry): string => {
-  const uniqueTypes = Array.from(new Set(entry.Payments.map((p) => p.type)));
+  const uniqueTypes = Array.from(new Set(entry.payments.map((p) => p.type)));
   return uniqueTypes.length ? uniqueTypes.join(", ") : "No payment";
 };
 
 const getPaymentStatus = (entry: ICashFlowEntry): string => {
-  const statuses = Array.from(new Set(entry.Payments.map((p) => p.status)));
+  const statuses = Array.from(new Set(entry.payments.map((p) => p.status)));
   return statuses.length ? statuses.join(", ") : "Pending";
 };
 
@@ -157,8 +158,8 @@ export default function CashFlowPage() {
       );
 
       const rows = exportEntries.map((entry) => [
-        `${entry.Customer.firstName} ${entry.Customer.lastName}`,
-        entry.Customer.email,
+        `${entry.customer.firstName} ${entry.customer.lastName}`,
+        entry.customer.email,
         entry.order.order_number,
         entry.order.payment_method,
         getPaymentTypes(entry),
