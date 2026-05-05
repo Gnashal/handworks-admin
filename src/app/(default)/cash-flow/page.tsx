@@ -1,14 +1,16 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useMemo, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { addMonths, format } from "date-fns";
-import { Download } from "lucide-react";
+import { format, addMonths } from "date-fns";
+import { Download, ChevronDown, ChevronRight } from "lucide-react";
 
 import { useCashFlowQuery } from "@/queries/paymentQueries";
 import type { ICashFlowEntry } from "@/types/payment";
 import { DataTableSkeleton } from "@/components/dataTableSkeleton";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -32,6 +34,140 @@ const getPaymentTypes = (entry: ICashFlowEntry): string => {
 const getPaymentStatus = (entry: ICashFlowEntry): string => {
   const statuses = Array.from(new Set(entry.payments.map((p) => p.status)));
   return statuses.length ? statuses.join(", ") : "Pending";
+};
+
+const CashFlowRow = ({ entry }: { entry: ICashFlowEntry }) => {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <>
+      <TableRow
+        className="cursor-pointer hover:bg-slate-50 transition-colors"
+        onClick={() => setExpanded(!expanded)}
+      >
+        {cashFlowColumns.map((column, idx) => (
+          <TableCell
+            key={`${entry.order.id}-${column.key}`}
+            className={column.className}
+          >
+            {idx === 0 ? (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 p-0 shrink-0 border border-slate-200 shadow-sm bg-white"
+                >
+                  {expanded ? (
+                    <ChevronDown className="h-3 w-3" />
+                  ) : (
+                    <ChevronRight className="h-3 w-3" />
+                  )}
+                </Button>
+                {column.render(entry)}
+              </div>
+            ) : (
+              column.render(entry)
+            )}
+          </TableCell>
+        ))}
+      </TableRow>
+      {expanded && (
+        <TableRow className="bg-slate-50/50 hover:bg-slate-50/50 border-b border-t-0 p-0">
+          <TableCell colSpan={cashFlowColumns.length} className="p-0">
+            <div className="p-4 bg-slate-50/80 border-b border-t-0 border-slate-200/60 transition-all duration-300">
+              <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm overflow-x-auto mx-12">
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-slate-800">
+                    Associated Payments
+                  </h3>
+                  <Badge
+                    variant="secondary"
+                    className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200/50"
+                  >
+                    {entry.payments.length} Payments
+                  </Badge>
+                </div>
+                <Table className="min-w-full">
+                  <TableHeader>
+                    <TableRow className="border-slate-100 uppercase text-[10px] tracking-wider bg-slate-50/50">
+                      <TableHead className="py-2 text-slate-500 font-semibold px-4 rounded-tl-lg">
+                        Type
+                      </TableHead>
+                      <TableHead className="py-2 text-slate-500 font-semibold">
+                        Payment ID
+                      </TableHead>
+                      <TableHead className="py-2 text-slate-500 font-semibold">
+                        Status
+                      </TableHead>
+                      <TableHead className="py-2 text-slate-500 font-semibold">
+                        Provider
+                      </TableHead>
+                      <TableHead className="py-2 text-slate-500 font-semibold text-right">
+                        Amount
+                      </TableHead>
+                      <TableHead className="py-2 text-slate-500 font-semibold text-right px-4 rounded-tr-lg">
+                        Date
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {entry.payments.length > 0 ? (
+                      entry.payments.map((p) => (
+                        <TableRow
+                          key={p.id}
+                          className="border-slate-100/60 hover:bg-slate-50/60"
+                        >
+                          <TableCell className="py-2.5 px-4">
+                            <Badge
+                              variant="outline"
+                              className={`text-[10px] font-medium tracking-wide ${p.type === "FULLPAYMENT" ? "border-blue-200 text-blue-700 bg-blue-50/30" : "border-amber-200 text-amber-700 bg-amber-50/30"}`}
+                            >
+                              {p.type}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="font-mono text-xs text-slate-600 py-2.5">
+                            {p.payment_id}
+                          </TableCell>
+                          <TableCell className="py-2.5">
+                            <Badge
+                              className={`text-[10px] uppercase font-bold tracking-wider rounded-md ${p.status === "paid" ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none px-2 py-0" : "bg-slate-100 text-slate-700 hover:bg-slate-200 border-none px-2 py-0"}`}
+                            >
+                              {p.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="py-2.5 text-xs font-medium text-slate-600 capitalize">
+                            {p.provider}
+                          </TableCell>
+                          <TableCell className="text-right font-medium text-slate-900 py-2.5">
+                            {cashFlowMoney.currencyFormatter.format(p.amount)}
+                          </TableCell>
+                          <TableCell className="text-right text-xs text-slate-500 whitespace-nowrap py-2.5 px-4">
+                            {format(
+                              new Date(p.created_at),
+                              "MMM dd, yyyy h:mm a",
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell
+                          colSpan={6}
+                          className="h-16 text-center text-sm text-slate-500 italic px-4"
+                        >
+                          No payments recorded.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </TableCell>
+        </TableRow>
+      )}
+    </>
+  );
 };
 
 export default function CashFlowPage() {
@@ -157,31 +293,76 @@ export default function CashFlowPage() {
         114,
       );
 
-      const rows = exportEntries.map((entry) => [
-        `${entry.customer.firstName} ${entry.customer.lastName}`,
-        entry.customer.email,
-        entry.order.order_number,
-        entry.order.payment_method,
-        getPaymentTypes(entry),
-        getPaymentStatus(entry),
-        cashFlowMoney.currencyFormatter.format(
-          cashFlowMoney.sumPayments(entry),
-        ),
-        format(new Date(entry.order.created_at), "MMM dd, yyyy"),
-      ]);
+      const rows: any[] = [];
+      exportEntries.forEach((entry) => {
+        // Main order row
+        rows.push([
+          {
+            content: `${entry.customer.firstName} ${entry.customer.lastName}`,
+            styles: { fontStyle: "bold" },
+          },
+          { content: entry.customer.email },
+          { content: entry.order.order_number },
+          { content: entry.order.payment_method },
+          { content: getPaymentTypes(entry) },
+          { content: getPaymentStatus(entry) },
+          {
+            content: cashFlowMoney.currencyFormatter.format(
+              cashFlowMoney.sumPayments(entry),
+            ),
+          },
+          { content: format(new Date(entry.order.created_at), "MMM dd, yyyy") },
+        ]);
+
+        if (entry.payments.length > 0) {
+          entry.payments.forEach((p) => {
+            rows.push([
+              {
+                content: "    \u21B3 Payment:",
+                styles: { fontStyle: "italic", textColor: [120, 120, 120] },
+              },
+              {
+                content: `ID: ${p.payment_id}`,
+                colSpan: 2,
+                styles: { fontStyle: "italic", textColor: [120, 120, 120] },
+              },
+              {
+                content: `Type: ${p.type}`,
+                styles: { fontStyle: "italic", textColor: [120, 120, 120] },
+              },
+              {
+                content: `Provider: ${p.provider}`,
+                styles: { fontStyle: "italic", textColor: [120, 120, 120] },
+              },
+              {
+                content: `Status: ${p.status.toUpperCase()}`,
+                styles: { fontStyle: "italic", textColor: [120, 120, 120] },
+              },
+              {
+                content: cashFlowMoney.currencyFormatter.format(p.amount),
+                styles: { fontStyle: "italic", textColor: [120, 120, 120] },
+              },
+              {
+                content: format(new Date(p.created_at), "MMM dd, yyyy h:mm a"),
+                styles: { fontStyle: "italic", textColor: [120, 120, 120] },
+              },
+            ]);
+          });
+        }
+      });
 
       autoTable(doc, {
         startY: 134,
         head: [
           [
-            "Customer",
-            "Email",
-            "Order #",
-            "Payment Method",
-            "Payment Type(s)",
+            "Customer / Details",
+            "Email / Info",
+            "Order # / Info",
+            "Method / Type",
+            "Types / Provider",
             "Status",
-            "Net Cash Flow",
-            "Created",
+            "Amount",
+            "Date",
           ],
         ],
         body: rows,
@@ -373,16 +554,7 @@ export default function CashFlowPage() {
               <TableBody>
                 {entries.length > 0 ? (
                   entries.map((entry) => (
-                    <TableRow key={entry.order.id}>
-                      {cashFlowColumns.map((column) => (
-                        <TableCell
-                          key={`${entry.order.id}-${column.key}`}
-                          className={column.className}
-                        >
-                          {column.render(entry)}
-                        </TableCell>
-                      ))}
-                    </TableRow>
+                    <CashFlowRow key={entry.order.id} entry={entry} />
                   ))
                 ) : (
                   <TableRow>
