@@ -12,12 +12,21 @@ import {
   PackageX,
   Timer,
   Wallet,
+  Trash2,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAdmin } from "@/context/adminContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
@@ -31,6 +40,8 @@ import {
   pushAlertItem,
   readAlertState,
   setAlertsConnected,
+  clearAlertItems,
+  removeAlertItem,
 } from "@/lib/fcmAlertState";
 import {
   subscribeToNotifications,
@@ -334,6 +345,7 @@ export default function FcmNotificationBridge({
   const queryClient = useQueryClient();
   const pathname = usePathname();
   const [items, setItems] = useState<NotificationItem[]>([]);
+  const [showOlder, setShowOlder] = useState(false);
   const [enabled, setEnabled] = useState(readAlertState().enabled);
   const [isConnecting, setIsConnecting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -555,6 +567,13 @@ export default function FcmNotificationBridge({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listen, canEnable, adminId, retryTick]);
 
+  const recentItems = items.filter(
+    (item) => Date.now() - new Date(item.createdAt).getTime() < 86400000,
+  );
+  const olderItems = items.filter(
+    (item) => Date.now() - new Date(item.createdAt).getTime() >= 86400000,
+  );
+
   if (!isSignedIn) {
     return null;
   }
@@ -563,7 +582,7 @@ export default function FcmNotificationBridge({
     return null;
   }
   return (
-    <Card className="h-64 flex flex-col overflow-hidden">
+    <Card className="flex flex-col">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="flex items-center gap-2 text-base">
@@ -578,7 +597,7 @@ export default function FcmNotificationBridge({
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3 pt-0 flex-1 flex flex-col overflow-hidden">
+      <CardContent className="space-y-3 pt-0 flex-1 flex flex-col overflow-hidden min-h-0">
         {errorMessage && (
           <p className="text-xs text-destructive">{errorMessage}</p>
         )}
@@ -635,54 +654,165 @@ export default function FcmNotificationBridge({
           </div>
         ) : null}
 
-        <div className="flex-1 space-y-2 overflow-y-auto pr-1">
-          {items.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Waiting for notifications.
-            </p>
-          ) : (
-            items.map((item) => (
-              <article
-                key={item.id}
-                className={cn(
-                  "rounded-md border px-3 py-2",
-                  item.event === "unknown"
-                    ? "border-border/70 bg-card"
-                    : NOTIFICATION_EVENT_META[item.event].rowClassName,
-                )}
-              >
-                <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
-                  {getNotificationIcon(item.event)}
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "px-1.5 py-0 text-[10px] font-medium",
-                      item.event === "unknown"
-                        ? ""
-                        : NOTIFICATION_EVENT_META[item.event].chipClassName,
-                    )}
-                  >
-                    {item.event}
-                  </Badge>
-                  {item.orderNumber ? (
-                    <span className="border border-border/60 bg-background px-1.5 py-0.5 text-[10px] font-medium text-foreground">
-                      Order {item.orderNumber}
-                    </span>
-                  ) : null}
-                  <span className="ml-auto">
-                    {new Date(item.createdAt).toLocaleTimeString()}
-                  </span>
-                </div>
-                <p className="text-sm font-semibold leading-snug">
-                  {item.title}
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="secondary" className="mt-auto w-full">
+              View {items.length > 0 ? items.length : ""} Notifications
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-h-[85vh] flex flex-col sm:max-w-[425px]">
+            <DialogHeader className="flex flex-row items-center justify-between">
+              <DialogTitle>Recent Notifications</DialogTitle>
+              {items.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2 text-muted-foreground hover:text-destructive"
+                  onClick={() => {
+                    clearAlertItems();
+                    setItems([]);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Clear All
+                </Button>
+              )}
+            </DialogHeader>
+            <div className="flex-1 space-y-2 overflow-y-auto pr-1 min-h-0">
+              {recentItems.length === 0 && olderItems.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Waiting for notifications.
                 </p>
-                <p className="text-xs text-muted-foreground leading-snug">
-                  {item.body}
-                </p>
-              </article>
-            ))
-          )}
-        </div>
+              ) : (
+                <>
+                  {recentItems.map((item) => (
+                    <article
+                      key={item.id}
+                      className={cn(
+                        "relative rounded-md border px-3 py-2",
+                        item.event === "unknown"
+                          ? "border-border/70 bg-card"
+                          : NOTIFICATION_EVENT_META[item.event].rowClassName,
+                      )}
+                    >
+                      <button
+                        onClick={() => {
+                          removeAlertItem(item.id);
+                          setItems((prev) =>
+                            prev.filter((i) => i.id !== item.id),
+                          );
+                        }}
+                        className="absolute top-2 right-2 text-muted-foreground hover:text-destructive transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                      <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground pr-6">
+                        {getNotificationIcon(item.event)}
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "px-1.5 py-0 text-[10px] font-medium",
+                            item.event === "unknown"
+                              ? ""
+                              : NOTIFICATION_EVENT_META[item.event]
+                                  .chipClassName,
+                          )}
+                        >
+                          {item.event}
+                        </Badge>
+                        {item.orderNumber ? (
+                          <span className="border border-border/60 bg-background px-1.5 py-0.5 text-[10px] font-medium text-foreground">
+                            Order {item.orderNumber}
+                          </span>
+                        ) : null}
+                        <span className="ml-auto">
+                          {new Date(item.createdAt).toLocaleTimeString()}
+                        </span>
+                      </div>
+                      <p className="text-sm font-semibold leading-snug">
+                        {item.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground leading-snug">
+                        {item.body}
+                      </p>
+                    </article>
+                  ))}
+
+                  {olderItems.length > 0 && !showOlder && (
+                    <Button
+                      variant="outline"
+                      className="w-full mt-4"
+                      onClick={() => setShowOlder(true)}
+                    >
+                      View {olderItems.length} older notifications
+                    </Button>
+                  )}
+
+                  {showOlder && (
+                    <div className="mt-6 space-y-2">
+                      <h4 className="text-sm font-medium text-muted-foreground sticky top-0 bg-background py-1">
+                        Older Notifications
+                      </h4>
+                      {olderItems.map((item) => (
+                        <article
+                          key={item.id}
+                          className={cn(
+                            "relative rounded-md border px-3 py-2 opacity-80 hover:opacity-100 transition-opacity",
+                            item.event === "unknown"
+                              ? "border-border/70 bg-card"
+                              : NOTIFICATION_EVENT_META[item.event]
+                                  .rowClassName,
+                          )}
+                        >
+                          <button
+                            onClick={() => {
+                              removeAlertItem(item.id);
+                              setItems((prev) =>
+                                prev.filter((i) => i.id !== item.id),
+                              );
+                            }}
+                            className="absolute top-2 right-2 text-muted-foreground hover:text-destructive transition-colors"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                          <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground pr-6">
+                            {getNotificationIcon(item.event)}
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "px-1.5 py-0 text-[10px] font-medium",
+                                item.event === "unknown"
+                                  ? ""
+                                  : NOTIFICATION_EVENT_META[item.event]
+                                      .chipClassName,
+                              )}
+                            >
+                              {item.event}
+                            </Badge>
+                            {item.orderNumber ? (
+                              <span className="border border-border/60 bg-background px-1.5 py-0.5 text-[10px] font-medium text-foreground">
+                                Order {item.orderNumber}
+                              </span>
+                            ) : null}
+                            <span className="ml-auto">
+                              {new Date(item.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <p className="text-sm font-semibold leading-snug">
+                            {item.title}
+                          </p>
+                          <p className="text-xs text-muted-foreground leading-snug">
+                            {item.body}
+                          </p>
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );

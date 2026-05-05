@@ -110,6 +110,14 @@ export function clearAlertItems() {
   });
 }
 
+export function removeAlertItem(id: string) {
+  const state = readAlertState();
+  writeAlertState({
+    enabled: state.enabled,
+    items: state.items.filter((item) => item.id !== id),
+  });
+}
+
 export function readBookingUnread(): boolean {
   if (typeof window === "undefined") {
     return false;
