@@ -1,7 +1,6 @@
 "use client";
 
 import { format } from "date-fns";
-
 import type { ICashFlowEntry } from "@/types/payment";
 
 export type CashFlowColumn = {
@@ -18,7 +17,8 @@ const currencyFormatter = new Intl.NumberFormat("en-PH", {
 });
 
 const sumPayments = (entry: ICashFlowEntry): number => {
-  return entry.Payments.reduce((acc, payment) => {
+  const payments = entry.payments ?? [];
+  return payments.reduce((acc, payment) => {
     const amount = Number(payment.amount) || 0;
     if (payment.type === "REFUND") return acc - amount;
     return acc + amount;
@@ -26,13 +26,44 @@ const sumPayments = (entry: ICashFlowEntry): number => {
 };
 
 const paymentTypes = (entry: ICashFlowEntry): string => {
-  const uniqueTypes = Array.from(new Set(entry.Payments.map((p) => p.type)));
+  const payments = entry.payments ?? [];
+  const uniqueTypes = Array.from(new Set(payments.map((p) => p.type)));
   return uniqueTypes.length ? uniqueTypes.join(", ") : "No payment";
 };
 
+// map raw status -> label + optional tailwind color
+const formatPaymentStatus = (status: string | undefined) => {
+  if (!status) {
+    return { label: "Pending", className: "text-slate-700" };
+  }
+
+  switch (status) {
+    case "paid":
+      return { label: "Paid", className: "text-emerald-700" };
+    case "awaiting_payment_method":
+      return { label: "Awaiting Payment Method", className: "text-amber-700" };
+    case "processing":
+      return { label: "Processing", className: "text-blue-700" };
+    case "failed":
+      return { label: "Failed", className: "text-red-700" };
+    default:
+      return {
+        label: status
+          .split("_")
+          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+          .join(" "),
+        className: "text-slate-700",
+      };
+  }
+};
+
 const paymentStatus = (entry: ICashFlowEntry): string => {
-  const statuses = Array.from(new Set(entry.Payments.map((p) => p.status)));
-  return statuses.length ? statuses.join(", ") : "Pending";
+  const payments = entry.payments ?? [];
+  const statuses = Array.from(new Set(payments.map((p) => p.status)));
+
+  if (!statuses.length) return "Pending";
+
+  return statuses.map((s) => formatPaymentStatus(s).label).join(", ");
 };
 
 export const cashFlowColumns: CashFlowColumn[] = [
@@ -42,9 +73,9 @@ export const cashFlowColumns: CashFlowColumn[] = [
     render: (entry) => (
       <div className="min-w-48">
         <p className="font-medium text-slate-900">
-          {entry.Customer.firstName} {entry.Customer.lastName}
+          {entry.customer.firstName} {entry.customer.lastName}
         </p>
-        <p className="text-xs text-slate-500">{entry.Customer.email}</p>
+        <p className="text-xs text-slate-500">{entry.customer.email}</p>
       </div>
     ),
   },
@@ -54,7 +85,6 @@ export const cashFlowColumns: CashFlowColumn[] = [
     render: (entry) => (
       <div>
         <p className="font-medium text-slate-800">{entry.order.order_number}</p>
-        <p className="text-xs text-slate-500">{entry.order.id}</p>
       </div>
     ),
   },
@@ -77,11 +107,13 @@ export const cashFlowColumns: CashFlowColumn[] = [
   {
     key: "status",
     header: "Status",
-    render: (entry) => (
-      <p className="text-sm font-medium text-slate-800">
-        {paymentStatus(entry)}
-      </p>
-    ),
+    render: (entry) => {
+      const payments = entry.payments ?? [];
+      const rawStatus = payments[0]?.status;
+      const { label, className } = formatPaymentStatus(rawStatus);
+
+      return <p className={`text-sm font-medium ${className}`}>{label}</p>;
+    },
   },
   {
     key: "total",

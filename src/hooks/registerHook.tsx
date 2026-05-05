@@ -35,16 +35,6 @@ export function useRegister() {
         toast.success("Verification email sent. Please check your inbox.");
         return { verificationRequired: true, clerkUserId: clerkId };
       }
-      if (clerkRes.status === "complete" && clerkRes.createdSessionId) {
-        await dbRegister({
-          email: email,
-          firstName: firstName,
-          lastName: lastName,
-          provider: "email/password",
-          clerkId: clerkId,
-        }).finally(() => setActive({ session: clerkRes.createdSessionId }));
-        return { verificationRequired: false, clerkUserId: clerkId };
-      }
       console.error("Clerk signup incomplete:", clerkRes.status);
       toast.error(`Clerk signup not complete. Status: ${clerkRes.status}`);
     } catch (err) {
@@ -90,13 +80,13 @@ export function useRegister() {
         await setActive({ session: verificationRes.createdSessionId });
         toast.success("Email verified! Welcome aboard.");
 
-        await dbRegister({
-          email: pendingUserData.email,
-          firstName: pendingUserData.firstName,
-          lastName: pendingUserData.lastName,
-          provider: "email/password",
-          clerkId: pendingUserData.clerkUserId,
-        });
+        // await dbRegister({
+        //   email: pendingUserData.email,
+        //   firstName: pendingUserData.firstName,
+        //   lastName: pendingUserData.lastName,
+        //   provider: "email/password",
+        //   clerkId: pendingUserData.clerkUserId,
+        // });
         return verificationRes.status;
       } else {
         toast.error(

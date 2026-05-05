@@ -127,8 +127,8 @@ export interface ICustomerInfo {
 }
 export interface ICashFlowEntry {
   order: IOrder;
-  Payments: IPayment[];
-  Customer: ICustomerInfo;
+  payments: IPayment[];
+  customer: ICustomerInfo;
 }
 
 export interface ICashFlowResponse {
