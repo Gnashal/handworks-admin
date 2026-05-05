@@ -15,6 +15,7 @@ import {
   attachResourcesToBooking,
   fetchBooking,
   fetchBookings,
+  fetchBookingSession,
   fetchBookingToday,
   fetchCalendarBookings,
 } from "@/service";
@@ -25,6 +26,7 @@ import type {
   ICalendarBookingResponse,
   IFetchAllBookingsResponse,
   IItemQuantity,
+  ISession,
 } from "@/types/booking";
 
 interface IAttachInventoryMutationInput {
@@ -131,6 +133,31 @@ export function useCalendarBookingsQuery(
         return res;
       } catch (err) {
         toast.error("Failed to fetch calendar bookings data");
+        throw err;
+      }
+    },
+  });
+}
+export function useBookingSessionQuery(
+  bookingId: string,
+): UseQueryResult<ISession> {
+  const { isLoaded, getToken } = useAuth();
+
+  return useQuery({
+    queryKey: ["bookingSession", bookingId],
+    enabled: isLoaded,
+    queryFn: async () => {
+      const token = await getToken();
+      if (!token) {
+        toast.error("No active session token found");
+        throw new Error("No active session token found");
+      }
+
+      try {
+        const res = await fetchBookingSession(token, bookingId);
+        return res;
+      } catch (err) {
+        toast.error("Failed to fetch booking session data");
         throw err;
       }
     },

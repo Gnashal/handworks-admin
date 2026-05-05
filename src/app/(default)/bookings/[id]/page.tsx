@@ -36,7 +36,10 @@ import { normalizeServiceName } from "@/lib/normalize";
 import { BookingServiceDetails } from "@/components/bookings/bookingServiceDetails";
 import { BookingOperationalDetails } from "@/components/bookings/operationalDetails";
 import { BookingAddressMap } from "@/components/bookings/bookingAddressMap";
-import { useBookingDetailsQuery } from "@/queries/bookingQueries";
+import {
+  useBookingDetailsQuery,
+  useBookingSessionQuery,
+} from "@/queries/bookingQueries";
 import { useOrderQuery } from "@/queries/paymentQueries";
 import { normalizeStatus, formatMoney } from "@/lib/normalize";
 import Loader from "@/components/loader";
@@ -246,6 +249,8 @@ function SectionHeading({
 export default function BookingDetailsPage(props: BookingDetailsPageProps) {
   const { id } = use(props.params);
   const { data, isLoading, error } = useBookingDetailsQuery(id);
+  const { data: sessionData, isLoading: sessionLoading } =
+    useBookingSessionQuery(id);
   const {
     loading: approveLoading,
     handleApproveBooking,
@@ -300,7 +305,7 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
   const effectiveReviewStatus = localReviewStatus ?? booking.base.reviewStatus;
   const paymentStatus = order.payment_status;
   const normalizedReviewStatus = normalizeStatus(effectiveReviewStatus);
-  // const normalizedBookingStatus = normalizeStatus(booking.base.status);
+  const normalizedBookingStatus = normalizeStatus(booking.base.status);
   const normalizedPaymentStatus = normalizeStatus(paymentStatus);
   const canApproveBooking = normalizedReviewStatus === "PENDING";
   const canCancelBooking = normalizedReviewStatus === "SCHEDULED";
@@ -559,6 +564,7 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
             <TabsTrigger value="operations">Operations</TabsTrigger>
             <TabsTrigger value="financials">Financials</TabsTrigger>
             <TabsTrigger value="media">Media</TabsTrigger>
+            <TabsTrigger value="session">Session</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
@@ -1028,6 +1034,111 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="session" className="space-y-4">
+            <SectionHeading
+              title="Session"
+              description="Cleaner execution session details, progress, start, and completion media."
+            />
+            {sessionLoading ? (
+              <div className="flex h-40 animate-pulse items-center justify-center rounded-xl border border-dashed text-muted-foreground">
+                <p>Loading session data...</p>
+              </div>
+            ) : normalizedBookingStatus !== "ONGOING" &&
+              normalizedBookingStatus !== "COMPLETED" ? (
+              <div className="flex h-40 items-center justify-center rounded-xl border border-dashed bg-muted/30">
+                <p className="text-sm font-medium text-muted-foreground">
+                  Booking has not yet started
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2">
+                <Card className="border shadow-sm">
+                  <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                    <CardTitle className="text-base text-foreground">
+                      Start Photos
+                    </CardTitle>
+                    <Badge
+                      variant="secondary"
+                      className="bg-blue-500/10 text-blue-700 hover:bg-blue-500/20"
+                    >
+                      {sessionData?.startPhotos?.length || 0} files
+                    </Badge>
+                  </CardHeader>
+                  <CardContent>
+                    {!sessionData?.startPhotos?.length ? (
+                      <p className="text-sm italic text-muted-foreground text-center py-8">
+                        No start photos uploaded.
+                      </p>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-2">
+                        {sessionData.startPhotos.map((photo, i) => (
+                          <div
+                            key={i}
+                            className="relative aspect-square overflow-hidden rounded-md border"
+                          >
+                            <Image
+                              src={photo}
+                              alt={`Start photo ${i + 1}`}
+                              fill
+                              className="object-cover"
+                              sizes="300px"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card
+                  className={`border shadow-sm ${!sessionData?.endPhotos?.length ? "border-dashed bg-muted/20" : ""}`}
+                >
+                  <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                    <CardTitle className="text-base text-foreground">
+                      End Photos
+                    </CardTitle>
+                    <Badge
+                      variant="secondary"
+                      className={
+                        !sessionData?.endPhotos?.length
+                          ? ""
+                          : "bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20"
+                      }
+                    >
+                      {sessionData?.endPhotos?.length
+                        ? `${sessionData.endPhotos.length} files`
+                        : "Ongoing"}
+                    </Badge>
+                  </CardHeader>
+                  <CardContent>
+                    {!sessionData?.endPhotos?.length ? (
+                      <p className="text-sm italic text-muted-foreground text-center py-8">
+                        Session is still ongoing, end photos will appear here.
+                      </p>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-2">
+                        {sessionData.endPhotos.map((photo, i) => (
+                          <div
+                            key={i}
+                            className="relative aspect-square overflow-hidden rounded-md border"
+                          >
+                            <Image
+                              src={photo}
+                              alt={`End photo ${i + 1}`}
+                              fill
+                              className="object-cover"
+                              sizes="300px"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>

@@ -27,6 +27,7 @@ import {
   ICancelBookingResponse,
   IFetchAllBookingsResponse,
   IItemQuantity,
+  ISession,
 } from "@/types/booking";
 import {
   ICreateItemRequest,
@@ -771,6 +772,26 @@ const updateEmployeeStatus = async (
     throw error;
   }
 };
+const fetchBookingSession = async (
+  token: string,
+  bookingId: string,
+): Promise<ISession> => {
+  try {
+    const params = new URLSearchParams();
+    if (bookingId) {
+      params.append("bookingId", bookingId);
+    }
+    const res = await fetchWithAuth<ISession>(
+      `/api/booking/fetchSession?${params.toString()}`,
+      token,
+      { method: "GET" },
+    );
+    return res;
+  } catch (error) {
+    console.error("fetchBookingSession Error:", error);
+    throw error;
+  }
+};
 export {
   signUpAdmin,
   fetchAdminDashboardData,
@@ -801,4 +822,5 @@ export {
   fetchEmployeeTimesheet,
   fetchCashFlow,
   updateEmployeeStatus,
+  fetchBookingSession,
 };

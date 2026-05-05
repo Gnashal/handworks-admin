@@ -214,6 +214,14 @@ export interface IBooking {
   totalPrice: number;
 }
 
+export interface ISession {
+  bookingId: string;
+  startPhotos: string[];
+  endPhotos: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface IFetchAllBookingsResponse {
   totalBookings: number;
   bookingsRequested: number;
