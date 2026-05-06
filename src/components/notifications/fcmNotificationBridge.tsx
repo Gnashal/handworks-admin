@@ -660,7 +660,7 @@ export default function FcmNotificationBridge({
               View {items.length > 0 ? items.length : ""} Notifications
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-h-[85vh] flex flex-col sm:max-w-[425px]">
+          <DialogContent className="max-h-[85vh] flex flex-col sm:max-w-106.25">
             <DialogHeader className="flex flex-row items-center justify-between">
               <DialogTitle>Recent Notifications</DialogTitle>
               {items.length > 0 && (
