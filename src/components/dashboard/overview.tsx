@@ -156,6 +156,7 @@ export default function DashboardOverview({
                     amount: data?.unpaid ?? 0,
                   },
                 ],
+                href: "/cash-flow",
                 className:
                   "w-full min-h-35 flex flex-col justify-between border transition hover:shadow-md",
               }}
