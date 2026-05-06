@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 import {
@@ -20,7 +21,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { useClerk } from "@clerk/nextjs";
+import { useClerk, useUser } from "@clerk/nextjs";
 import { useBookingAlertBadge } from "@/hooks/useBookingAlertBadge";
 // import { useMessages } from "@/context/messagesContext";
 import SettingsDialog from "@/components/settings/SettingsDialog";
@@ -113,6 +114,7 @@ const MenuItem: React.FC<{
 export default function Sidebar() {
   const location = usePathname();
   const { signOut } = useClerk();
+  const { user } = useUser();
   const { hasBookingAlert } = useBookingAlertBadge();
   // const { unreadCount } = useMessages();
 
@@ -158,9 +160,9 @@ export default function Sidebar() {
     }
   }, [location]);
 
-  // const handleSettingsClick = () => {
-  //   setSettingsOpen(true);
-  // };
+  const handleSettingsClick = () => {
+    setSettingsOpen(true);
+  };
 
   const handleSignOutClick = () => {
     setShowLogoutConfirm(true);
@@ -220,23 +222,48 @@ export default function Sidebar() {
         </nav>
 
         {/* Bottom Section */}
-        <div className="mt-4 space-y-2">
-          <div className="border-t border-gray-100 pt-4 space-y-2">
-            {/* <MenuItem
-              icon={<Settings />}
-              label="Settings"
-              collapsed={collapsed}
-              hoverClass="hover:bg-green-100 hover:text-green-700"
-              onClick={handleSettingsClick}
-            /> */}
+        <div className="mt-auto border-t border-gray-100 pt-4">
+          <div
+            className={`flex items-center p-3 rounded-md transition-colors cursor-pointer hover:bg-gray-50 ${
+              collapsed ? "justify-center" : "justify-between gap-3"
+            }`}
+            onClick={handleSettingsClick}
+          >
+            {user && (
+              <Image
+                src={user.imageUrl}
+                alt="Profile"
+                width={32}
+                height={32}
+                className="w-8 h-8 rounded-full shrink-0"
+              />
+            )}
 
-            <MenuItem
-              icon={<LogOut />}
-              label="Sign Out"
-              collapsed={collapsed}
-              hoverClass="hover:bg-red-100 hover:text-red-700"
-              onClick={handleSignOutClick}
-            />
+            {!collapsed && user && (
+              <div className="flex flex-col text-sm overflow-hidden flex-1 text-left">
+                <span className="font-semibold text-gray-900 truncate">
+                  {user.fullName}
+                </span>
+                <span className="text-xs text-gray-500 truncate">
+                  {user.primaryEmailAddress?.emailAddress}
+                </span>
+              </div>
+            )}
+
+            {!collapsed && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-gray-500 hover:text-red-600 hover:bg-red-50 shrink-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSignOutClick();
+                }}
+                title="Sign Out"
+              >
+                <LogOut className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         </div>
       </aside>

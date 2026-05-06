@@ -1,6 +1,8 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowRightIcon } from "lucide-react";
+import Link from "next/link";
 import CountUp from "react-countup";
 
 export interface FinancialStat {
@@ -14,11 +16,12 @@ export interface FinancialStat {
   }>;
   currency?: string;
   className?: string;
+  href?: string;
 }
 
 export default function FinancialCard({ data }: { data: FinancialStat }) {
   const currency = data.currency ?? "₱";
-
+  const href = data.href ?? "#";
   const renderAmount = (amount: number) => (
     <>
       {currency}
@@ -65,6 +68,15 @@ export default function FinancialCard({ data }: { data: FinancialStat }) {
         <p className="text-xs text-muted-foreground">
           Current Financial Period
         </p>
+        {href && data.href && (
+          <Link
+            href={href}
+            className="text-muted-foreground hover:text-primary text-xs flex items-center gap-1 mt-2 self-end"
+          >
+            <span>View</span>
+            <ArrowRightIcon className="h-3 w-3" />
+          </Link>
+        )}
       </CardContent>
     </Card>
   );

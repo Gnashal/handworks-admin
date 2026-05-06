@@ -1,17 +1,11 @@
-import { signUpAdmin } from "@/service";
-import {
-  IDbRegisterRequest,
-  IRegisterRequest,
-  IVerifyEmailRequest,
-} from "@/types/account";
-import { useAuth, useSignUp } from "@clerk/nextjs";
+import { IRegisterRequest, IVerifyEmailRequest } from "@/types/account";
+import { useSignUp } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 export function useRegister() {
   const { signUp, isLoaded, setActive } = useSignUp();
   const router = useRouter();
-  const { getToken } = useAuth();
 
   async function register({
     firstName,
@@ -26,6 +20,7 @@ export function useRegister() {
         lastName,
         emailAddress: email,
         password,
+        unsafeMetadata: { role: "admin" },
       });
       const clerkId = clerkRes.createdUserId as string;
       if (clerkRes.unverifiedFields?.includes("email_address")) {
@@ -41,23 +36,6 @@ export function useRegister() {
       console.error("Sign up error:", err);
       toast.error(err instanceof Error ? err.message : "Unknown error");
     }
-  }
-  async function dbRegister({
-    email,
-    firstName,
-    lastName,
-    provider,
-    clerkId,
-  }: IDbRegisterRequest) {
-    const token = await getToken();
-    if (!token) {
-      console.error("No active session token found");
-      toast.error("No active session token found");
-      return;
-    }
-    await signUpAdmin(clerkId, email, firstName, lastName, provider, "admin");
-    toast.success("Signed up successfully");
-    router.push("/home");
   }
   const handleVerify = async (
     pendingUserData: IVerifyEmailRequest | null,
@@ -78,15 +56,8 @@ export function useRegister() {
         verificationRes.createdSessionId
       ) {
         await setActive({ session: verificationRes.createdSessionId });
+        router.push("/home");
         toast.success("Email verified! Welcome aboard.");
-
-        // await dbRegister({
-        //   email: pendingUserData.email,
-        //   firstName: pendingUserData.firstName,
-        //   lastName: pendingUserData.lastName,
-        //   provider: "email/password",
-        //   clerkId: pendingUserData.clerkUserId,
-        // });
         return verificationRes.status;
       } else {
         toast.error(
@@ -112,5 +83,5 @@ export function useRegister() {
     }
   };
 
-  return { register, dbRegister, handleVerify, handleResend };
+  return { register, handleVerify, handleResend };
 }

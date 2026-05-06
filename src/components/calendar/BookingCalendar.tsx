@@ -170,9 +170,6 @@ export default function BookingCalendar() {
             <button className="px-3 py-1.5 border rounded-md text-sm hover:bg-gray-100">
               Month
             </button>
-            <button className="px-4 py-1.5 bg-green-600 text-white rounded-md text-sm hover:bg-green-700">
-              + New Booking
-            </button>
           </div>
         </div>
 
