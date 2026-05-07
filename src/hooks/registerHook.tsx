@@ -56,7 +56,7 @@ export function useRegister() {
         verificationRes.createdSessionId
       ) {
         await setActive({ session: verificationRes.createdSessionId });
-        router.push("/home");
+        router.push("/");
         toast.success("Email verified! Welcome aboard.");
         return verificationRes.status;
       } else {
