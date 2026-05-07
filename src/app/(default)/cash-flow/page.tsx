@@ -126,7 +126,7 @@ const CashFlowRow = ({ entry }: { entry: ICashFlowEntry }) => {
                             </Badge>
                           </TableCell>
                           <TableCell className="font-mono text-xs text-slate-600 py-2.5">
-                            {p.payment_id}
+                            {p.payment_id ?? "cash_payment"}
                           </TableCell>
                           <TableCell className="py-2.5">
                             <Badge

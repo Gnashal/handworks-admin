@@ -310,9 +310,9 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
   const canApproveBooking = normalizedReviewStatus === "PENDING";
   const canCancelBooking = normalizedReviewStatus === "SCHEDULED";
   const showDownpaymentPaidPill =
-    normalizedPaymentStatus === "PENDING_FULLPAYMENT" ||
-    normalizedPaymentStatus === "COMPLETED";
-  const showFullpaymentPaidPill = normalizedPaymentStatus === "COMPLETED";
+    normalizedPaymentStatus === "FULLY_PAID" ||
+    normalizedPaymentStatus === "PENDING_FULLPAYMENT";
+  const showFullpaymentPaidPill = normalizedPaymentStatus === "FULLY_PAID";
   const bookingAlert =
     alertItems.find(
       (item) => item.bookingId === booking.id || item.orderId === orderId,
