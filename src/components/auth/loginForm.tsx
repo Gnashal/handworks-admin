@@ -1,7 +1,6 @@
 "use client";
 
 import * as z from "zod";
-import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,7 +16,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useLogin } from "@/hooks/loginHook";
-import { toast } from "sonner";
 
 export const loginSchema = z.object({
   email: z.email({ message: "Invalid email address" }),
@@ -29,14 +27,12 @@ export const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function Login() {
-  const { login, forgotPassword } = useLogin();
-  const [isSubmittingForgot, setIsSubmittingForgot] = useState(false);
+  const { login } = useLogin();
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-    getValues,
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -47,21 +43,6 @@ export default function Login() {
 
   const onSubmit = async (values: LoginFormValues) => {
     await login(values);
-  };
-
-  const handleForgotPassword = async () => {
-    const email = getValues("email");
-    if (!email) {
-      toast.error("Please enter your email first.");
-      return;
-    }
-
-    setIsSubmittingForgot(true);
-    try {
-      await forgotPassword(email);
-    } finally {
-      setIsSubmittingForgot(false);
-    }
   };
 
   return (
@@ -116,15 +97,6 @@ export default function Login() {
         </form>
 
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <button
-            type="button"
-            onClick={handleForgotPassword}
-            className="underline cursor-pointer underline-offset-4"
-            disabled={isSubmittingForgot}
-          >
-            {isSubmittingForgot ? "Sending reset email..." : "Forgot password?"}
-          </button>
-
           <p className="text-right">
             No account?{" "}
             <Link
