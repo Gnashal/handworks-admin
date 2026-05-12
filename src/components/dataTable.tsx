@@ -7,11 +7,12 @@ import {
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
-  // getSortedRowModel,
+  getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 import type { PaginationState, SortingState } from "@tanstack/react-table";
 import { format } from "date-fns";
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 
 import {
   Table,
@@ -34,11 +35,9 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   onRowClick?: (row: TData) => void;
 
-  // optional date filter UI
   enableDateFilter?: boolean;
   onDateSearchClick?: (from: Date | undefined, to: Date | undefined) => void;
 
-  // generic search handler (works even without dates)
   onSearchClick?: (opts: {
     from?: Date;
     to?: Date;
@@ -71,6 +70,8 @@ export function DataTable<TData, TValue>({
   const [fromDate, setFromDate] = React.useState<Date | undefined>();
   const [toDate, setToDate] = React.useState<Date | undefined>();
 
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+
   const [pagination, setPagination] = React.useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
@@ -80,49 +81,53 @@ export function DataTable<TData, TValue>({
     onPaginationChange?.(pagination.pageIndex, pagination.pageSize);
   }, [pagination, onPaginationChange]);
 
-  // const [sorting, setSorting] = React.useState<SortingState>([
-  //   { id: "cleaningDate", desc: false },
-  //   { id: "reviewStatus", desc: false },
-  //   { id: "paymentStatus", desc: false },
-  // ]);
-
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     manualPagination: true,
     pageCount: pageCount ?? -1,
     state: {
       pagination,
-      // sorting,
+      sorting,
     },
     onPaginationChange: setPagination,
-    // onSortingChange: setSorting,
-    // getSortedRowModel: getSortedRowModel(),
+    onSortingChange: (updater) => {
+      setSorting(updater);
+      setPagination((prev) => ({
+        ...prev,
+        pageIndex: 0,
+      }));
+    },
   });
 
   const handlePreviousPage = () => {
     if (!canPreviousPage) return;
+
     table.previousPage();
+
     const { pageIndex, pageSize } = table.getState().pagination;
     onPreviousPageClick?.(pageIndex, pageSize);
   };
 
   const handleNextPage = () => {
     if (!canNextPage) return;
+
     table.nextPage();
+
     const { pageIndex, pageSize } = table.getState().pagination;
     onNextPageClick?.(pageIndex, pageSize);
   };
 
   const handleSearch = () => {
     const { pageIndex, pageSize } = table.getState().pagination;
-    // legacy date-specific callback (for bookings)
+
     if (onDateSearchClick) {
       onDateSearchClick(fromDate, toDate);
     }
-    // generic search callback (for inventory / anything)
+
     if (onSearchClick) {
       onSearchClick({
         from: fromDate,
@@ -197,7 +202,6 @@ export function DataTable<TData, TValue>({
             </>
           )}
 
-          {/* Unified Search button: always available if onSearchClick or onDateSearchClick exist */}
           <div className="flex items-center gap-2 text-sm">
             <span>Rows:</span>
             <input
@@ -210,6 +214,7 @@ export function DataTable<TData, TValue>({
                 table.setPageSize(size);
               }}
             />
+
             {(onSearchClick || onDateSearchClick) && (
               <Button
                 size="sm"
@@ -221,41 +226,52 @@ export function DataTable<TData, TValue>({
             )}
           </div>
         </div>
-
-        {/* <div className="flex items-center gap-2 text-sm">
-          <span>Rows per page:</span>
-          <input
-            type="number"
-            min={1}
-            className="w-16 h-8 rounded border px-2"
-            value={table.getState().pagination.pageSize}
-            onChange={(e) => {
-              const size = Number(e.target.value) || 1;
-              table.setPageSize(size);
-            }}
-          />
-        </div> */}
       </div>
 
-      {/* Table */}
       <div className="max-h-[60vh] overflow-y-auto rounded-md">
         <Table>
           <TableHeader className="sticky top-0 bg-white z-10">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
+                {headerGroup.headers.map((header) => {
+                  const sorted = header.column.getIsSorted();
+
+                  return (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder ? null : header.column.getCanSort() ? (
+                        <button
+                          type="button"
+                          onClick={header.column.getToggleSortingHandler()}
+                          className="group flex w-full items-center gap-1.5 text-left font-medium text-foreground transition hover:text-primary"
+                        >
+                          <span>
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                          </span>
+
+                          {sorted === "asc" ? (
+                            <ArrowUp className="h-3.5 w-3.5 text-primary" />
+                          ) : sorted === "desc" ? (
+                            <ArrowDown className="h-3.5 w-3.5 text-primary" />
+                          ) : (
+                            <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground opacity-40 transition group-hover:opacity-100" />
+                          )}
+                        </button>
+                      ) : (
+                        flexRender(
                           header.column.columnDef.header,
                           header.getContext(),
-                        )}
-                  </TableHead>
-                ))}
+                        )
+                      )}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
             ))}
           </TableHeader>
+
           <TableBody>
             {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
@@ -288,7 +304,6 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
 
-      {/* Pagination controls */}
       <div className="flex flex-row justify-between">
         <div>
           Page <span className="font-small">{pagination.pageIndex + 1}</span> of{" "}
@@ -306,6 +321,7 @@ export function DataTable<TData, TValue>({
           >
             Previous
           </Button>
+
           <Button
             variant="outline"
             size="sm"
