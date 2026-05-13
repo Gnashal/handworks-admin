@@ -51,7 +51,6 @@ interface DataTableProps<TData, TValue> {
   pageCount?: number;
   canNextPage?: boolean;
   canPreviousPage?: boolean;
-  emptyMessage?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -67,7 +66,6 @@ export function DataTable<TData, TValue>({
   pageCount,
   canNextPage,
   canPreviousPage,
-  emptyMessage = "No results found.",
 }: DataTableProps<TData, TValue>) {
   const [fromDate, setFromDate] = React.useState<Date | undefined>();
   const [toDate, setToDate] = React.useState<Date | undefined>();
@@ -105,11 +103,6 @@ export function DataTable<TData, TValue>({
     },
   });
 
-  const resolvedPageCount = pageCount && pageCount > 0 ? pageCount : 1;
-  const resolvedCanPreviousPage = canPreviousPage ?? pagination.pageIndex > 0;
-  const resolvedCanNextPage = canNextPage ?? false;
-  const hasDateFilter = Boolean(fromDate || toDate);
-
   const handlePreviousPage = () => {
     if (!canPreviousPage) return;
 
@@ -139,29 +132,8 @@ export function DataTable<TData, TValue>({
       onSearchClick({
         from: fromDate,
         to: toDate,
-        pageIndex: nextPageIndex,
-        pageSize: pagination.pageSize,
-      });
-    }
-  };
-
-  const handleClearDateFilter = () => {
-    setFromDate(undefined);
-    setToDate(undefined);
-
-    setPagination((prev) => ({
-      ...prev,
-      pageIndex: 0,
-    }));
-
-    onDateSearchClick?.(undefined, undefined);
-
-    if (onSearchClick) {
-      onSearchClick({
-        from: undefined,
-        to: undefined,
-        pageIndex: 0,
-        pageSize: pagination.pageSize,
+        pageIndex,
+        pageSize,
       });
     }
   };
@@ -198,41 +170,33 @@ export function DataTable<TData, TValue>({
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleClearDateFilter}
-                    className="h-10 rounded-xl text-slate-500 hover:text-slate-950"
+                    variant="outline"
+                    className="rounded-none w-30 justify-start text-left font-normal"
                   >
-                    <X className="mr-1.5 h-4 w-4" />
-                    Clear
+                    {toDate ? format(toDate, "yyyy-MM-dd") : "End date"}
                   </Button>
-                )}
-              </div>
-            )}
+                </PopoverTrigger>
+                <PopoverContent className="p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={toDate}
+                    onSelect={(date) => setToDate(date ?? undefined)}
+                    autoFocus
+                  />
+                </PopoverContent>
+              </Popover>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <label className="flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm shadow-sm">
-                <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Rows
-                </span>
-                <input
-                  type="number"
-                  min={1}
-                  className="h-7 w-16 rounded-md border border-slate-200 px-2 text-sm outline-none transition focus:border-slate-400"
-                  value={table.getState().pagination.pageSize}
-                  onChange={(event) => handlePageSizeChange(event.target.value)}
-                />
-              </label>
-
-              {(onSearchClick || onDateSearchClick) && (
+              {(fromDate || toDate) && (
                 <Button
+                  variant="ghost"
                   size="sm"
-                  onClick={handleSearch}
-                  disabled={!onSearchClick && !onDateSearchClick}
-                  className="h-10 rounded-xl bg-slate-950 px-4 text-white hover:bg-slate-800"
+                  onClick={() => {
+                    setFromDate(undefined);
+                    setToDate(undefined);
+                    onDateSearchClick?.(undefined, undefined);
+                  }}
                 >
-                  <Search className="mr-2 h-4 w-4" />
-                  Search
+                  Clear
                 </Button>
               )}
             </>
@@ -266,7 +230,7 @@ export function DataTable<TData, TValue>({
 
       <div className="max-h-[60vh] overflow-y-auto rounded-md">
         <Table>
-          <TableHeader className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(226,232,240)]">
+          <TableHeader className="sticky top-0 bg-white z-10">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
@@ -313,18 +277,11 @@ export function DataTable<TData, TValue>({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className={`border-b border-slate-100 transition ${
-                    onRowClick
-                      ? "cursor-pointer hover:bg-slate-50"
-                      : "hover:bg-slate-50/70"
-                  }`}
+                  className="cursor-pointer hover:bg-muted"
                   onClick={() => onRowClick?.(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className="whitespace-nowrap px-5 py-4 align-middle text-sm"
-                    >
+                    <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),
@@ -335,18 +292,11 @@ export function DataTable<TData, TValue>({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-40 text-center">
-                  <div className="flex flex-col items-center justify-center gap-2 text-slate-500">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
-                      <Search className="h-5 w-5" />
-                    </div>
-                    <p className="text-sm font-medium text-slate-700">
-                      {emptyMessage}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      Try changing the date range or rows per page.
-                    </p>
-                  </div>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No results.
                 </TableCell>
               </TableRow>
             )}
@@ -367,10 +317,8 @@ export function DataTable<TData, TValue>({
             variant="outline"
             size="sm"
             onClick={handlePreviousPage}
-            disabled={!resolvedCanPreviousPage}
-            className="h-9 rounded-xl border-slate-200"
+            disabled={!canPreviousPage}
           >
-            <ChevronLeft className="mr-1 h-4 w-4" />
             Previous
           </Button>
 
@@ -378,11 +326,9 @@ export function DataTable<TData, TValue>({
             variant="outline"
             size="sm"
             onClick={handleNextPage}
-            disabled={!resolvedCanNextPage}
-            className="h-9 rounded-xl border-slate-200"
+            disabled={!canNextPage}
           >
             Next
-            <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
         </div>
       </div>

@@ -530,7 +530,7 @@ export default function BookingCalendar() {
   };
 
   return (
-    <section className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 p-3 sm:p-4 lg:p-5">
+    <section className="min-h-screen bg-linear-to-b from-slate-50 via-white to-slate-100 p-3 sm:p-4 lg:p-5">
       <div className="flex w-full max-w-none flex-col gap-5">
         <header className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
           <div className="bg-slate-950 px-5 py-5 text-white sm:px-6">
