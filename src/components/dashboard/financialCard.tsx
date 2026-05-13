@@ -1,9 +1,10 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRightIcon } from "lucide-react";
+import { ArrowRightIcon, WalletCards } from "lucide-react";
 import Link from "next/link";
 import CountUp from "react-countup";
+import clsx from "clsx";
 
 export interface FinancialStat {
   label: string;
@@ -21,14 +22,22 @@ export interface FinancialStat {
 
 export default function FinancialCard({ data }: { data: FinancialStat }) {
   const currency = data.currency ?? "₱";
-  const href = data.href ?? "#";
+  const paidBreakdown = data.breakdowns?.find(
+    (item) => item.label.toLowerCase() === "paid",
+  );
+
+  const paidPercentage =
+    data.amount > 0
+      ? Math.min(100, Math.round(((paidBreakdown?.amount ?? 0) / data.amount) * 100))
+      : 0;
+
   const renderAmount = (amount: number) => (
     <>
       {currency}
       <CountUp
         start={0}
         end={amount}
-        duration={2}
+        duration={1.5}
         separator=","
         decimals={2}
         decimal="."
@@ -38,45 +47,75 @@ export default function FinancialCard({ data }: { data: FinancialStat }) {
   );
 
   return (
-    <Card className={data.className ? data.className : "w-full h-50"}>
-      <CardHeader>
-        <CardTitle className="text-xl">{data.label}</CardTitle>
+    <Card
+      className={clsx(
+        "relative overflow-hidden rounded-3xl",
+        data.className ?? "min-h-[170px] border border-slate-200 bg-white shadow-sm",
+      )}
+    >
+      <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-slate-900 via-emerald-500 to-blue-500" />
+
+      <CardHeader className="flex flex-row items-start justify-between gap-3 pb-2 pt-5">
+        <div>
+          <CardTitle className="text-sm font-semibold text-slate-700">
+            {data.label}
+          </CardTitle>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Current financial period
+          </p>
+        </div>
+
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-700">
+          <WalletCards className="h-5 w-5" />
+        </div>
       </CardHeader>
 
-      <CardContent className="flex flex-col gap-2">
-        {/* Primary Amount */}
-        <div className="text-xl font-semibold">{renderAmount(data.amount)}</div>
+      <CardContent className="space-y-4 pt-0">
+        <div className="text-2xl font-bold tracking-tight text-slate-950">
+          {renderAmount(data.amount)}
+        </div>
 
-        {/* Secondary (optional) */}
-        {data.secondaryAmount !== undefined && (
-          <div className="text-sm text-muted-foreground">
-            {data.secondaryLabel}:{" "}
-            <span className="font-medium">
+        {data.secondaryAmount !== undefined ? (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">{data.secondaryLabel}</span>
+            <span className="font-semibold text-slate-900">
               {renderAmount(data.secondaryAmount)}
             </span>
           </div>
-        )}
+        ) : null}
 
-        {/* Breakdown rows (optional) */}
-        {data.breakdowns?.map((item) => (
-          <div key={item.label} className="text-sm text-muted-foreground">
-            {item.label}:{" "}
-            <span className="font-medium">{renderAmount(item.amount)}</span>
+        {data.breakdowns?.length ? (
+          <div className="space-y-2">
+            {data.breakdowns.map((item) => (
+              <div
+                key={item.label}
+                className="flex items-center justify-between text-sm"
+              >
+                <span className="text-muted-foreground">{item.label}</span>
+                <span className="font-semibold text-slate-900">
+                  {renderAmount(item.amount)}
+                </span>
+              </div>
+            ))}
+
+            <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full rounded-full bg-linear-to-r from-emerald-500 to-green-500"
+                style={{ width: `${paidPercentage}%` }}
+              />
+            </div>
           </div>
-        ))}
+        ) : null}
 
-        <p className="text-xs text-muted-foreground">
-          Current Financial Period
-        </p>
-        {href && data.href && (
+        {data.href ? (
           <Link
-            href={href}
-            className="text-muted-foreground hover:text-primary text-xs flex items-center gap-1 mt-2 self-end"
+            href={data.href}
+            className="flex items-center justify-end gap-1 text-xs font-medium text-muted-foreground transition hover:text-slate-950"
           >
-            <span>View</span>
-            <ArrowRightIcon className="h-3 w-3" />
+            <span>View details</span>
+            <ArrowRightIcon className="h-3.5 w-3.5" />
           </Link>
-        )}
+        ) : null}
       </CardContent>
     </Card>
   );
