@@ -12,17 +12,7 @@ import {
 } from "@tanstack/react-table";
 import type { PaginationState, SortingState } from "@tanstack/react-table";
 import { format } from "date-fns";
-import {
-  ArrowDown,
-  ArrowUp,
-  ArrowUpDown,
-  CalendarDays,
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  SlidersHorizontal,
-  X,
-} from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 
 import {
   Table,
@@ -91,7 +81,7 @@ export function DataTable<TData, TValue>({
 
   React.useEffect(() => {
     onPaginationChange?.(pagination.pageIndex, pagination.pageSize);
-  }, [pagination.pageIndex, pagination.pageSize, onPaginationChange]);
+  }, [pagination, onPaginationChange]);
 
   const table = useReactTable({
     data,
@@ -121,47 +111,25 @@ export function DataTable<TData, TValue>({
   const hasDateFilter = Boolean(fromDate || toDate);
 
   const handlePreviousPage = () => {
-    if (!resolvedCanPreviousPage) return;
+    if (!canPreviousPage) return;
 
-    const nextPageIndex = Math.max(0, pagination.pageIndex - 1);
+    table.previousPage();
 
-    setPagination((prev) => ({
-      ...prev,
-      pageIndex: nextPageIndex,
-    }));
-
-    onPreviousPageClick?.(nextPageIndex, pagination.pageSize);
+    const { pageIndex, pageSize } = table.getState().pagination;
+    onPreviousPageClick?.(pageIndex, pageSize);
   };
 
   const handleNextPage = () => {
-    if (!resolvedCanNextPage) return;
+    if (!canNextPage) return;
 
-    const nextPageIndex = pagination.pageIndex + 1;
+    table.nextPage();
 
-    setPagination((prev) => ({
-      ...prev,
-      pageIndex: nextPageIndex,
-    }));
-
-    onNextPageClick?.(nextPageIndex, pagination.pageSize);
-  };
-
-  const handlePageSizeChange = (value: string) => {
-    const size = Math.max(1, Number(value) || 1);
-
-    setPagination({
-      pageIndex: 0,
-      pageSize: size,
-    });
+    const { pageIndex, pageSize } = table.getState().pagination;
+    onNextPageClick?.(pageIndex, pageSize);
   };
 
   const handleSearch = () => {
-    const nextPageIndex = 0;
-
-    setPagination((prev) => ({
-      ...prev,
-      pageIndex: nextPageIndex,
-    }));
+    const { pageIndex, pageSize } = table.getState().pagination;
 
     if (onDateSearchClick) {
       onDateSearchClick(fromDate, toDate);
@@ -199,71 +167,36 @@ export function DataTable<TData, TValue>({
   };
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-200 bg-slate-50/80 p-4">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-          <div>
-            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-              <SlidersHorizontal className="h-4 w-4 text-slate-500" />
-              Table Controls
-            </div>
-            <p className="mt-1 text-xs text-slate-500">
-              Filter records, adjust rows, sort columns, and move between pages.
-            </p>
-          </div>
+    <div className="w-full bg-white p-4 rounded-md border space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-2">
+          {enableDateFilter && (
+            <>
+              <span className="text-sm font-medium">Date range:</span>
 
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-            {enableDateFilter && (
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Date range
-                </span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="rounded-none w-30 justify-start text-left font-normal"
+                  >
+                    {fromDate ? format(fromDate, "yyyy-MM-dd") : "Start date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={fromDate}
+                    onSelect={(date) => setFromDate(date ?? undefined)}
+                    autoFocus
+                  />
+                </PopoverContent>
+              </Popover>
 
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="h-10 min-w-36 justify-start rounded-xl border-slate-200 bg-white px-3 text-left text-sm font-normal text-slate-700 shadow-sm"
-                    >
-                      <CalendarDays className="mr-2 h-4 w-4 text-slate-400" />
-                      {fromDate ? format(fromDate, "yyyy-MM-dd") : "Start date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={fromDate}
-                      onSelect={(date) => setFromDate(date ?? undefined)}
-                      autoFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+              <span className="text-sm">to</span>
 
-                <span className="hidden text-sm text-slate-400 sm:inline">
-                  to
-                </span>
-
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="h-10 min-w-36 justify-start rounded-xl border-slate-200 bg-white px-3 text-left text-sm font-normal text-slate-700 shadow-sm"
-                    >
-                      <CalendarDays className="mr-2 h-4 w-4 text-slate-400" />
-                      {toDate ? format(toDate, "yyyy-MM-dd") : "End date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={toDate}
-                      onSelect={(date) => setToDate(date ?? undefined)}
-                      autoFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-
-                {hasDateFilter && (
+              <Popover>
+                <PopoverTrigger asChild>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -302,32 +235,50 @@ export function DataTable<TData, TValue>({
                   Search
                 </Button>
               )}
-            </div>
+            </>
+          )}
+
+          <div className="flex items-center gap-2 text-sm">
+            <span>Rows:</span>
+            <input
+              type="number"
+              min={1}
+              className="w-16 h-8 rounded border px-2"
+              value={table.getState().pagination.pageSize}
+              onChange={(e) => {
+                const size = Number(e.target.value) || 1;
+                table.setPageSize(size);
+              }}
+            />
+
+            {(onSearchClick || onDateSearchClick) && (
+              <Button
+                size="sm"
+                onClick={handleSearch}
+                disabled={!onSearchClick && !onDateSearchClick}
+              >
+                Search
+              </Button>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="max-h-[62vh] overflow-auto">
+      <div className="max-h-[60vh] overflow-y-auto rounded-md">
         <Table>
           <TableHeader className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgb(226,232,240)]">
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow
-                key={headerGroup.id}
-                className="border-b border-slate-200 hover:bg-transparent"
-              >
+              <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   const sorted = header.column.getIsSorted();
 
                   return (
-                    <TableHead
-                      key={header.id}
-                      className="h-12 whitespace-nowrap px-5 text-xs font-semibold uppercase tracking-wide text-slate-500"
-                    >
+                    <TableHead key={header.id}>
                       {header.isPlaceholder ? null : header.column.getCanSort() ? (
                         <button
                           type="button"
                           onClick={header.column.getToggleSortingHandler()}
-                          className="group flex w-full items-center gap-1.5 text-left transition hover:text-slate-950"
+                          className="group flex w-full items-center gap-1.5 text-left font-medium text-foreground transition hover:text-primary"
                         >
                           <span>
                             {flexRender(
@@ -337,11 +288,11 @@ export function DataTable<TData, TValue>({
                           </span>
 
                           {sorted === "asc" ? (
-                            <ArrowUp className="h-3.5 w-3.5 text-slate-950" />
+                            <ArrowUp className="h-3.5 w-3.5 text-primary" />
                           ) : sorted === "desc" ? (
-                            <ArrowDown className="h-3.5 w-3.5 text-slate-950" />
+                            <ArrowDown className="h-3.5 w-3.5 text-primary" />
                           ) : (
-                            <ArrowUpDown className="h-3.5 w-3.5 text-slate-400 opacity-50 transition group-hover:opacity-100" />
+                            <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground opacity-40 transition group-hover:opacity-100" />
                           )}
                         </button>
                       ) : (
@@ -403,15 +354,11 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
 
-      <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-sm text-slate-600">
-          Page{" "}
-          <span className="font-semibold text-slate-950">
-            {pagination.pageIndex + 1}
-          </span>{" "}
-          of{" "}
-          <span className="font-semibold text-slate-950">
-            {resolvedPageCount}
+      <div className="flex flex-row justify-between">
+        <div>
+          Page <span className="font-small">{pagination.pageIndex + 1}</span> of{" "}
+          <span className="font-small">
+            {pageCount && pageCount > 0 ? pageCount : 1}
           </span>
         </div>
 
