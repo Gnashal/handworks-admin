@@ -1,11 +1,14 @@
 "use client";
 
+import { useMemo } from "react";
+import { endOfMonth, startOfMonth, subMonths } from "date-fns";
 import {
-  CalendarDays,
   AlertCircle,
-  Users,
+  CalendarDays,
+  CheckCircle2,
+  Clock3,
   UserCheck,
-  // Package,
+  Users,
 } from "lucide-react";
 
 import MetricCard from "./metricCard";
@@ -17,11 +20,13 @@ import TopServicesCard from "./topServicesCard";
 import InventoryAlertsCard from "./inventoryAlertsCard";
 import FinancialCard from "./financialCard";
 import FcmNotificationBridge from "../notifications/fcmNotificationBridge";
+
 import type { IAdminDashboardResponse } from "@/types/admin";
 import { normalizeServiceName } from "@/lib/normalize";
 import type { IMainServiceType } from "@/types/booking";
 import { useBookingTrendsQuery } from "@/queries/dashboardQueries";
 import { useBookingAlertBadge } from "@/hooks/useBookingAlertBadge";
+import { useBookingsQuery } from "@/queries/bookingQueries";
 
 const SERVICE_TYPE_VALUES: IMainServiceType[] = [
   "SERVICE_TYPE_UNSPECIFIED",
@@ -40,6 +45,7 @@ const toActivityType = (type: string): ActivityType => {
   if (normalized === "booking") {
     return "booking";
   }
+
   if (normalized === "client") {
     return "client";
   }
@@ -65,14 +71,55 @@ const normalizeDashboardServiceName = (name: string) => {
   return name;
 };
 
+const compactNumber = new Intl.NumberFormat("en-PH", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
+
 export default function DashboardOverview({
   data,
 }: {
   data?: IAdminDashboardResponse;
 }) {
   const { hasBookingAlert } = useBookingAlertBadge();
-  const activeClients = data?.activeClients ?? 0;
+  const { data: bookingTrendsData } = useBookingTrendsQuery();
+
+  /*
+    Keep this range aligned with src/app/(default)/bookings/page.tsx.
+    That page currently defaults to:
+    startOfMonth(subMonths(now, 3)) -> endOfMonth(now)
+  */
+  const bookingPageRange = useMemo(() => {
+    const now = new Date();
+    const start = startOfMonth(subMonths(now, 3));
+    const end = endOfMonth(now);
+
+    return {
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+    };
+  }, []);
+
+  const { data: bookingsPageData } = useBookingsQuery(
+    bookingPageRange.startDate,
+    bookingPageRange.endDate,
+    0,
+    1,
+  );
+
+  const bookingTotal = bookingsPageData?.totalBookings ?? data?.bookings ?? 0;
   const todayBookings = data?.todayBookings ?? 0;
+  const pendingActions = data?.pendingActions ?? 0;
+  const activeClients = data?.activeClients ?? 0;
+  const employeesActive = data?.employeesActive ?? 0;
+  const employeesTotal = data?.employeesTotal ?? 0;
+  const revenue = data?.revenue ?? 0;
+  const paid = data?.paid ?? 0;
+  const unpaid = data?.unpaid ?? 0;
+
+  const employeeCoverage = employeesTotal
+    ? Math.round((employeesActive / employeesTotal) * 100)
+    : 0;
 
   const topServices = (data?.topServices ?? []).map((service) => ({
     ...service,
@@ -86,25 +133,97 @@ export default function DashboardOverview({
     type: toActivityType(activity.type),
   }));
 
-  const { data: bookingTrendsData } = useBookingTrendsQuery();
+  const clientBreakdown = [
+    {
+      label: "New",
+      value: getClientPercentage(data?.newClients ?? 0, activeClients),
+      count: data?.newClients ?? 0,
+    },
+    {
+      label: "Returning",
+      value: getClientPercentage(data?.returningClients ?? 0, activeClients),
+      count: data?.returningClients ?? 0,
+    },
+    {
+      label: "Inactive",
+      value: getClientPercentage(data?.inactiveClients ?? 0, activeClients),
+      count: data?.inactiveClients ?? 0,
+    },
+  ];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="space-y-6">
+      {/* FAST SUMMARY STRIP */}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Today
+              </p>
+              <p className="mt-1 text-xl font-semibold tracking-tight">
+                {todayBookings} booking{todayBookings === 1 ? "" : "s"}
+              </p>
+            </div>
+
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-700">
+              <Clock3 className="h-5 w-5" />
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Staff Readiness
+              </p>
+              <p className="mt-1 text-xl font-semibold tracking-tight">
+                {employeeCoverage}%
+              </p>
+            </div>
+
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-700">
+              <CheckCircle2 className="h-5 w-5" />
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Revenue
+              </p>
+              <p className="mt-1 text-xl font-semibold tracking-tight">
+                ₱{compactNumber.format(revenue)}
+              </p>
+            </div>
+
+            <div className="rounded-full border px-2 py-1 text-xs font-medium text-muted-foreground">
+              Current period
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* MAIN GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_350px]">
         {/* LEFT CONTENT */}
-        <div className="lg:col-span-3 xl:col-span-4 flex flex-col gap-6">
+        <div className="min-w-0 space-y-6">
           {/* METRIC CARDS */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-5">
             <MetricCard
               href="/bookings"
               variant="info"
               showAlertDot={hasBookingAlert}
-              icon={<CalendarDays />}
+              icon={<CalendarDays className="h-5 w-5" />}
               data={{
                 title: "Bookings",
-                value: data?.bookings ?? 0,
-                todayStat: `${todayBookings} booking${todayBookings === 1 ? "" : "s"} today`,
+                value: bookingTotal,
+                todayStat: `${todayBookings} booking${
+                  todayBookings === 1 ? "" : "s"
+                } today`,
                 change: data?.growthIndex?.bookingsGrowthIndex,
                 trend:
                   (data?.growthIndex?.bookingsGrowthIndex ?? 0) >= 0
@@ -114,110 +233,89 @@ export default function DashboardOverview({
             />
 
             <MetricCard
-              variant={(data?.pendingActions ?? 0) > 0 ? "danger" : "success"}
-              icon={<AlertCircle />}
+              variant={pendingActions > 0 ? "danger" : "success"}
+              icon={<AlertCircle className="h-5 w-5" />}
               data={{
                 title: "Pending Actions",
-                value: data?.pendingActions ?? 0,
+                value: pendingActions,
+                todayStat:
+                  pendingActions > 0
+                    ? `${pendingActions} need review`
+                    : "No urgent actions",
               }}
             />
 
             <MetricCard
               href="/clients"
               variant="success"
-              icon={<Users />}
+              icon={<Users className="h-5 w-5" />}
               data={{
                 title: "Active Clients",
                 value: activeClients,
+                todayStat: `${data?.newClients ?? 0} new this period`,
               }}
             />
 
             <MetricCard
               href="/employees"
-              variant="info"
-              icon={<UserCheck />}
+              variant="warning"
+              icon={<UserCheck className="h-5 w-5" />}
               data={{
                 title: "Employees Status",
-                value: `${data?.employeesActive ?? 0}/${data?.employeesTotal ?? 0}`,
+                value: `${employeesActive}/${employeesTotal}`,
+                todayStat: `${employeeCoverage}% active`,
               }}
             />
 
             <FinancialCard
               data={{
                 label: "Revenue",
-                amount: data?.revenue ?? 0,
+                amount: revenue,
                 breakdowns: [
                   {
                     label: "Paid",
-                    amount: data?.paid ?? 0,
+                    amount: paid,
                   },
                   {
                     label: "Unpaid",
-                    amount: data?.unpaid ?? 0,
+                    amount: unpaid,
                   },
                 ],
                 href: "/cash-flow",
                 className:
-                  "w-full min-h-35 flex flex-col justify-between border transition hover:shadow-md",
+                  "min-h-[170px] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
               }}
             />
           </div>
 
-          {/* CHART + SECONDARY CARDS */}
-          <div className="flex flex-col gap-6 pt-2 border-t">
+          {/* CHART */}
+          <div className="rounded-3xl border border-slate-200 bg-white p-3 shadow-sm">
             {bookingTrendsData ? (
               <ServiceDynamics bookingTrendsData={bookingTrendsData} />
             ) : (
-              <p className="text-sm text-muted-foreground">
-                Failed to load booking trends data
-              </p>
+              <div className="flex h-72 items-center justify-center rounded-2xl border border-dashed bg-slate-50 text-sm text-muted-foreground">
+                Failed to load booking trends data.
+              </div>
             )}
-            {/* SECOND ROW UNDER CHART */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-              <TopServicesCard services={topServices} />
-              <InventoryAlertsCard items={inventoryAlerts} />
-            </div>
+          </div>
+
+          {/* SECONDARY CARDS */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <TopServicesCard services={topServices} />
+            <InventoryAlertsCard items={inventoryAlerts} />
           </div>
         </div>
 
         {/* RIGHT SIDEBAR */}
-        <div className="lg:col-span-2 xl:col-span-1 flex flex-col gap-5">
+        <aside className="space-y-5 xl:sticky xl:top-6 xl:self-start">
           <QuickActions />
 
           <FcmNotificationBridge />
 
           <RecentActivity activities={recentActivities} />
 
-          <ClientBreakdownCard
-            total={activeClients}
-            clients={[
-              {
-                label: "New",
-                value: getClientPercentage(
-                  data?.newClients ?? 0,
-                  activeClients,
-                ),
-                count: data?.newClients ?? 0,
-              },
-              {
-                label: "Returning",
-                value: getClientPercentage(
-                  data?.returningClients ?? 0,
-                  activeClients,
-                ),
-                count: data?.returningClients ?? 0,
-              },
-              {
-                label: "Inactive",
-                value: getClientPercentage(
-                  data?.inactiveClients ?? 0,
-                  activeClients,
-                ),
-                count: data?.inactiveClients ?? 0,
-              },
-            ]}
-          />
-        </div>
+          <ClientBreakdownCard total={activeClients} clients={clientBreakdown} />
+        </aside>
       </div>
     </div>
   );

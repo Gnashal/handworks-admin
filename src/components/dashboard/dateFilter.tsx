@@ -1,11 +1,11 @@
 import {
   Select,
-  SelectTrigger,
-  SelectValue,
   SelectContent,
   SelectGroup,
-  SelectLabel,
   SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
 } from "../ui/select";
 
 export type DateFilterValue = "week" | "month" | "year";
@@ -24,13 +24,13 @@ export default function DatePicker({
       value={value}
       onValueChange={(v) => onChange?.(v as DateFilterValue)}
     >
-      <SelectTrigger className="w-full max-w-48 bg-white text-black border border-gray-300">
-        <SelectValue placeholder="Select the date filter" />
+      <SelectTrigger className="h-10 w-full min-w-40 rounded-xl border border-slate-200 bg-white text-slate-950 shadow-sm">
+        <SelectValue placeholder="Select date filter" />
       </SelectTrigger>
 
-      <SelectContent className="bg-white text-black border border-gray-300">
+      <SelectContent className="rounded-xl border border-slate-200 bg-white text-slate-950 shadow-lg">
         <SelectGroup>
-          <SelectLabel>Select the Date Filter</SelectLabel>
+          <SelectLabel>Date Filter</SelectLabel>
           <SelectItem value="week">Week</SelectItem>
           <SelectItem value="month">Month</SelectItem>
           <SelectItem value="year">Year</SelectItem>
