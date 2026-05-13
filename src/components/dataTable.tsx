@@ -139,7 +139,7 @@ export function DataTable<TData, TValue>({
   };
 
   return (
-    <div className="bg-white p-4 m-auto rounded-md border space-y-4">
+    <div className="w-full bg-white p-4 rounded-md border space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-2">
           {enableDateFilter && (
