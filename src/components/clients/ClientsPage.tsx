@@ -2,14 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import {
-  AlertCircle,
-  Search,
-  ShieldCheck,
-  Star,
-  Users,
-  X,
-} from "lucide-react";
+import { AlertCircle, Search, ShieldCheck, Star, Users, X } from "lucide-react";
 
 import { DataTable } from "@/components/dataTable";
 import { DataTableSkeleton } from "@/components/dataTableSkeleton";
@@ -320,10 +313,8 @@ export default function ClientsPage() {
           </Card>
         ) : (
           <DataTable<ICustomer, unknown>
-            columns={clientColumns(
-              watchList,
-              setWatchList,
-              (customer) => router.push(`/clients/${customer.id}`),
+            columns={clientColumns(watchList, setWatchList, (customer) =>
+              router.push(`/clients/${customer.id}`),
             )}
             data={filteredClients}
             onRowClick={(row) => router.push(`/clients/${row.id}`)}

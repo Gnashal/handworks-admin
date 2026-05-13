@@ -20,7 +20,7 @@ export function DataTableSkeleton({
   rowCount = 10,
 }: DataTableSkeletonProps) {
   return (
-    <div className="p-4 border bg-white m-auto rounded-md space-y-4">
+    <div className="w-full p-4 border bg-white rounded-md space-y-4">
       {/* Filter row skeleton */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-2">
