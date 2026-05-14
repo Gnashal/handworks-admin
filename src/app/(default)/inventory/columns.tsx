@@ -105,6 +105,24 @@ const getComputedStockStatus = (
 
 export const columns: ColumnDef<IInventoryItem>[] = [
   {
+    accessorKey: "inventory_number",
+    header: "Item ID",
+    enableSorting: true,
+    cell: ({ row }) => {
+      const item = row.original;
+
+      return (
+        <div className="flex items-center gap-3">
+          <div className="min-w-0">
+            <p className="truncate font-semibold text-foreground">
+              {item.inventory_number}
+            </p>
+          </div>
+        </div>
+      );
+    },
+  },
+  {
     accessorKey: "name",
     header: "Item",
     enableSorting: true,
@@ -219,7 +237,7 @@ export const columns: ColumnDef<IInventoryItem>[] = [
       const status = statusStyles[computedStatus];
 
       return (
-        <div className="w-full max-w-[230px] space-y-2">
+        <div className="w-full max-w-57.5 space-y-2">
           <div className="flex items-center justify-between gap-3">
             <div className="flex flex-col">
               <span className="font-semibold">

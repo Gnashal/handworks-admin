@@ -105,7 +105,7 @@ export default function ClientHistoryPage() {
           <div className="space-y-1">
             <p>
               <span className="font-semibold">Customer ID:</span>{" "}
-              {customerData.id}
+              {customerData.account.account_number}
             </p>
             <p>
               <span className="font-semibold">Email:</span>{" "}
@@ -119,12 +119,8 @@ export default function ClientHistoryPage() {
 
           <div className="space-y-1">
             <p>
-              <span className="font-semibold">Account ID:</span>{" "}
-              {customerData.account.id}
-            </p>
-            <p>
               <span className="font-semibold">Clerk ID:</span>{" "}
-              {customerData.account.clerkId}
+              {customerData.account.clerk_id}
             </p>
             <p>
               <span className="font-semibold">Bookings in Range:</span>{" "}

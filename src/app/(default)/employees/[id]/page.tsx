@@ -234,7 +234,7 @@ export default function EmployeeDetailsPage(props: EmployeeDetailsPageProps) {
           <div className="space-y-1">
             <p>
               <span className="font-semibold">Employee ID:</span>{" "}
-              {employee.employee.id}
+              {employee.employee.account.account_number}
             </p>
             <p>
               <span className="font-semibold">Email:</span>{" "}
