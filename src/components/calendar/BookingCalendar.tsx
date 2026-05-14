@@ -15,7 +15,6 @@ import {
   Package,
   Plus,
   RefreshCcw,
-  ShieldCheck,
   Sparkles,
   UserRound,
   UsersRound,
@@ -27,10 +26,15 @@ import {
   normalizeServiceType,
 } from "@/lib/normalize";
 import {
-  useBookingsTodayQuery,
+  useBookingDetailsQuery,
   useCalendarBookingsQuery,
 } from "@/queries/bookingQueries";
-import type { ICalendarBooking, IMainServiceType } from "@/types/booking";
+import { useOrderQuery } from "@/queries/paymentQueries";
+import type {
+  IBooking,
+  ICalendarBooking,
+  IMainServiceType,
+} from "@/types/booking";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,8 +52,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const TIME_SLOTS = ["08:00 AM", "10:00 AM", "01:00 PM", "03:00 PM", "05:00 PM"];
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -75,14 +77,6 @@ type CalendarDay = {
 };
 
 type ServiceFilter = IMainServiceType | "ALL";
-
-type TodayBooking = {
-  id?: string;
-  bookingId?: string;
-  service: string;
-  time: string;
-  client: string;
-};
 
 type ExtraCalendarBooking = ICalendarBooking & {
   status?: string;
@@ -183,10 +177,83 @@ const formatStatusLabel = (value?: string) => {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
-const getCustomerName = (booking: ICalendarBooking) => {
+const getCalendarCustomerName = (booking: ICalendarBooking) => {
   if (!booking.customer) return "Unknown customer";
 
   return `${booking.customer.firstName} ${booking.customer.lastName}`.trim();
+};
+
+const getBookingCustomerName = (
+  bookingDetails: IBooking | undefined,
+  fallbackBooking: ICalendarBooking,
+) => {
+  if (bookingDetails) {
+    const firstName = bookingDetails.base.customerFirstName ?? "";
+    const lastName = bookingDetails.base.customerLastName ?? "";
+    const fullName = `${firstName} ${lastName}`.trim();
+
+    if (fullName) return fullName;
+  }
+
+  return getCalendarCustomerName(fallbackBooking);
+};
+
+const getBookingAddress = (
+  bookingDetails: IBooking | undefined,
+  fallbackBooking: ExtraCalendarBooking,
+) => {
+  return (
+    bookingDetails?.base.address.addressHuman ??
+    fallbackBooking.address ??
+    "Not provided"
+  );
+};
+
+const getBookingService = (
+  bookingDetails: IBooking | undefined,
+  fallbackBooking: ExtraCalendarBooking,
+) => {
+  return bookingDetails?.mainService.serviceType ?? fallbackBooking.service;
+};
+
+const getBookingSchedule = (
+  bookingDetails: IBooking | undefined,
+  fallbackBooking: ExtraCalendarBooking,
+) => {
+  if (bookingDetails?.base.startSched) {
+    const startDate = new Date(bookingDetails.base.startSched);
+    const endDate = bookingDetails.base.endSched
+      ? new Date(bookingDetails.base.endSched)
+      : null;
+
+    const startTime = format(startDate, "hh:mm a");
+
+    if (endDate && !Number.isNaN(endDate.getTime())) {
+      return `${startTime} - ${format(endDate, "hh:mm a")}`;
+    }
+
+    return startTime;
+  }
+
+  return fallbackBooking.schedule?.time ?? "--";
+};
+
+const getBookingDate = (
+  bookingDetails: IBooking | undefined,
+  fallbackBooking: ExtraCalendarBooking,
+) => {
+  if (bookingDetails?.base.startSched) {
+    return format(new Date(bookingDetails.base.startSched), "MMMM dd, yyyy");
+  }
+
+  if (fallbackBooking.schedule?.date) {
+    return format(
+      new Date(`${fallbackBooking.schedule.date}T00:00:00`),
+      "MMMM dd, yyyy",
+    );
+  }
+
+  return "Not provided";
 };
 
 const getNormalizedServiceType = (service: string): IMainServiceType => {
@@ -205,21 +272,11 @@ const getShortBookingId = (bookingId?: string) => {
   return `${bookingId.slice(0, 6)}...${bookingId.slice(-4)}`;
 };
 
-const getRiskLabel = (count: number, capacity: number) => {
-  if (count >= capacity) return "Full";
-  if (count >= capacity - 1) return "Almost Full";
+const getWorkloadLabel = (count: number) => {
+  if (count >= 6) return "High";
   if (count >= 3) return "Busy";
-  if (count > 0) return "Available";
+  if (count > 0) return "Scheduled";
   return "Open";
-};
-
-const getRiskClass = (count: number, capacity: number) => {
-  if (count >= capacity) return "border-red-200 bg-red-50 text-red-700";
-  if (count >= capacity - 1)
-    return "border-orange-200 bg-orange-50 text-orange-700";
-  if (count >= 3) return "border-amber-200 bg-amber-50 text-amber-700";
-  if (count > 0) return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  return "border-slate-200 bg-slate-50 text-slate-600";
 };
 
 const getDayNumberClass = ({
@@ -265,11 +322,11 @@ function DetailRow({
   value: ReactNode;
 }) {
   return (
-    <div className="flex items-start gap-2 rounded-xl bg-white/70 px-3 py-2 text-xs">
-      <div className="mt-0.5 text-slate-500">{icon}</div>
-      <div className="min-w-0 flex-1">
+    <div className="flex min-w-0 items-start gap-2 overflow-hidden rounded-xl bg-white/70 px-3 py-2 text-xs">
+      <div className="mt-0.5 shrink-0 text-slate-500">{icon}</div>
+      <div className="min-w-0 flex-1 overflow-hidden">
         <p className="font-medium text-slate-500">{label}</p>
-        <div className="mt-0.5 truncate font-semibold text-slate-900">
+        <div className="mt-0.5 min-w-0 break-words font-semibold text-slate-900 [overflow-wrap:anywhere]">
           {value}
         </div>
       </div>
@@ -287,15 +344,233 @@ function AdminMetric({
   value: ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-      <div className="mb-1 flex items-center gap-1.5 text-slate-500">
+    <div className="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white px-2.5 py-2">
+      <div className="mb-0.5 flex items-center gap-1.5 text-slate-500">
         {icon}
         <span className="text-[10px] font-semibold uppercase tracking-wide">
           {label}
         </span>
       </div>
-      <div className="text-sm font-semibold text-slate-950">{value}</div>
+      <div className="min-w-0 break-words text-[13px] font-semibold leading-tight text-slate-950 [overflow-wrap:anywhere]">
+        {value}
+      </div>
     </div>
+  );
+}
+
+function PaymentStatusText({
+  orderId,
+  fallbackPaymentStatus,
+}: {
+  orderId?: string;
+  fallbackPaymentStatus?: string;
+}) {
+  if (!orderId) {
+    return <>{formatStatusLabel(fallbackPaymentStatus)}</>;
+  }
+
+  return (
+    <PaymentStatusFromOrder
+      orderId={orderId}
+      fallbackPaymentStatus={fallbackPaymentStatus}
+    />
+  );
+}
+
+function PaymentStatusFromOrder({
+  orderId,
+  fallbackPaymentStatus,
+}: {
+  orderId: string;
+  fallbackPaymentStatus?: string;
+}) {
+  const { data: order, isLoading } = useOrderQuery(orderId);
+
+  if (isLoading) {
+    return <>Loading...</>;
+  }
+
+  return <>{formatStatusLabel(order?.payment_status ?? fallbackPaymentStatus)}</>;
+}
+
+function SelectedBookingCard({
+  booking,
+  bookingPosition,
+  selectedDayCount,
+  openBooking,
+}: {
+  booking: ExtraCalendarBooking;
+  bookingPosition: number;
+  selectedDayCount: number;
+  openBooking: (bookingId?: string) => void;
+}) {
+  const {
+    data: bookingDetails,
+    isLoading: isLoadingBookingDetails,
+    isError: isBookingDetailsError,
+  } = useBookingDetailsQuery(booking.id);
+
+  const service = getBookingService(bookingDetails, booking);
+  const style = getServiceStyle(service);
+  const schedule = getBookingSchedule(bookingDetails, booking);
+  const scheduleDate = getBookingDate(bookingDetails, booking);
+  const customerName = getBookingCustomerName(bookingDetails, booking);
+  const address = getBookingAddress(bookingDetails, booking);
+
+  const bookingStatus = bookingDetails?.base.status ?? booking.status;
+  const reviewStatus = bookingDetails?.base.reviewStatus ?? booking.reviewStatus;
+  const paymentStatus = booking.paymentStatus;
+  const orderId = bookingDetails?.base.orderId;
+  const dirtyScale = bookingDetails?.base.dirtyScale ?? booking.dirtyScale;
+  const totalPrice = bookingDetails?.totalPrice ?? booking.totalPrice;
+
+  const cleanersCount = getOptionalCount(
+    bookingDetails?.cleaners ?? booking.cleaners,
+  );
+  const equipmentCount = getOptionalCount(
+    bookingDetails?.equipments ?? booking.equipments ?? booking.equipment,
+  );
+  const resourceCount = getOptionalCount(
+    bookingDetails?.resources ?? booking.resources,
+  );
+
+  return (
+    <button
+      type="button"
+      onClick={() => openBooking(booking.id)}
+      className={`block w-full max-w-full cursor-pointer overflow-hidden rounded-2xl border p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 ${style.panel}`}
+    >
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0 flex-1 overflow-hidden">
+          <h3 className="min-w-0 break-words text-sm font-semibold [overflow-wrap:anywhere]">
+            {normalizeServiceNameFromValue(service)}
+          </h3>
+
+          <p className="mt-1 min-w-0 break-words text-xs opacity-80 [overflow-wrap:anywhere]">
+            Booking ID: {getShortBookingId(bookingDetails?.id ?? booking.id)}
+          </p>
+        </div>
+
+        <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${style.dot}`} />
+      </div>
+
+      {isLoadingBookingDetails && (
+        <div className="mt-3 flex min-w-0 items-center gap-2 overflow-hidden rounded-xl bg-white/70 px-3 py-2 text-xs font-medium text-slate-600">
+          <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
+          <span className="min-w-0 break-words [overflow-wrap:anywhere]">
+            Loading full booking details...
+          </span>
+        </div>
+      )}
+
+      {isBookingDetailsError && (
+        <div className="mt-3 flex min-w-0 items-center gap-2 overflow-hidden rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
+          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+          <span className="min-w-0 break-words [overflow-wrap:anywhere]">
+            Failed to load full booking details.
+          </span>
+        </div>
+      )}
+
+      <div className="mt-3 grid min-w-0 gap-2 overflow-hidden">
+        <DetailRow
+          icon={<Clock3 className="h-3.5 w-3.5" />}
+          label="Schedule"
+          value={`${schedule} · Booking ${bookingPosition} of ${selectedDayCount}`}
+        />
+
+        <DetailRow
+          icon={<CalendarDays className="h-3.5 w-3.5" />}
+          label="Date"
+          value={scheduleDate}
+        />
+
+        <DetailRow
+          icon={<UserRound className="h-3.5 w-3.5" />}
+          label="Customer"
+          value={customerName}
+        />
+
+        <DetailRow
+          icon={<MapPin className="h-3.5 w-3.5" />}
+          label="Address"
+          value={address}
+        />
+
+        <DetailRow
+          icon={<CircleDollarSign className="h-3.5 w-3.5" />}
+          label="Estimated Total"
+          value={formatMoney(totalPrice)}
+        />
+      </div>
+
+      <div className="mt-3 grid min-w-0 grid-cols-2 gap-2 overflow-hidden">
+        <div className="min-w-0 overflow-hidden rounded-xl bg-white/70 px-3 py-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+            Booking Status
+          </p>
+          <p className="mt-1 min-w-0 break-words text-xs font-semibold text-slate-950 [overflow-wrap:anywhere]">
+            {formatStatusLabel(bookingStatus)}
+          </p>
+        </div>
+
+        <div className="min-w-0 overflow-hidden rounded-xl bg-white/70 px-3 py-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+            Review Status
+          </p>
+          <p className="mt-1 min-w-0 break-words text-xs font-semibold text-slate-950 [overflow-wrap:anywhere]">
+            {formatStatusLabel(reviewStatus)}
+          </p>
+        </div>
+
+        <div className="min-w-0 overflow-hidden rounded-xl bg-white/70 px-3 py-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+            Payment
+          </p>
+          <p className="mt-1 min-w-0 break-words text-xs font-semibold text-slate-950 [overflow-wrap:anywhere]">
+            <PaymentStatusText
+              orderId={orderId}
+              fallbackPaymentStatus={paymentStatus}
+            />
+          </p>
+        </div>
+
+        <div className="min-w-0 overflow-hidden rounded-xl bg-white/70 px-3 py-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+            Dirty Scale
+          </p>
+          <p className="mt-1 min-w-0 break-words text-xs font-semibold text-slate-950 [overflow-wrap:anywhere]">
+            {typeof dirtyScale === "number" ? `${dirtyScale}/5` : "Not provided"}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-3 grid min-w-0 grid-cols-3 gap-2 overflow-hidden">
+        <div className="min-w-0 overflow-hidden rounded-xl border bg-white/70 px-2 py-2 text-center">
+          <UsersRound className="mx-auto h-4 w-4 text-slate-500" />
+          <p className="mt-1 text-[10px] text-slate-500">Cleaners</p>
+          <p className="min-w-0 break-words text-xs font-bold text-slate-950 [overflow-wrap:anywhere]">
+            {cleanersCount}
+          </p>
+        </div>
+
+        <div className="min-w-0 overflow-hidden rounded-xl border bg-white/70 px-2 py-2 text-center">
+          <Wrench className="mx-auto h-4 w-4 text-slate-500" />
+          <p className="mt-1 text-[10px] text-slate-500">Equipment</p>
+          <p className="min-w-0 break-words text-xs font-bold text-slate-950 [overflow-wrap:anywhere]">
+            {equipmentCount}
+          </p>
+        </div>
+
+        <div className="min-w-0 overflow-hidden rounded-xl border bg-white/70 px-2 py-2 text-center">
+          <Package className="mx-auto h-4 w-4 text-slate-500" />
+          <p className="mt-1 text-[10px] text-slate-500">Resources</p>
+          <p className="min-w-0 break-words text-xs font-bold text-slate-950 [overflow-wrap:anywhere]">
+            {resourceCount}
+          </p>
+        </div>
+      </div>
+    </button>
   );
 }
 
@@ -310,9 +585,6 @@ export default function BookingCalendar() {
 
   const [selectedDate, setSelectedDate] = useState(todayKey);
   const [serviceFilter, setServiceFilter] = useState<ServiceFilter>("ALL");
-
-  const { data: bookingsTodayData, isLoading: isLoadingBookingsToday } =
-    useBookingsTodayQuery();
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -404,41 +676,12 @@ export default function BookingCalendar() {
 
   const getDayInfo = (date: string) => {
     const count = getDayBookings(date).length;
-    const capacity = 5;
 
     return {
       count,
-      capacity,
-      isFull: count >= capacity,
       isBusy: count > 0,
-      remaining: Math.max(capacity - count, 0),
     };
   };
-
-  const todayBookingsRaw = bookingsTodayData?.bookings as
-    | TodayBooking[]
-    | TodayBooking
-    | undefined;
-
-  const todayBookings = Array.isArray(todayBookingsRaw)
-    ? todayBookingsRaw
-    : todayBookingsRaw
-      ? [todayBookingsRaw]
-      : [];
-
-  const scheduleSlots = Array.from(
-    new Set([
-      ...TIME_SLOTS,
-      ...todayBookings
-        .map((booking) => booking.time)
-        .filter((time): time is string => Boolean(time)),
-    ]),
-  ).sort((a, b) => parseTimeToMinutes(a) - parseTimeToMinutes(b));
-
-  const groupedTodayBookings = scheduleSlots.map((slot) => ({
-    slot,
-    items: todayBookings.filter((booking) => booking.time === slot),
-  }));
 
   const selectedDayBookings = getDayBookings(selectedDate);
   const selectedDayInfo = getDayInfo(selectedDate);
@@ -448,15 +691,20 @@ export default function BookingCalendar() {
   );
 
   const monthBookingsCount = bookings.length;
-  const fullDaysCount = calendarDays.filter((day) => {
-    const date = formatDateKey(day.date);
-    return day.current && getDayInfo(date).isFull;
-  }).length;
 
   const busyDaysCount = calendarDays.filter((day) => {
     const date = formatDateKey(day.date);
     return day.current && getDayInfo(date).isBusy;
   }).length;
+
+  const busiestDayCount = calendarDays.reduce((highest, day) => {
+    if (!day.current) return highest;
+
+    const date = formatDateKey(day.date);
+    const info = getDayInfo(date);
+
+    return Math.max(highest, info.count);
+  }, 0);
 
   const selectedServiceMix = selectedDayBookings.reduce(
     (acc, booking) => {
@@ -546,8 +794,7 @@ export default function BookingCalendar() {
                 </h1>
 
                 <p className="mt-1 max-w-2xl text-sm text-slate-300">
-                  Track booking schedules, daily slot capacity, and service
-                  workload across the month.
+                  Track booking schedules and service workload across the month.
                 </p>
               </div>
 
@@ -613,10 +860,10 @@ export default function BookingCalendar() {
 
             <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                Full Days
+                Busiest Day
               </p>
               <p className="mt-1 text-2xl font-semibold text-slate-950">
-                {fullDaysCount}
+                {busiestDayCount}
               </p>
             </div>
 
@@ -625,7 +872,7 @@ export default function BookingCalendar() {
                 Selected Day
               </p>
               <p className="mt-1 text-2xl font-semibold text-slate-950">
-                {selectedDayInfo.count}/{selectedDayInfo.capacity}
+                {selectedDayInfo.count}
               </p>
             </div>
           </div>
@@ -639,117 +886,7 @@ export default function BookingCalendar() {
         )}
 
         <div className="overflow-x-auto pb-2">
-          <div className="grid min-w-[1220px] grid-cols-[220px_minmax(660px,1fr)_320px] gap-4 2xl:min-w-0 2xl:grid-cols-[240px_minmax(760px,1fr)_340px]">
-            <Card className="flex max-h-[720px] flex-col overflow-hidden border-slate-200 bg-white shadow-sm">
-              <CardHeader className="shrink-0 border-b border-slate-200 px-4 py-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <CardTitle className="text-base">
-                      Today&apos;s Timeline
-                    </CardTitle>
-                    <CardDescription className="text-xs">
-                      Bookings scheduled for today.
-                    </CardDescription>
-                  </div>
-
-                  <Badge variant="outline">{todayBookings.length}</Badge>
-                </div>
-              </CardHeader>
-
-              <CardContent className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
-                {isLoadingBookingsToday && (
-                  <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Loading today&apos;s bookings...
-                  </div>
-                )}
-
-                {!isLoadingBookingsToday && todayBookings.length === 0 && (
-                  <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-center">
-                    <p className="text-sm font-medium text-slate-700">
-                      No bookings scheduled for today.
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      Timeline is clear for now.
-                    </p>
-                  </div>
-                )}
-
-                {!isLoadingBookingsToday &&
-                  groupedTodayBookings.map(({ slot, items }) => {
-                    const slotCapacity = 2;
-                    const slotRemaining = Math.max(
-                      slotCapacity - items.length,
-                      0,
-                    );
-
-                    return (
-                      <div key={slot} className="rounded-2xl border p-3">
-                        <div className="mb-2 flex items-start justify-between gap-2">
-                          <div>
-                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                              {slot}
-                            </p>
-                            <p className="mt-0.5 text-[11px] text-slate-400">
-                              {slotRemaining} open capacity
-                            </p>
-                          </div>
-
-                          <Badge
-                            variant="outline"
-                            className={getRiskClass(items.length, slotCapacity)}
-                          >
-                            {items.length}/{slotCapacity}
-                          </Badge>
-                        </div>
-
-                        <div className="space-y-2">
-                          {items.length > 0 ? (
-                            items.map((booking, index) => {
-                              const style = getServiceStyle(booking.service);
-                              const bookingId = booking.bookingId ?? booking.id;
-
-                              return (
-                                <button
-                                  key={`${booking.client}-${booking.time}-${index}`}
-                                  type="button"
-                                  onClick={() => openBooking(bookingId)}
-                                  className={`w-full rounded-xl border px-3 py-2 text-left text-xs transition hover:shadow-sm ${style.panel}`}
-                                >
-                                  <div className="flex items-start justify-between gap-2">
-                                    <div className="min-w-0">
-                                      <p className="truncate font-semibold">
-                                        {normalizeServiceNameFromValue(
-                                          booking.service,
-                                        )}
-                                      </p>
-                                      <p className="mt-1 truncate opacity-80">
-                                        Client: {booking.client}
-                                      </p>
-                                      <p className="mt-1 truncate opacity-70">
-                                        ID: {getShortBookingId(bookingId)}
-                                      </p>
-                                    </div>
-
-                                    <span
-                                      className={`mt-1 h-2.5 w-2.5 rounded-full ${style.dot}`}
-                                    />
-                                  </div>
-                                </button>
-                              );
-                            })
-                          ) : (
-                            <p className="rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-400">
-                              No booking in this slot.
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-              </CardContent>
-            </Card>
-
+          <div className="grid min-w-[980px] grid-cols-[minmax(660px,1fr)_320px] gap-4 2xl:min-w-0 2xl:grid-cols-[minmax(760px,1fr)_340px]">
             <Card className="min-w-0 overflow-hidden border-slate-200 bg-white shadow-sm">
               <CardHeader className="border-b border-slate-200 bg-white px-4 py-3">
                 <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
@@ -891,14 +1028,14 @@ export default function BookingCalendar() {
                             {calendarDay.day}
                           </span>
 
-                          {calendarDay.current && (
+                          {calendarDay.current && info.count > 0 && (
                             <span
-                              className={`absolute right-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-semibold ${getRiskClass(
-                                info.count,
-                                info.capacity,
-                              )}`}
+                              title={`${info.count} booking${
+                                info.count === 1 ? "" : "s"
+                              } scheduled`}
+                              className="absolute right-2 top-2 inline-flex h-7 min-w-7 items-center justify-center rounded-full border-2 border-white bg-red-500 px-2 text-[11px] font-extrabold text-white shadow-md shadow-red-500/25"
                             >
-                              {info.count}/{info.capacity}
+                              {info.count}
                             </span>
                           )}
 
@@ -946,29 +1083,29 @@ export default function BookingCalendar() {
             </Card>
 
             <aside className="min-w-0">
-              <Card className="flex max-h-[720px] flex-col overflow-hidden border-slate-200 bg-white shadow-sm">
-                <CardHeader className="shrink-0 bg-slate-950 px-4 py-4 text-white">
+              <Card className="flex max-h-[calc(100vh-120px)] flex-col overflow-hidden border-slate-200 bg-white shadow-sm">
+                <CardHeader className="shrink-0 bg-slate-950 px-4 py-3 text-white">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <CardDescription className="text-slate-300">
+                      <CardDescription className="text-xs text-slate-300">
                         Selected Schedule
                       </CardDescription>
-                      <CardTitle className="mt-1 text-lg">
+                      <CardTitle className="mt-1 text-base">
                         {selectedDateLabel}
                       </CardTitle>
                     </div>
 
                     <Badge
                       variant="outline"
-                      className="border-white/20 bg-white/10 text-white"
+                      className="h-6 min-w-6 rounded-full border-white/20 bg-white/10 px-2 text-xs text-white"
                     >
-                      {selectedDayInfo.count}/{selectedDayInfo.capacity}
+                      {selectedDayInfo.count}
                     </Badge>
                   </div>
                 </CardHeader>
 
-                <CardContent className="flex min-h-0 flex-1 flex-col gap-3 p-3">
-                  <div className="grid shrink-0 grid-cols-2 gap-2">
+                <CardContent className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden p-2.5">
+                  <div className="grid shrink-0 grid-cols-2 gap-1.5">
                     <AdminMetric
                       icon={<CalendarDays className="h-3.5 w-3.5" />}
                       label="Bookings"
@@ -976,18 +1113,19 @@ export default function BookingCalendar() {
                     />
 
                     <AdminMetric
-                      icon={<ShieldCheck className="h-3.5 w-3.5" />}
-                      label="Capacity"
-                      value={`${selectedDayInfo.remaining} open`}
+                      icon={<Clock3 className="h-3.5 w-3.5" />}
+                      label="Schedule"
+                      value={
+                        selectedDayInfo.count > 0
+                          ? `${selectedDayInfo.count} scheduled`
+                          : "Clear"
+                      }
                     />
 
                     <AdminMetric
                       icon={<Wrench className="h-3.5 w-3.5" />}
                       label="Workload"
-                      value={getRiskLabel(
-                        selectedDayInfo.count,
-                        selectedDayInfo.capacity,
-                      )}
+                      value={getWorkloadLabel(selectedDayInfo.count)}
                     />
 
                     <AdminMetric
@@ -997,166 +1135,17 @@ export default function BookingCalendar() {
                     />
                   </div>
 
-                  <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+                  <div className="min-h-0 flex-1 space-y-2 overflow-y-auto overflow-x-hidden pr-1">
                     {selectedDayBookings.length > 0 ? (
-                      selectedDayBookings.map((booking, index) => {
-                        const style = getServiceStyle(booking.service);
-                        const slotPosition = index + 1;
-                        const cleanersCount = getOptionalCount(
-                          booking.cleaners,
-                        );
-                        const equipmentCount = getOptionalCount(
-                          booking.equipments ?? booking.equipment,
-                        );
-                        const resourceCount = getOptionalCount(
-                          booking.resources,
-                        );
-
-                        return (
-                          <div
-                            key={booking.id}
-                            className={`rounded-2xl border p-3 text-left shadow-sm ${style.panel}`}
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <h3 className="truncate text-sm font-semibold">
-                                  {normalizeServiceNameFromValue(
-                                    booking.service,
-                                  )}
-                                </h3>
-                                <p className="mt-1 text-xs opacity-80">
-                                  Booking ID: {getShortBookingId(booking.id)}
-                                </p>
-                              </div>
-
-                              <span
-                                className={`mt-1 h-2.5 w-2.5 rounded-full ${style.dot}`}
-                              />
-                            </div>
-
-                            <div className="mt-3 grid gap-2">
-                              <DetailRow
-                                icon={<Clock3 className="h-3.5 w-3.5" />}
-                                label="Schedule"
-                                value={`${booking.schedule?.time ?? "--"} · Slot ${slotPosition}/${selectedDayInfo.count}`}
-                              />
-
-                              <DetailRow
-                                icon={<UserRound className="h-3.5 w-3.5" />}
-                                label="Customer"
-                                value={getCustomerName(booking)}
-                              />
-
-                              <DetailRow
-                                icon={<MapPin className="h-3.5 w-3.5" />}
-                                label="Address"
-                                value={booking.address ?? "Not provided"}
-                              />
-
-                              <DetailRow
-                                icon={
-                                  <CircleDollarSign className="h-3.5 w-3.5" />
-                                }
-                                label="Estimated Total"
-                                value={formatMoney(booking.totalPrice)}
-                              />
-                            </div>
-
-                            <div className="mt-3 grid grid-cols-2 gap-2">
-                              <div className="rounded-xl bg-white/70 px-3 py-2">
-                                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                                  Booking Status
-                                </p>
-                                <p className="mt-1 text-xs font-semibold text-slate-950">
-                                  {formatStatusLabel(booking.status)}
-                                </p>
-                              </div>
-
-                              <div className="rounded-xl bg-white/70 px-3 py-2">
-                                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                                  Review Status
-                                </p>
-                                <p className="mt-1 text-xs font-semibold text-slate-950">
-                                  {formatStatusLabel(booking.reviewStatus)}
-                                </p>
-                              </div>
-
-                              <div className="rounded-xl bg-white/70 px-3 py-2">
-                                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                                  Payment
-                                </p>
-                                <p className="mt-1 text-xs font-semibold text-slate-950">
-                                  {formatStatusLabel(booking.paymentStatus)}
-                                </p>
-                              </div>
-
-                              <div className="rounded-xl bg-white/70 px-3 py-2">
-                                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                                  Dirty Scale
-                                </p>
-                                <p className="mt-1 text-xs font-semibold text-slate-950">
-                                  {booking.dirtyScale
-                                    ? `${booking.dirtyScale}/5`
-                                    : "Not provided"}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="mt-3 grid grid-cols-3 gap-2">
-                              <div className="rounded-xl border bg-white/70 px-2 py-2 text-center">
-                                <UsersRound className="mx-auto h-4 w-4 text-slate-500" />
-                                <p className="mt-1 text-[10px] text-slate-500">
-                                  Cleaners
-                                </p>
-                                <p className="text-xs font-bold text-slate-950">
-                                  {cleanersCount}
-                                </p>
-                              </div>
-
-                              <div className="rounded-xl border bg-white/70 px-2 py-2 text-center">
-                                <Wrench className="mx-auto h-4 w-4 text-slate-500" />
-                                <p className="mt-1 text-[10px] text-slate-500">
-                                  Equipment
-                                </p>
-                                <p className="text-xs font-bold text-slate-950">
-                                  {equipmentCount}
-                                </p>
-                              </div>
-
-                              <div className="rounded-xl border bg-white/70 px-2 py-2 text-center">
-                                <Package className="mx-auto h-4 w-4 text-slate-500" />
-                                <p className="mt-1 text-[10px] text-slate-500">
-                                  Resources
-                                </p>
-                                <p className="text-xs font-bold text-slate-950">
-                                  {resourceCount}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="mt-3 flex gap-2">
-                              <Button
-                                type="button"
-                                size="sm"
-                                onClick={() => openBooking(booking.id)}
-                                className="h-9 flex-1 rounded-xl bg-slate-950 text-xs text-white hover:bg-slate-800"
-                              >
-                                View Details
-                              </Button>
-
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                onClick={() => openBooking(booking.id)}
-                                className="h-9 flex-1 rounded-xl bg-white text-xs"
-                              >
-                                Manage
-                              </Button>
-                            </div>
-                          </div>
-                        );
-                      })
+                      selectedDayBookings.map((booking, index) => (
+                        <SelectedBookingCard
+                          key={booking.id}
+                          booking={booking}
+                          bookingPosition={index + 1}
+                          selectedDayCount={selectedDayInfo.count}
+                          openBooking={openBooking}
+                        />
+                      ))
                     ) : (
                       <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
                         <Sparkles className="mx-auto h-7 w-7 text-slate-400" />
