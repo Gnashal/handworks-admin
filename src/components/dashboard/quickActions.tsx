@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 
 const actions = [
   {
-    label: "New Booking",
-    description: "Create booking",
-    href: "/bookings/create",
+    label: "Bookings",
+    description: "View Bookings",
+    href: "/bookings",
     icon: CalendarPlus,
     primary: true,
   },
