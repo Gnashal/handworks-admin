@@ -52,7 +52,7 @@ function getSearchableEmployeeText(employee: IEmployee) {
   return [
     employee.id,
     employee.account.id,
-    employee.account.clerkId,
+    employee.account.clerk_id,
     employee.account.first_name,
     employee.account.last_name,
     employee.account.email,
@@ -245,11 +245,11 @@ export default function EmployeesPage() {
                   key={option.value}
                   type="button"
                   size="sm"
-                  variant={statusFilter === option.value ? "default" : "outline"}
-                  onClick={() => setStatusFilter(option.value)}
-                  className={
-                    statusFilter === option.value ? "" : "bg-white"
+                  variant={
+                    statusFilter === option.value ? "default" : "outline"
                   }
+                  onClick={() => setStatusFilter(option.value)}
+                  className={statusFilter === option.value ? "" : "bg-white"}
                 >
                   {option.label}
                 </Button>
