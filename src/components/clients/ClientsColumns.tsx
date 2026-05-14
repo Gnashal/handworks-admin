@@ -2,7 +2,6 @@ import type * as React from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Eye, Mail, Star, UserRound } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 import type { ICustomer } from "@/types/account";
@@ -21,16 +20,6 @@ function getInitials(customer: ICustomer) {
   const initials = `${firstInitial}${lastInitial}`.toUpperCase();
 
   return initials || "C";
-}
-
-function formatRole(role?: string) {
-  if (!role) return "Customer";
-
-  return role
-    .replace(/^org:/, "")
-    .replace(/_/g, " ")
-    .toLowerCase()
-    .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 export const clientColumns = (
@@ -78,27 +67,19 @@ export const clientColumns = (
     ),
   },
   {
-    accessorKey: "id",
+    id: "account_number",
     header: "Customer ID",
+    accessorFn: (row) => row.account.account_number || row.id,
     cell: ({ row }) => (
       <span
-        title={row.original.id}
+        title={row.original.account.account_number || row.original.id}
         className="block max-w-72 truncate font-mono text-xs text-slate-600"
       >
-        {row.original.id}
+        {row.original.account.account_number || row.original.id}
       </span>
     ),
   },
-  {
-    id: "accountType",
-    header: "Account",
-    accessorFn: (row) => row.account.role,
-    cell: ({ row }) => (
-      <Badge variant="outline" className="bg-slate-50">
-        {formatRole(row.original.account.role)}
-      </Badge>
-    ),
-  },
+
   {
     id: "watch",
     header: "Watch",
@@ -135,9 +116,7 @@ export const clientColumns = (
         >
           <Star
             className={
-              isWatched
-                ? "h-4 w-4 fill-amber-400 text-amber-500"
-                : "h-4 w-4"
+              isWatched ? "h-4 w-4 fill-amber-400 text-amber-500" : "h-4 w-4"
             }
           />
         </Button>

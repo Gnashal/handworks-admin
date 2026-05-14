@@ -212,6 +212,7 @@ export interface IBooking {
   resources: ICleaningResources[];
   cleaners: ICleanerAssigned[];
   totalPrice: number;
+  bookingNumber: string;
 }
 
 export interface ISession {

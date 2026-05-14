@@ -3,8 +3,9 @@ export interface IAccount {
   first_name: string;
   last_name: string;
   email: string;
-  clerkId: string;
+  clerk_id: string;
   role: string;
+  account_number: string;
 }
 
 export interface IAdmin {

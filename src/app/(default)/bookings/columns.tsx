@@ -73,7 +73,8 @@ function BookingStatusBadge({ status }: { status: string }) {
     <Badge
       variant="outline"
       className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-        bookingStatusClass[status] ?? "border-slate-200 bg-slate-50 text-slate-700"
+        bookingStatusClass[status] ??
+        "border-slate-200 bg-slate-50 text-slate-700"
       }`}
     >
       {bookingStatusLabel[status] ?? status}
@@ -139,9 +140,6 @@ export const bookingColumns: ColumnDef<IBooking>[] = [
             <p className="font-semibold text-slate-900 group-hover:text-blue-600 group-hover:underline">
               {base.customerFirstName} {base.customerLastName}
             </p>
-            <p className="max-w-44 truncate text-xs text-slate-500">
-              {base.custId}
-            </p>
           </div>
         </Link>
       );
@@ -173,7 +171,9 @@ export const bookingColumns: ColumnDef<IBooking>[] = [
     cell: ({ row }) => (
       <div className="flex items-center gap-2 text-sm text-slate-700">
         <CalendarDays className="h-4 w-4 text-slate-400" />
-        <span>{format(new Date(row.original.base.createdAt), "MMM dd, yyyy")}</span>
+        <span>
+          {format(new Date(row.original.base.createdAt), "MMM dd, yyyy")}
+        </span>
       </div>
     ),
   },

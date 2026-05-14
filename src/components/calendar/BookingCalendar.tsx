@@ -264,13 +264,13 @@ const getServiceStyle = (service: string) => {
   return SERVICE_STYLES[getNormalizedServiceType(service)];
 };
 
-const getShortBookingId = (bookingId?: string) => {
-  if (!bookingId) return "No ID";
+// const getShortBookingId = (bookingId?: string) => {
+//   if (!bookingId) return "No ID";
 
-  if (bookingId.length <= 10) return bookingId;
+//   if (bookingId.length <= 10) return bookingId;
 
-  return `${bookingId.slice(0, 6)}...${bookingId.slice(-4)}`;
-};
+//   return `${bookingId.slice(0, 6)}...${bookingId.slice(-4)}`;
+// };
 
 const getWorkloadLabel = (count: number) => {
   if (count >= 6) return "High";
@@ -326,7 +326,7 @@ function DetailRow({
       <div className="mt-0.5 shrink-0 text-slate-500">{icon}</div>
       <div className="min-w-0 flex-1 overflow-hidden">
         <p className="font-medium text-slate-500">{label}</p>
-        <div className="mt-0.5 min-w-0 break-words font-semibold text-slate-900 [overflow-wrap:anywhere]">
+        <div className="mt-0.5 min-w-0 wrap-anywhere font-semibold text-slate-900">
           {value}
         </div>
       </div>
@@ -351,7 +351,7 @@ function AdminMetric({
           {label}
         </span>
       </div>
-      <div className="min-w-0 break-words text-[13px] font-semibold leading-tight text-slate-950 [overflow-wrap:anywhere]">
+      <div className="min-w-0 text-[13px] font-semibold leading-tight text-slate-950 wrap-anywhere">
         {value}
       </div>
     </div>
@@ -390,7 +390,9 @@ function PaymentStatusFromOrder({
     return <>Loading...</>;
   }
 
-  return <>{formatStatusLabel(order?.payment_status ?? fallbackPaymentStatus)}</>;
+  return (
+    <>{formatStatusLabel(order?.payment_status ?? fallbackPaymentStatus)}</>
+  );
 }
 
 function SelectedBookingCard({
@@ -418,7 +420,8 @@ function SelectedBookingCard({
   const address = getBookingAddress(bookingDetails, booking);
 
   const bookingStatus = bookingDetails?.base.status ?? booking.status;
-  const reviewStatus = bookingDetails?.base.reviewStatus ?? booking.reviewStatus;
+  const reviewStatus =
+    bookingDetails?.base.reviewStatus ?? booking.reviewStatus;
   const paymentStatus = booking.paymentStatus;
   const orderId = bookingDetails?.base.orderId;
   const dirtyScale = bookingDetails?.base.dirtyScale ?? booking.dirtyScale;
@@ -442,22 +445,20 @@ function SelectedBookingCard({
     >
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0 flex-1 overflow-hidden">
-          <h3 className="min-w-0 break-words text-sm font-semibold [overflow-wrap:anywhere]">
+          <h3 className="min-w-0 text-sm font-semibold wrap-anywhere">
             {normalizeServiceNameFromValue(service)}
           </h3>
-
-          <p className="mt-1 min-w-0 break-words text-xs opacity-80 [overflow-wrap:anywhere]">
-            Booking ID: {getShortBookingId(bookingDetails?.id ?? booking.id)}
-          </p>
         </div>
 
-        <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${style.dot}`} />
+        <span
+          className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${style.dot}`}
+        />
       </div>
 
       {isLoadingBookingDetails && (
         <div className="mt-3 flex min-w-0 items-center gap-2 overflow-hidden rounded-xl bg-white/70 px-3 py-2 text-xs font-medium text-slate-600">
           <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
-          <span className="min-w-0 break-words [overflow-wrap:anywhere]">
+          <span className="min-w-0 wrap-anywhere">
             Loading full booking details...
           </span>
         </div>
@@ -466,7 +467,7 @@ function SelectedBookingCard({
       {isBookingDetailsError && (
         <div className="mt-3 flex min-w-0 items-center gap-2 overflow-hidden rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
           <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-          <span className="min-w-0 break-words [overflow-wrap:anywhere]">
+          <span className="min-w-0 wrap-anywhere">
             Failed to load full booking details.
           </span>
         </div>
@@ -509,7 +510,7 @@ function SelectedBookingCard({
           <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
             Booking Status
           </p>
-          <p className="mt-1 min-w-0 break-words text-xs font-semibold text-slate-950 [overflow-wrap:anywhere]">
+          <p className="mt-1 min-w-0 wrap-anywhere text-xs font-semibold text-slate-950">
             {formatStatusLabel(bookingStatus)}
           </p>
         </div>
@@ -518,7 +519,7 @@ function SelectedBookingCard({
           <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
             Review Status
           </p>
-          <p className="mt-1 min-w-0 break-words text-xs font-semibold text-slate-950 [overflow-wrap:anywhere]">
+          <p className="mt-1 min-w-0 wrap-anywhere text-xs font-semibold text-slate-950">
             {formatStatusLabel(reviewStatus)}
           </p>
         </div>
@@ -527,7 +528,7 @@ function SelectedBookingCard({
           <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
             Payment
           </p>
-          <p className="mt-1 min-w-0 break-words text-xs font-semibold text-slate-950 [overflow-wrap:anywhere]">
+          <p className="mt-1 min-w-0 wrap-anywhere text-xs font-semibold text-slate-950">
             <PaymentStatusText
               orderId={orderId}
               fallbackPaymentStatus={paymentStatus}
@@ -539,8 +540,10 @@ function SelectedBookingCard({
           <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
             Dirty Scale
           </p>
-          <p className="mt-1 min-w-0 break-words text-xs font-semibold text-slate-950 [overflow-wrap:anywhere]">
-            {typeof dirtyScale === "number" ? `${dirtyScale}/5` : "Not provided"}
+          <p className="mt-1 min-w-0 wrap-anywhere text-xs font-semibold text-slate-950">
+            {typeof dirtyScale === "number"
+              ? `${dirtyScale}/5`
+              : "Not provided"}
           </p>
         </div>
       </div>
@@ -549,7 +552,7 @@ function SelectedBookingCard({
         <div className="min-w-0 overflow-hidden rounded-xl border bg-white/70 px-2 py-2 text-center">
           <UsersRound className="mx-auto h-4 w-4 text-slate-500" />
           <p className="mt-1 text-[10px] text-slate-500">Cleaners</p>
-          <p className="min-w-0 break-words text-xs font-bold text-slate-950 [overflow-wrap:anywhere]">
+          <p className="min-w-0 text-xs font-bold text-slate-950 wrap-anywhere">
             {cleanersCount}
           </p>
         </div>
@@ -557,7 +560,7 @@ function SelectedBookingCard({
         <div className="min-w-0 overflow-hidden rounded-xl border bg-white/70 px-2 py-2 text-center">
           <Wrench className="mx-auto h-4 w-4 text-slate-500" />
           <p className="mt-1 text-[10px] text-slate-500">Equipment</p>
-          <p className="min-w-0 break-words text-xs font-bold text-slate-950 [overflow-wrap:anywhere]">
+          <p className="min-w-0 wrap-anywhere text-xs font-bold text-slate-950">
             {equipmentCount}
           </p>
         </div>
@@ -565,7 +568,7 @@ function SelectedBookingCard({
         <div className="min-w-0 overflow-hidden rounded-xl border bg-white/70 px-2 py-2 text-center">
           <Package className="mx-auto h-4 w-4 text-slate-500" />
           <p className="mt-1 text-[10px] text-slate-500">Resources</p>
-          <p className="min-w-0 break-words text-xs font-bold text-slate-950 [overflow-wrap:anywhere]">
+          <p className="min-w-0 text-xs font-bold text-slate-950 wrap-anywhere">
             {resourceCount}
           </p>
         </div>
@@ -886,7 +889,7 @@ export default function BookingCalendar() {
         )}
 
         <div className="overflow-x-auto pb-2">
-          <div className="grid min-w-[980px] grid-cols-[minmax(660px,1fr)_320px] gap-4 2xl:min-w-0 2xl:grid-cols-[minmax(760px,1fr)_340px]">
+          <div className="grid min-w-245 grid-cols-[minmax(660px,1fr)_320px] gap-4 2xl:min-w-0 2xl:grid-cols-[minmax(760px,1fr)_340px]">
             <Card className="min-w-0 overflow-hidden border-slate-200 bg-white shadow-sm">
               <CardHeader className="border-b border-slate-200 bg-white px-4 py-3">
                 <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
@@ -983,7 +986,7 @@ export default function BookingCalendar() {
               </CardHeader>
 
               <CardContent className="p-0">
-                <div className="min-w-[660px]">
+                <div className="min-w-165">
                   <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50">
                     {DAYS.map((day) => (
                       <div

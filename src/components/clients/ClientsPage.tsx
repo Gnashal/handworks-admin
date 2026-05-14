@@ -37,7 +37,7 @@ function getSearchableClientText(client: ICustomer) {
   return [
     client.id,
     client.account.id,
-    client.account.clerkId,
+    client.account.clerk_id,
     client.account.first_name,
     client.account.last_name,
     client.account.email,

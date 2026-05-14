@@ -23,6 +23,7 @@ export interface IInventoryItem {
   image_url: string;
   created_at: string; // ISO date
   updated_at: string; // ISO date
+  inventory_number: string;
 }
 
 export interface ICreateItemRequest {

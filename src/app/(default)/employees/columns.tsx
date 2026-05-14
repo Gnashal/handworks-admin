@@ -141,9 +141,7 @@ export const columns = (
   {
     accessorKey: "performance_score",
     header: "Rating",
-    cell: ({ row }) => (
-      <StarRating rating={row.original.performance_score} />
-    ),
+    cell: ({ row }) => <StarRating rating={row.original.performance_score} />,
   },
   {
     accessorKey: "status",
@@ -158,14 +156,15 @@ export const columns = (
     ),
   },
   {
-    accessorKey: "id",
+    id: "account_number",
     header: "Employee ID",
+    accessorFn: (row) => row.account.account_number || row.id,
     cell: ({ row }) => (
       <span
-        title={row.original.id}
+        title={row.original.account.account_number || row.original.id}
         className="block max-w-64 truncate font-mono text-xs text-slate-600"
       >
-        {row.original.id}
+        {row.original.account.account_number || row.original.id}
       </span>
     ),
   },
