@@ -22,6 +22,7 @@ import {
   Wallet,
   PinIcon,
   Images,
+  RefreshCcw,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ import { normalizeServiceName } from "@/lib/normalize";
 import { BookingServiceDetails } from "@/components/bookings/bookingServiceDetails";
 import { BookingOperationalDetails } from "@/components/bookings/operationalDetails";
 import { BookingAddressMap } from "@/components/bookings/bookingAddressMap";
+import { RescheduleBookingDialog } from "@/components/bookings/rescheduleBookingDialog";
 import {
   useBookingDetailsQuery,
   useBookingSessionQuery,
@@ -188,6 +190,7 @@ function StatusPill({ status }: { status: string }) {
     label: status,
     className: "bg-muted text-muted-foreground border",
   };
+
   return (
     <span
       className={`inline-flex items-center rounded-full px-4 py-1.5 text-sm font-semibold ${c.className}`}
@@ -202,6 +205,7 @@ function ReviewPill({ status }: { status: string }) {
     label: status,
     className: "bg-muted text-muted-foreground border",
   };
+
   return (
     <span
       className={`inline-flex items-center rounded-full px-4 py-1.5 text-sm font-semibold ${c.className}`}
@@ -257,10 +261,17 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
     handleCancelBooking,
   } = useBooking();
   const { items: alertItems } = useFcmAlertState();
+
   const [localReviewStatus, setLocalReviewStatus] = useState<string | null>(
     null,
   );
   const [mediaIndex, setMediaIndex] = useState(0);
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const [localSchedule, setLocalSchedule] = useState<{
+    startSched: string;
+    endSched: string;
+  } | null>(null);
+
   const orderId = data?.base.orderId ?? "";
   const {
     data: order,
@@ -313,17 +324,23 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
     normalizedPaymentStatus === "FULLY_PAID" ||
     normalizedPaymentStatus === "PENDING_FULLPAYMENT";
   const showFullpaymentPaidPill = normalizedPaymentStatus === "FULLY_PAID";
+
   const bookingAlert =
     alertItems.find(
       (item) => item.bookingId === booking.id || item.orderId === orderId,
     ) ?? null;
+
   const serviceType = booking.mainService.serviceType as IMainServiceType;
   const heroTheme =
     serviceHeroThemeConfig[serviceType] ??
     serviceHeroThemeConfig.SERVICE_TYPE_UNSPECIFIED;
+
   const photos = booking.base.photos ?? [];
   const activeMediaIndex =
     photos.length > 0 ? Math.min(mediaIndex, photos.length - 1) : 0;
+
+  const displayStartSched = localSchedule?.startSched ?? booking.base.startSched;
+  const displayEndSched = localSchedule?.endSched ?? booking.base.endSched;
 
   const handlePrevMedia = () => {
     if (!photos.length) return;
@@ -390,7 +407,7 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
 
                 <div className="space-y-1">
                   <CardTitle className="text-2xl font-bold tracking-tight sm:text-3xl">
-                    Booking #{booking.bookingNumber}
+                    Booking #{booking.id}
                   </CardTitle>
                   <p
                     className={`text-sm font-medium ${heroTheme.subtleTextClass}`}
@@ -576,9 +593,21 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
               <div className="space-y-4">
                 <Card>
                   <CardHeader className="pb-2">
-                    <div className="flex items-center gap-2">
-                      <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                      <CardTitle className="text-base">Schedule</CardTitle>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-2">
+                        <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-base">Schedule</CardTitle>
+                      </div>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setRescheduleOpen(true)}
+                        className="w-fit border-blue-200 bg-blue-50 text-blue-700 shadow-sm hover:bg-blue-100 hover:text-blue-800"
+                      >
+                        <RefreshCcw className="mr-1.5 h-4 w-4" />
+                        Reschedule
+                      </Button>
                     </div>
                   </CardHeader>
                   <CardContent className="grid gap-4 text-sm sm:grid-cols-2">
@@ -588,13 +617,10 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
                           Start
                         </p>
                         <p className="mt-0.5 font-semibold">
-                          {format(
-                            new Date(booking.base.startSched),
-                            "MMM dd, yyyy",
-                          )}
+                          {format(new Date(displayStartSched), "MMM dd, yyyy")}
                         </p>
                         <p className="text-muted-foreground">
-                          {format(new Date(booking.base.startSched), "hh:mm a")}
+                          {format(new Date(displayStartSched), "hh:mm a")}
                         </p>
                       </div>
                       <div>
@@ -602,13 +628,10 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
                           End
                         </p>
                         <p className="mt-0.5 font-semibold">
-                          {format(
-                            new Date(booking.base.endSched),
-                            "MMM dd, yyyy",
-                          )}
+                          {format(new Date(displayEndSched), "MMM dd, yyyy")}
                         </p>
                         <p className="text-muted-foreground">
-                          {format(new Date(booking.base.endSched), "hh:mm a")}
+                          {format(new Date(displayEndSched), "hh:mm a")}
                         </p>
                       </div>
                     </div>
@@ -637,7 +660,9 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
                         </p>
                         <p className="mt-0.5 text-muted-foreground">
                           {hasAddons
-                            ? `+${addons!.length} add-on${addons!.length > 1 ? "s" : ""}`
+                            ? `+${addons!.length} add-on${
+                                addons!.length > 1 ? "s" : ""
+                              }`
                             : "No add-ons"}
                         </p>
                       </div>
@@ -727,9 +752,7 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
                   <CardContent className="space-y-3 text-sm">
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-muted-foreground">Booking ID</span>
-                      <span className="font-mono text-xs">
-                        {booking.bookingNumber}
-                      </span>
+                      <span className="font-mono text-xs">{booking.id}</span>
                     </div>
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-muted-foreground">
@@ -769,7 +792,10 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
                     </div>
                     <p className="text-muted-foreground">
                       {booking.base.extraHourCost > 0
-                        ? `Additional charge: ${formatMoney(booking.base.extraHourCost, order.currency)}`
+                        ? `Additional charge: ${formatMoney(
+                            booking.base.extraHourCost,
+                            order.currency,
+                          )}`
                         : "No extra-hour charge"}
                     </p>
                   </CardContent>
@@ -939,7 +965,10 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
                     </p>
                     <p className="mt-1 text-muted-foreground">
                       {hasAddons
-                        ? `Includes ${formatMoney(addonTotal, order.currency)} in add-ons.`
+                        ? `Includes ${formatMoney(
+                            addonTotal,
+                            order.currency,
+                          )} in add-ons.`
                         : "No add-on charges on this booking."}
                     </p>
                   </CardContent>
@@ -1095,7 +1124,11 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
                 </Card>
 
                 <Card
-                  className={`border shadow-sm ${!sessionData?.endPhotos?.length ? "border-dashed bg-muted/20" : ""}`}
+                  className={`border shadow-sm ${
+                    !sessionData?.endPhotos?.length
+                      ? "border-dashed bg-muted/20"
+                      : ""
+                  }`}
                 >
                   <CardHeader className="pb-3 flex flex-row items-center justify-between">
                     <CardTitle className="text-base text-foreground">
@@ -1143,6 +1176,21 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
             )}
           </TabsContent>
         </Tabs>
+
+        <RescheduleBookingDialog
+          open={rescheduleOpen}
+          onOpenChange={setRescheduleOpen}
+          bookingId={booking.id}
+          customerId={booking.base.custId}
+          currentStartSched={displayStartSched}
+          currentEndSched={displayEndSched}
+          onRescheduled={(schedule) => {
+            setLocalSchedule({
+              startSched: schedule.newStartSched,
+              endSched: schedule.newEndSched,
+            });
+          }}
+        />
       </div>
     </div>
   );
