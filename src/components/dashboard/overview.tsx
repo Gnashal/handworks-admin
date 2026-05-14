@@ -3,7 +3,6 @@
 import { useMemo } from "react";
 import { endOfMonth, startOfMonth, subMonths } from "date-fns";
 import {
-  AlertCircle,
   CalendarDays,
   CheckCircle2,
   Clock3,
@@ -86,11 +85,6 @@ export default function DashboardOverview({
   const { hasBookingAlert } = useBookingAlertBadge();
   const { data: bookingTrendsData } = useBookingTrendsQuery();
 
-  /*
-    Keep this range aligned with src/app/(default)/bookings/page.tsx.
-    That page currently defaults to:
-    startOfMonth(subMonths(now, 3)) -> endOfMonth(now)
-  */
   const bookingPageRange = useMemo(() => {
     const now = new Date();
     const start = startOfMonth(subMonths(now, 3));
@@ -111,7 +105,6 @@ export default function DashboardOverview({
 
   const bookingTotal = bookingsPageData?.totalBookings ?? data?.bookings ?? 0;
   const todayBookings = data?.todayBookings ?? 0;
-  const pendingActions = data?.pendingActions ?? 0;
   const activeClients = data?.activeClients ?? 0;
   const employeesActive = data?.employeesActive ?? 0;
   const employeesTotal = data?.employeesTotal ?? 0;
@@ -214,7 +207,7 @@ export default function DashboardOverview({
         {/* LEFT CONTENT */}
         <div className="min-w-0 space-y-6">
           {/* METRIC CARDS */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-5">
+          <div className="grid grid-cols-1 items-stretch gap-4 md:grid-cols-2 2xl:grid-cols-5">
             <MetricCard
               href="/bookings"
               variant="info"
@@ -234,18 +227,7 @@ export default function DashboardOverview({
               }}
             />
 
-            <MetricCard
-              variant={pendingActions > 0 ? "danger" : "success"}
-              icon={<AlertCircle className="h-5 w-5" />}
-              data={{
-                title: "Pending Actions",
-                value: pendingActions,
-                todayStat:
-                  pendingActions > 0
-                    ? `${pendingActions} need review`
-                    : "No urgent actions",
-              }}
-            />
+            <InventoryAlertsCard items={inventoryAlerts} variant="compact" />
 
             <MetricCard
               href="/clients"
@@ -284,8 +266,7 @@ export default function DashboardOverview({
                   },
                 ],
                 href: "/cash-flow",
-                className:
-                  "min-h-[170px] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
+                className: "border border-slate-200 bg-white shadow-sm",
               }}
             />
           </div>
@@ -301,10 +282,9 @@ export default function DashboardOverview({
             )}
           </div>
 
-          {/* SECONDARY CARDS */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* SECONDARY CARD */}
+          <div className="grid grid-cols-1 gap-6">
             <TopServicesCard services={topServices} />
-            <InventoryAlertsCard items={inventoryAlerts} />
           </div>
         </div>
 
