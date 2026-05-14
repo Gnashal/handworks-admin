@@ -67,7 +67,8 @@ type SlotStatus =
   | "current"
   | "occupied"
   | "padding"
-  | "past";
+  | "past"
+  | "outside-hours";
 
 interface RescheduleBookingDialogProps {
   open: boolean;
@@ -93,9 +94,10 @@ function normalizeSlotsData(
     occupiedSlots: Array.isArray(data?.occupiedSlots)
       ? data.occupiedSlots
       : [],
-    totalActiveCleaners: Number.isFinite(data?.totalActiveCleaners)
-      ? Number(data?.totalActiveCleaners)
-      : 0,
+    totalActiveCleaners:
+      typeof data?.totalActiveCleaners === "number"
+        ? data.totalActiveCleaners
+        : 0,
   };
 }
 
@@ -230,17 +232,23 @@ function isPastTimeSlot(slotStart: Date, now: Date) {
   return isSameDay(slotStart, now) && slotStart <= now;
 }
 
+function isSlotInsideRange(slotStart: Date, rangeStart: Date, rangeEnd: Date) {
+  return slotStart >= rangeStart && slotStart < rangeEnd;
+}
+
 function getSlotStatusClass(status: SlotStatus) {
   switch (status) {
     case "selected":
-      return "border-blue-500 bg-blue-50 text-blue-800 ring-2 ring-blue-500/20";
+      return "border-emerald-500 bg-emerald-500 text-white hover:bg-emerald-500";
     case "current":
-      return "border-violet-300 bg-violet-50 text-violet-800";
+      return "cursor-not-allowed border-violet-500 bg-violet-500 text-white opacity-90";
     case "occupied":
       return "cursor-not-allowed border-red-200 bg-red-50 text-red-700 opacity-80";
     case "padding":
       return "cursor-not-allowed border-amber-200 bg-amber-50 text-amber-700 opacity-80";
     case "past":
+      return "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400 opacity-75";
+    case "outside-hours":
       return "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400 opacity-75";
     case "available":
     default:
@@ -260,6 +268,8 @@ function getSlotStatusLabel(status: SlotStatus) {
       return "Travel Padding";
     case "past":
       return "Unavailable";
+    case "outside-hours":
+      return "Unavailable";
     case "available":
     default:
       return "Available";
@@ -269,14 +279,16 @@ function getSlotStatusLabel(status: SlotStatus) {
 function getSlotBadgeClass(status: SlotStatus) {
   switch (status) {
     case "selected":
-      return "text-blue-700";
+      return "text-white";
     case "current":
-      return "text-violet-700";
+      return "text-white";
     case "occupied":
       return "text-red-700";
     case "padding":
       return "text-amber-700";
     case "past":
+      return "text-slate-400";
+    case "outside-hours":
       return "text-slate-400";
     case "available":
     default:
@@ -439,9 +451,31 @@ export function RescheduleBookingDialog({
   const getSlotMeta = React.useCallback(
     (slotStart: Date) => {
       const slotEnd = addMinutes(slotStart, durationMinutes);
+      const businessEnd = buildDateTime(dateValue, BUSINESS_END_HOUR, 0);
       const occupiedSlots = Array.isArray(slotsData.occupiedSlots)
         ? slotsData.occupiedSlots
         : [];
+
+      if (
+        isValidDate(currentStart) &&
+        isValidDate(currentEnd) &&
+        isSameDay(slotStart, currentStart) &&
+        isSlotInsideRange(slotStart, currentStart, currentEnd)
+      ) {
+        return {
+          disabled: true,
+          status: "current" as SlotStatus,
+          blockingSlot: null as OccupiedSlot | null,
+        };
+      }
+
+      if (slotEnd > businessEnd) {
+        return {
+          disabled: true,
+          status: "outside-hours" as SlotStatus,
+          blockingSlot: null as OccupiedSlot | null,
+        };
+      }
 
       if (isPastTimeSlot(slotStart, nowSnapshot)) {
         return {
@@ -479,24 +513,11 @@ export function RescheduleBookingDialog({
       if (
         selectedStart &&
         selectedEnd &&
-        slotStart.getTime() === selectedStart.getTime()
+        isSlotInsideRange(slotStart, selectedStart, selectedEnd)
       ) {
         return {
           disabled: false,
           status: "selected" as SlotStatus,
-          blockingSlot: null as OccupiedSlot | null,
-        };
-      }
-
-      if (
-        isValidDate(currentStart) &&
-        isValidDate(currentEnd) &&
-        isSameDay(slotStart, currentStart) &&
-        intervalsOverlap(slotStart, slotEnd, currentStart, currentEnd)
-      ) {
-        return {
-          disabled: false,
-          status: "current" as SlotStatus,
           blockingSlot: null as OccupiedSlot | null,
         };
       }
@@ -511,6 +532,7 @@ export function RescheduleBookingDialog({
       bookingId,
       currentEnd,
       currentStart,
+      dateValue,
       durationMinutes,
       nowSnapshot,
       selectedEnd,
@@ -524,6 +546,13 @@ export function RescheduleBookingDialog({
   const handleSubmit = async () => {
     if (!selectedStart || !selectedEnd) {
       toast.error("Select an available schedule first.");
+      return;
+    }
+
+    const businessEnd = buildDateTime(dateValue, BUSINESS_END_HOUR, 0);
+
+    if (selectedEnd > businessEnd) {
+      toast.error("Selected schedule cannot end past 8:00 PM.");
       return;
     }
 
@@ -686,20 +715,13 @@ export function RescheduleBookingDialog({
 
           <div className="flex min-h-0 flex-col overflow-hidden">
             <div className="shrink-0 border-b px-6 py-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-base font-semibold">
-                    Select Schedule ({getDurationLabel(durationMinutes)})
-                  </h3>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Occupied and travel-padded slots cannot be selected.
-                  </p>
-                </div>
-
-                <Badge variant="outline" className="bg-white">
-                  {slotsData.totalActiveCleaners} active cleaner
-                  {slotsData.totalActiveCleaners === 1 ? "" : "s"}
-                </Badge>
+              <div>
+                <h3 className="text-base font-semibold">
+                  Select Schedule ({getDurationLabel(durationMinutes)})
+                </h3>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Occupied and travel-padded slots cannot be selected.
+                </p>
               </div>
 
               {slotsData.notEnoughCleaners ? (
@@ -733,6 +755,27 @@ export function RescheduleBookingDialog({
                     const slotKey = getSlotKey(slot);
                     const slotEnd = addMinutes(slot, durationMinutes);
                     const status = meta.status;
+                    const isSelectedBlock = status === "selected";
+                    const isCurrentBlock = status === "current";
+                    const isSelectedStart =
+                      !!selectedStart &&
+                      slot.getTime() === selectedStart.getTime();
+                    const isCurrentStart =
+                      isValidDate(currentStart) &&
+                      slot.getTime() === currentStart.getTime();
+
+                    const helperText =
+                      isSelectedBlock && selectedEnd
+                        ? isSelectedStart
+                          ? `Ends ${formatSlotLabel(selectedEnd)}`
+                          : "Part of selected schedule"
+                        : isCurrentBlock
+                          ? isCurrentStart
+                            ? `Ends ${formatSlotLabel(currentEnd)}`
+                            : "Current booking schedule"
+                          : status === "outside-hours"
+                            ? "Ends past 8:00 PM"
+                            : `Ends ${formatSlotLabel(slotEnd)}`;
 
                     return (
                       <button
@@ -749,8 +792,8 @@ export function RescheduleBookingDialog({
                       >
                         <div>
                           <p className="font-medium">{formatSlotLabel(slot)}</p>
-                          <p className="mt-0.5 text-xs opacity-70">
-                            Ends {formatSlotLabel(slotEnd)}
+                          <p className="mt-0.5 text-xs opacity-80">
+                            {helperText}
                           </p>
                         </div>
 
@@ -759,8 +802,8 @@ export function RescheduleBookingDialog({
                             <Route className="h-3.5 w-3.5 text-amber-600" />
                           ) : null}
 
-                          {status === "selected" ? (
-                            <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
+                          {status === "selected" || status === "current" ? (
+                            <CheckCircle2 className="h-3.5 w-3.5 text-white" />
                           ) : null}
 
                           <span
