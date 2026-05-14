@@ -339,7 +339,8 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
   const activeMediaIndex =
     photos.length > 0 ? Math.min(mediaIndex, photos.length - 1) : 0;
 
-  const displayStartSched = localSchedule?.startSched ?? booking.base.startSched;
+  const displayStartSched =
+    localSchedule?.startSched ?? booking.base.startSched;
   const displayEndSched = localSchedule?.endSched ?? booking.base.endSched;
 
   const handlePrevMedia = () => {
@@ -407,7 +408,7 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
 
                 <div className="space-y-1">
                   <CardTitle className="text-2xl font-bold tracking-tight sm:text-3xl">
-                    Booking #{booking.id}
+                    Booking #{booking.bookingNumber}
                   </CardTitle>
                   <p
                     className={`text-sm font-medium ${heroTheme.subtleTextClass}`}
@@ -752,7 +753,9 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
                   <CardContent className="space-y-3 text-sm">
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-muted-foreground">Booking ID</span>
-                      <span className="font-mono text-xs">{booking.id}</span>
+                      <span className="font-mono text-xs">
+                        {booking.bookingNumber}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-muted-foreground">
