@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { endOfMonth, format, startOfMonth, subMonths } from "date-fns";
 import {
   CalendarDays,
@@ -9,12 +8,10 @@ import {
   ClipboardList,
   Clock3,
   CircleDollarSign,
-  Plus,
 } from "lucide-react";
 
 import { DataTable } from "@/components/dataTable";
 import { DataTableSkeleton } from "@/components/dataTableSkeleton";
-import { Button } from "@/components/ui/button";
 import { bookingColumns } from "./columns";
 
 import type { IBooking } from "@/types/booking";
@@ -35,8 +32,6 @@ const formatRangeDate = (date?: string) => {
 };
 
 export default function BookingsPage() {
-  const router = useRouter();
-
   const defaultRange = React.useMemo(() => {
     const now = new Date();
     const start = startOfMonth(subMonths(now, 3));
@@ -71,9 +66,8 @@ export default function BookingsPage() {
   const canPreviousPage = page > 0;
 
   const pendingReviewCount = React.useMemo(() => {
-    return bookings.filter(
-      (booking) => booking.base.reviewStatus === "PENDING",
-    ).length;
+    return bookings.filter((booking) => booking.base.reviewStatus === "PENDING")
+      .length;
   }, [bookings]);
 
   const scheduledCount = React.useMemo(() => {
@@ -104,8 +98,8 @@ export default function BookingsPage() {
   )} - ${formatRangeDate(searchParams.endDate)}`;
 
   return (
-    <section className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 px-3 py-4 sm:px-4 lg:px-5">
-      <div className="mx-auto flex w-full max-w-[1680px] flex-col gap-5">
+    <section className="min-h-screen bg-linear-to-b from-slate-50 via-white to-slate-100 px-3 py-4 sm:px-4 lg:px-5">
+      <div className="mx-auto flex w-full max-w-420 flex-col gap-5">
         <header className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
           <div className="bg-slate-950 px-5 py-5 text-white lg:px-7">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
@@ -133,14 +127,14 @@ export default function BookingsPage() {
                   </p>
                 </div>
 
-                <Button
+                {/* <Button
                   type="button"
                   onClick={() => router.push("/bookings/create")}
                   className="h-10 rounded-xl bg-white px-4 text-slate-950 hover:bg-slate-100"
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Create Booking
-                </Button>
+                </Button> */}
               </div>
             </div>
           </div>
