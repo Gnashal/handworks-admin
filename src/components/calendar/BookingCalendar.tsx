@@ -13,7 +13,6 @@ import {
   Loader2,
   MapPin,
   Package,
-  Plus,
   RefreshCcw,
   Sparkles,
   UserRound,
@@ -263,14 +262,6 @@ const getNormalizedServiceType = (service: string): IMainServiceType => {
 const getServiceStyle = (service: string) => {
   return SERVICE_STYLES[getNormalizedServiceType(service)];
 };
-
-// const getShortBookingId = (bookingId?: string) => {
-//   if (!bookingId) return "No ID";
-
-//   if (bookingId.length <= 10) return bookingId;
-
-//   return `${bookingId.slice(0, 6)}...${bookingId.slice(-4)}`;
-// };
 
 const getWorkloadLabel = (count: number) => {
   if (count >= 6) return "High";
@@ -829,15 +820,6 @@ export default function BookingCalendar() {
                   <RefreshCcw className="mr-2 h-4 w-4" />
                   Today
                 </Button>
-
-                <Button
-                  type="button"
-                  onClick={() => router.push("/bookings/create")}
-                  className="h-10 rounded-xl bg-white text-slate-950 hover:bg-slate-100"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  New Booking
-                </Button>
               </div>
             </div>
           </div>
@@ -1156,7 +1138,7 @@ export default function BookingCalendar() {
                           No bookings on this day.
                         </p>
                         <p className="mt-1 text-xs text-slate-500">
-                          Select another day or create a new booking.
+                          Select another day to view scheduled bookings.
                         </p>
                       </div>
                     )}

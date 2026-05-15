@@ -339,9 +339,24 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
   const activeMediaIndex =
     photos.length > 0 ? Math.min(mediaIndex, photos.length - 1) : 0;
 
-  const displayStartSched =
-    localSchedule?.startSched ?? booking.base.startSched;
+  const displayStartSched = localSchedule?.startSched ?? booking.base.startSched;
   const displayEndSched = localSchedule?.endSched ?? booking.base.endSched;
+
+  const displayEndDate = new Date(displayEndSched);
+  const hasBookingEnded =
+    !Number.isNaN(displayEndDate.getTime()) && displayEndDate <= new Date();
+
+  const isFinishedBooking =
+    normalizedBookingStatus === "COMPLETED" ||
+    normalizedBookingStatus === "CANCELLED";
+
+  const canRescheduleBooking = !hasBookingEnded && !isFinishedBooking;
+
+  const rescheduleDisabledReason = isFinishedBooking
+    ? "Finished or cancelled bookings cannot be rescheduled."
+    : hasBookingEnded
+      ? "Past bookings cannot be rescheduled."
+      : "Reschedule booking";
 
   const handlePrevMedia = () => {
     if (!photos.length) return;
@@ -408,7 +423,7 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
 
                 <div className="space-y-1">
                   <CardTitle className="text-2xl font-bold tracking-tight sm:text-3xl">
-                    Booking #{booking.bookingNumber}
+                    Booking #{booking.id}
                   </CardTitle>
                   <p
                     className={`text-sm font-medium ${heroTheme.subtleTextClass}`}
@@ -603,11 +618,23 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setRescheduleOpen(true)}
-                        className="w-fit border-blue-200 bg-blue-50 text-blue-700 shadow-sm hover:bg-blue-100 hover:text-blue-800"
+                        disabled={!canRescheduleBooking}
+                        title={rescheduleDisabledReason}
+                        onClick={() => {
+                          if (!canRescheduleBooking) return;
+
+                          setRescheduleOpen(true);
+                        }}
+                        className={
+                          canRescheduleBooking
+                            ? "w-fit border-blue-200 bg-blue-50 text-blue-700 shadow-sm hover:bg-blue-100 hover:text-blue-800"
+                            : "w-fit cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400 shadow-none hover:bg-slate-100 hover:text-slate-400"
+                        }
                       >
                         <RefreshCcw className="mr-1.5 h-4 w-4" />
-                        Reschedule
+                        {canRescheduleBooking
+                          ? "Reschedule"
+                          : "Cannot reschedule"}
                       </Button>
                     </div>
                   </CardHeader>
@@ -753,9 +780,7 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
                   <CardContent className="space-y-3 text-sm">
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-muted-foreground">Booking ID</span>
-                      <span className="font-mono text-xs">
-                        {booking.bookingNumber}
-                      </span>
+                      <span className="font-mono text-xs">{booking.id}</span>
                     </div>
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-muted-foreground">
@@ -1180,20 +1205,22 @@ export default function BookingDetailsPage(props: BookingDetailsPageProps) {
           </TabsContent>
         </Tabs>
 
-        <RescheduleBookingDialog
-          open={rescheduleOpen}
-          onOpenChange={setRescheduleOpen}
-          bookingId={booking.id}
-          customerId={booking.base.custId}
-          currentStartSched={displayStartSched}
-          currentEndSched={displayEndSched}
-          onRescheduled={(schedule) => {
-            setLocalSchedule({
-              startSched: schedule.newStartSched,
-              endSched: schedule.newEndSched,
-            });
-          }}
-        />
+        {canRescheduleBooking ? (
+          <RescheduleBookingDialog
+            open={rescheduleOpen}
+            onOpenChange={setRescheduleOpen}
+            bookingId={booking.id}
+            customerId={booking.base.custId}
+            currentStartSched={displayStartSched}
+            currentEndSched={displayEndSched}
+            onRescheduled={(schedule) => {
+              setLocalSchedule({
+                startSched: schedule.newStartSched,
+                endSched: schedule.newEndSched,
+              });
+            }}
+          />
+        ) : null}
       </div>
     </div>
   );
