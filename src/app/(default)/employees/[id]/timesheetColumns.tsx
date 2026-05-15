@@ -32,7 +32,7 @@ const formatWorkHours = (timeIn?: string | Date, timeOut?: string | Date) => {
 const resolveStatusVariant = (status: string) => {
   const normalized = status.trim().toUpperCase();
 
-  if (normalized === "PRESENT" || normalized === "COMPLETE") {
+  if (normalized === "ON-TIME") {
     return "bg-emerald-500/10 text-emerald-700 border-emerald-500/30";
   }
 
